@@ -1,47 +1,40 @@
 """
 WEOS Relationship API
-Version: 0.5.0
+Version: 0.9.0
 """
 
 from fastapi import APIRouter
-
-from app.repositories.relationship_repository import RelationshipRepository
-from app.models.relationship_model import RelationshipModel
+from app.db.relationship import Relationship
+from app.services.relationship_service import RelationshipService
 
 router = APIRouter(
     prefix="/relationships",
     tags=["Relationships"]
 )
 
-repository = RelationshipRepository()
+service = RelationshipService()
 
 
 @router.get("/")
-def get_relationships():
-    return repository.all()
+def get_all_relationships():
+    return service.get_all()
 
 
-@router.get("/source/{source_id}")
-def get_by_source(source_id: str):
-    return repository.by_source(source_id)
-
-
-@router.get("/target/{target_id}")
-def get_by_target(target_id: str):
-    return repository.by_target(target_id)
+@router.get("/{relationship_id}")
+def get_relationship(relationship_id: str):
+    return service.get(relationship_id)
 
 
 @router.post("/")
-def create_relationship(relationship: RelationshipModel):
-    repository.save(relationship)
-    return {
-        "message": "Relationship created",
-        "relationship": relationship
-    }
+def create_relationship(relationship: Relationship):
+    return service.create(relationship)
 
 
-@router.get("/count")
-def count_relationships():
-    return {
-        "count": repository.count()
-    }
+@router.put("/")
+def update_relationship(relationship: Relationship):
+    return service.update(relationship)
+
+
+@router.delete("/{relationship_id}")
+def delete_relationship(relationship_id: str):
+    return service.delete(relationship_id)
