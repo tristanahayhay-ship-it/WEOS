@@ -265,4 +265,145 @@ if len(
 # ==========================================================
 # KẾT THÚC ĐOẠN 002
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 003
+# ==========================================================
 
+# ==========================================================
+# SIDEBAR
+# ==========================================================
+
+st.sidebar.title(
+
+    "🌍 WEOS"
+
+)
+
+pages = [
+
+    "Dashboard",
+
+    "Gold",
+
+    "Forex",
+
+    "Macro",
+
+    "News",
+
+    "Watchlist",
+
+    "Settings"
+
+]
+
+st.session_state.page = st.sidebar.radio(
+
+    "Navigation",
+
+    pages,
+
+    index=pages.index(
+
+        st.session_state.page
+
+    )
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# MARKET SYMBOLS
+# ==========================================================
+
+MARKET_SYMBOLS = {
+
+    "Gold": "GC=F",
+
+    "DXY": "DX-Y.NYB",
+
+    "S&P500": "^GSPC",
+
+    "NASDAQ": "^IXIC",
+
+    "USDJPY": "JPY=X",
+
+    "EURUSD": "EURUSD=X",
+
+    "GBPUSD": "GBPUSD=X"
+
+}
+
+# ==========================================================
+# MARKET DATA FUNCTION
+# ==========================================================
+
+@st.cache_data(
+
+    ttl=60
+
+)
+
+def load_market_data(
+
+    symbol
+
+):
+
+    try:
+
+        ticker = yf.Ticker(
+
+            symbol
+
+        )
+
+        history = ticker.history(
+
+            period="2d"
+
+        )
+
+        if history.empty:
+
+            return None
+
+        close = history["Close"]
+
+        price = float(
+
+            close.iloc[-1]
+
+        )
+
+        previous = float(
+
+            close.iloc[-2]
+
+        )
+
+        change = (
+
+            (price - previous)
+
+            / previous
+
+        ) * 100
+
+        return {
+
+            "price": price,
+
+            "change": change
+
+        }
+
+    except Exception:
+
+        return None
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 003
+# ==========================================================
