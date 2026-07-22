@@ -21496,3 +21496,3768 @@ if st.session_state.page == "Gold":
 # ==========================================================
 # KẾT THÚC ĐOẠN 090
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 091
+# ==========================================================
+
+# ==========================================================
+# MARKET SESSION PERFORMANCE ANALYZER
+# ==========================================================
+
+if "session_history" not in st.session_state:
+
+    st.session_state.session_history = []
+
+
+def analyze_trading_session():
+
+    hour = datetime.utcnow().hour
+
+
+    if 0 <= hour < 8:
+
+        session = "Asian"
+
+    elif 8 <= hour < 16:
+
+        session = "London"
+
+    elif 16 <= hour < 22:
+
+        session = "New York"
+
+    else:
+
+        session = "Transition"
+
+
+    volatility = calculate_volatility()
+
+
+    if volatility:
+
+        if volatility["latest"] > volatility["average"]:
+
+            activity = "High"
+
+        else:
+
+            activity = "Normal"
+
+    else:
+
+        activity = "Unknown"
+
+
+    return {
+
+        "session":
+
+        session,
+
+        "activity":
+
+        activity
+
+    }
+
+
+# ==========================================================
+# SESSION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌍 Trading Session"
+
+    )
+
+
+    session = analyze_trading_session()
+
+
+    session_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            session.keys(),
+
+            "Value":
+
+            session.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        session_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# GOLD MOMENTUM DIRECTION ENGINE
+# ==========================================================
+
+def momentum_direction_engine():
+
+    bullish = 0
+
+    bearish = 0
+
+    reasons = []
+
+
+    momentum = calculate_gold_momentum_score()
+
+
+    if momentum["score"] >= 60:
+
+        bullish += 1
+
+        reasons.append(
+
+            "Momentum supports buyers"
+
+        )
+
+    else:
+
+        bearish += 1
+
+        reasons.append(
+
+            "Momentum weak"
+
+        )
+
+
+    pressure = calculate_market_pressure_index()
+
+
+    if pressure["score"] >= 60:
+
+        bullish += 1
+
+        reasons.append(
+
+            "Buying pressure"
+
+        )
+
+    else:
+
+        bearish += 1
+
+        reasons.append(
+
+            "Selling pressure"
+
+        )
+
+
+    if bullish > bearish:
+
+        direction = "UP"
+
+    elif bearish > bullish:
+
+        direction = "DOWN"
+
+    else:
+
+        direction = "SIDEWAY"
+
+
+    return {
+
+        "direction":
+
+        direction,
+
+        "bullish":
+
+        bullish,
+
+        "bearish":
+
+        bearish,
+
+        "reasons":
+
+        reasons
+
+    }
+
+
+# ==========================================================
+# MOMENTUM DIRECTION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧭 Momentum Direction"
+
+    )
+
+
+    momentum_direction = momentum_direction_engine()
+
+
+    st.metric(
+
+        "Direction",
+
+        momentum_direction["direction"]
+
+    )
+
+
+    col1, col2 = st.columns(
+
+        2
+
+    )
+
+
+    with col1:
+
+        st.metric(
+
+            "Bullish",
+
+            momentum_direction["bullish"]
+
+        )
+
+
+    with col2:
+
+        st.metric(
+
+            "Bearish",
+
+            momentum_direction["bearish"]
+
+        )
+
+
+    for reason in momentum_direction["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# MARKET ENTRY ZONE QUALITY
+# ==========================================================
+
+def entry_zone_quality():
+
+    score = 50
+
+    reasons = []
+
+
+    zone = calculate_entry_zone()
+
+
+    if zone:
+
+        current = zone["Current"]
+
+        buy_zone = zone["Buy Zone"]
+
+        sell_zone = zone["Sell Zone"]
+
+
+        if current <= buy_zone:
+
+            score += 20
+
+            reasons.append(
+
+                "Near buy zone"
+
+            )
+
+
+        elif current >= sell_zone:
+
+            score += 20
+
+            reasons.append(
+
+                "Near sell zone"
+
+            )
+
+
+        else:
+
+            reasons.append(
+
+                "Middle zone"
+
+            )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    return {
+
+        "score":
+
+        score,
+
+        "reasons":
+
+        reasons
+
+    }
+
+
+# ==========================================================
+# ENTRY ZONE QUALITY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Entry Zone Quality"
+
+    )
+
+
+    zone_quality = entry_zone_quality()
+
+
+    st.progress(
+
+        zone_quality["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Quality",
+
+        f'{zone_quality["score"]}/100'
+
+    )
+
+
+    for reason in zone_quality["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 091
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 092
+# ==========================================================
+
+# ==========================================================
+# MARKET SENTIMENT FUSION ENGINE
+# ==========================================================
+
+def sentiment_fusion_engine():
+
+    score = 50
+
+    factors = []
+
+
+    news = analyze_news_sentiment()
+
+
+    if news["sentiment"] == "Positive":
+
+        score += 15
+
+        factors.append(
+
+            "Positive news sentiment"
+
+        )
+
+
+    elif news["sentiment"] == "Negative":
+
+        score -= 15
+
+        factors.append(
+
+            "Negative news sentiment"
+
+        )
+
+
+    sentiment = calculate_market_sentiment()
+
+
+    if sentiment:
+
+        score += sentiment[0] - 50
+
+        factors.append(
+
+            "Technical sentiment included"
+
+        )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    if score >= 70:
+
+        status = "Bullish Sentiment"
+
+    elif score <= 30:
+
+        status = "Bearish Sentiment"
+
+    else:
+
+        status = "Neutral Sentiment"
+
+
+    return {
+
+        "score":
+
+        score,
+
+        "status":
+
+        status,
+
+        "factors":
+
+        factors
+
+    }
+
+
+# ==========================================================
+# SENTIMENT FUSION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Sentiment Fusion"
+
+    )
+
+
+    sentiment = sentiment_fusion_engine()
+
+
+    st.progress(
+
+        sentiment["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Sentiment",
+
+        sentiment["status"]
+
+    )
+
+
+    for factor in sentiment["factors"]:
+
+        st.write(
+
+            "•",
+
+            factor
+
+        )
+
+
+# ==========================================================
+# GOLD MARKET MASTER SIGNAL
+# ==========================================================
+
+def generate_master_signal():
+
+    buy_points = 0
+
+    sell_points = 0
+
+    reasons = []
+
+
+    decision = trade_decision_matrix()
+
+    confidence = calculate_confidence_v2()
+
+    control = analyze_market_control()
+
+
+    if "BUY" in decision["decision"]:
+
+        buy_points += 2
+
+        reasons.append(
+
+            "Decision supports BUY"
+
+        )
+
+
+    elif "SELL" in decision["decision"]:
+
+        sell_points += 2
+
+        reasons.append(
+
+            "Decision supports SELL"
+
+        )
+
+
+    if confidence["score"] >= 70:
+
+        buy_points += 1
+
+        reasons.append(
+
+            "High confidence"
+
+        )
+
+
+    if control["Controller"] == "Buyers":
+
+        buy_points += 1
+
+        reasons.append(
+
+            "Buyers control market"
+
+        )
+
+
+    elif control["Controller"] == "Sellers":
+
+        sell_points += 1
+
+        reasons.append(
+
+            "Sellers control market"
+
+        )
+
+
+    if buy_points > sell_points:
+
+        signal = "BUY"
+
+    elif sell_points > buy_points:
+
+        signal = "SELL"
+
+    else:
+
+        signal = "WAIT"
+
+
+    strength = abs(
+
+        buy_points
+
+        -
+
+        sell_points
+
+    )
+
+
+    return {
+
+        "signal":
+
+        signal,
+
+        "strength":
+
+        strength,
+
+        "reasons":
+
+        reasons
+
+    }
+
+
+# ==========================================================
+# MASTER SIGNAL DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚀 Master Signal"
+
+    )
+
+
+    master = generate_master_signal()
+
+
+    st.metric(
+
+        "Signal",
+
+        master["signal"]
+
+    )
+
+
+    st.metric(
+
+        "Strength",
+
+        master["strength"]
+
+    )
+
+
+    for reason in master["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# GOLD MARKET COMMAND MEMORY
+# ==========================================================
+
+if "command_history" not in st.session_state:
+
+    st.session_state.command_history = []
+
+
+def save_command_history():
+
+    command = gold_command_center()
+
+
+    st.session_state.command_history.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Action":
+
+            command["Action"],
+
+            "Confidence":
+
+            command["Confidence"],
+
+            "Setup":
+
+            command["Setup"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.command_history
+
+    ) > 200:
+
+        st.session_state.command_history.pop(
+
+            0
+
+        )
+
+
+save_command_history()
+
+
+# ==========================================================
+# COMMAND HISTORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📘 Command History"
+
+    )
+
+
+    command_df = pd.DataFrame(
+
+        st.session_state.command_history[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        command_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 092
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 093
+# ==========================================================
+
+# ==========================================================
+# MARKET MASTER DECISION ENGINE
+# ==========================================================
+
+def market_master_decision():
+
+    result = {
+
+        "Decision":
+
+        "WAIT",
+
+        "Confidence":
+
+        0,
+
+        "Reasons":
+
+        []
+
+    }
+
+
+    master_signal = generate_master_signal()
+
+    readiness = calculate_execution_readiness()
+
+    opportunity = opportunity_radar()
+
+
+    confidence = 0
+
+
+    if master_signal["signal"] == "BUY":
+
+        result["Reasons"].append(
+
+            "Master system detects BUY"
+
+        )
+
+        confidence += 30
+
+
+    elif master_signal["signal"] == "SELL":
+
+        result["Reasons"].append(
+
+            "Master system detects SELL"
+
+        )
+
+        confidence += 30
+
+
+    else:
+
+        result["Reasons"].append(
+
+            "No dominant direction"
+
+        )
+
+
+    if readiness["status"] == "READY":
+
+        confidence += 40
+
+        result["Reasons"].append(
+
+            "Execution conditions ready"
+
+        )
+
+
+    if opportunity["Strength"] >= 70:
+
+        confidence += 30
+
+        result["Reasons"].append(
+
+            "High opportunity score"
+
+        )
+
+
+    result["Confidence"] = min(
+
+        confidence,
+
+        100
+
+    )
+
+
+    if (
+
+        result["Confidence"] >= 80
+
+        and
+
+        master_signal["signal"] != "WAIT"
+
+    ):
+
+        result["Decision"] = (
+
+            master_signal["signal"]
+
+        )
+
+
+    elif result["Confidence"] >= 50:
+
+        result["Decision"] = "PREPARE"
+
+
+    return result
+
+
+# ==========================================================
+# MASTER DECISION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "👑 Master Decision"
+
+    )
+
+
+    master_decision = market_master_decision()
+
+
+    st.metric(
+
+        "Decision",
+
+        master_decision["Decision"]
+
+    )
+
+
+    st.progress(
+
+        master_decision["Confidence"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Confidence",
+
+        f'{master_decision["Confidence"]}%'
+
+    )
+
+
+    for reason in master_decision["Reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# MARKET AUTO REPORT STORAGE
+# ==========================================================
+
+if "auto_reports" not in st.session_state:
+
+    st.session_state.auto_reports = []
+
+
+def save_auto_report():
+
+    report = generate_intelligence_report()
+
+    st.session_state.auto_reports.append(
+
+        report
+
+    )
+
+
+    if len(
+
+        st.session_state.auto_reports
+
+    ) > 100:
+
+        st.session_state.auto_reports.pop(
+
+            0
+
+        )
+
+
+save_auto_report()
+
+
+# ==========================================================
+# AUTO REPORT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📂 Auto Reports"
+
+    )
+
+
+    auto_report_df = pd.DataFrame(
+
+        st.session_state.auto_reports[-10:]
+
+    )
+
+
+    st.dataframe(
+
+        auto_report_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# GOLD MARKET FINAL COMMAND
+# ==========================================================
+
+def final_gold_command():
+
+    decision = market_master_decision()
+
+    setup = generate_gold_setup()
+
+    risk = smart_risk_controller()
+
+
+    command = {
+
+        "Action":
+
+        decision["Decision"],
+
+        "Confidence":
+
+        decision["Confidence"],
+
+        "Entry":
+
+        setup["Entry"],
+
+        "Stop Loss":
+
+        setup["Stop Loss"],
+
+        "Take Profit":
+
+        setup["Take Profit"],
+
+        "Risk":
+
+        risk["status"]
+
+    }
+
+
+    return command
+
+
+# ==========================================================
+# FINAL COMMAND DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Final Gold Command"
+
+    )
+
+
+    final_command = final_gold_command()
+
+
+    command_final_df = pd.DataFrame(
+
+        {
+
+            "Parameter":
+
+            final_command.keys(),
+
+            "Value":
+
+            final_command.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        command_final_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 093
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 094
+# ==========================================================
+
+# ==========================================================
+# TRADE JOURNAL SYSTEM
+# ==========================================================
+
+if "trade_journal" not in st.session_state:
+
+    st.session_state.trade_journal = []
+
+
+def add_trade_journal():
+
+    command = final_gold_command()
+
+    journal = {
+
+        "Time":
+
+        current_time(),
+
+        "Action":
+
+        command["Action"],
+
+        "Confidence":
+
+        command["Confidence"],
+
+        "Entry":
+
+        command["Entry"],
+
+        "Stop Loss":
+
+        command["Stop Loss"],
+
+        "Take Profit":
+
+        command["Take Profit"],
+
+        "Risk":
+
+        command["Risk"]
+
+    }
+
+
+    st.session_state.trade_journal.append(
+
+        journal
+
+    )
+
+
+    if len(
+
+        st.session_state.trade_journal
+
+    ) > 300:
+
+        st.session_state.trade_journal.pop(
+
+            0
+
+        )
+
+
+add_trade_journal()
+
+
+# ==========================================================
+# TRADE JOURNAL DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📔 Trade Journal"
+
+    )
+
+
+    journal_df = pd.DataFrame(
+
+        st.session_state.trade_journal[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        journal_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# MARKET DECISION CONFIRMATION V2
+# ==========================================================
+
+def market_confirmation_v2():
+
+    confirmations = 0
+
+    reasons = []
+
+
+    master = market_master_decision()
+
+    control = analyze_market_control()
+
+    sentiment = sentiment_fusion_engine()
+
+
+    if master["Confidence"] >= 70:
+
+        confirmations += 1
+
+        reasons.append(
+
+            "Master confidence confirmed"
+
+        )
+
+
+    if control["Strength"] >= 60:
+
+        confirmations += 1
+
+        reasons.append(
+
+            "Market control confirmed"
+
+        )
+
+
+    if sentiment["score"] >= 60:
+
+        confirmations += 1
+
+        reasons.append(
+
+            "Sentiment supports direction"
+
+        )
+
+
+    if confirmations >= 3:
+
+        status = "FULL CONFIRMATION"
+
+    elif confirmations >= 2:
+
+        status = "PARTIAL CONFIRMATION"
+
+    else:
+
+        status = "NO CONFIRMATION"
+
+
+    return {
+
+        "status":
+
+        status,
+
+        "count":
+
+        confirmations,
+
+        "reasons":
+
+        reasons
+
+    }
+
+
+# ==========================================================
+# CONFIRMATION V2 DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔐 Confirmation Engine V2"
+
+    )
+
+
+    confirmation_v2 = market_confirmation_v2()
+
+
+    st.metric(
+
+        "Status",
+
+        confirmation_v2["status"]
+
+    )
+
+
+    st.metric(
+
+        "Confirmations",
+
+        confirmation_v2["count"]
+
+    )
+
+
+    for reason in confirmation_v2["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# GOLD TRADE EXECUTION SCORE
+# ==========================================================
+
+def calculate_execution_score():
+
+    score = 0
+
+    reasons = []
+
+
+    readiness = calculate_execution_readiness()
+
+    confirmation = market_confirmation_v2()
+
+    quality = calculate_trade_quality()
+
+
+    if readiness["score"] >= 70:
+
+        score += 40
+
+        reasons.append(
+
+            "Execution readiness good"
+
+        )
+
+
+    if confirmation["count"] >= 2:
+
+        score += 30
+
+        reasons.append(
+
+            "Multiple confirmations"
+
+        )
+
+
+    if quality["score"] >= 70:
+
+        score += 30
+
+        reasons.append(
+
+            "Trade quality acceptable"
+
+        )
+
+
+    return {
+
+        "score":
+
+        min(
+
+            score,
+
+            100
+
+        ),
+
+        "reasons":
+
+        reasons
+
+    }
+
+
+# ==========================================================
+# EXECUTION SCORE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚡ Execution Score"
+
+    )
+
+
+    execution_score = calculate_execution_score()
+
+
+    st.progress(
+
+        execution_score["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Execution",
+
+        f'{execution_score["score"]}/100'
+
+    )
+
+
+    for reason in execution_score["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 094
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 095
+# ==========================================================
+
+# ==========================================================
+# AI TRADE RATING SYSTEM
+# ==========================================================
+
+def calculate_ai_trade_rating():
+
+    rating = 0
+
+    reasons = []
+
+
+    execution = calculate_execution_score()
+
+    confirmation = market_confirmation_v2()
+
+    final_score = calculate_final_gold_score()
+
+    risk = smart_risk_controller()
+
+
+    if execution["score"] >= 70:
+
+        rating += 30
+
+        reasons.append(
+
+            "Execution score strong"
+
+        )
+
+
+    if confirmation["count"] >= 2:
+
+        rating += 25
+
+        reasons.append(
+
+            "Confirmation available"
+
+        )
+
+
+    if final_score["score"] >= 70:
+
+        rating += 25
+
+        reasons.append(
+
+            "Market quality high"
+
+        )
+
+
+    if risk["score"] >= 70:
+
+        rating += 20
+
+        reasons.append(
+
+            "Risk condition acceptable"
+
+        )
+
+
+    rating = min(
+
+        rating,
+
+        100
+
+    )
+
+
+    if rating >= 80:
+
+        grade = "A"
+
+    elif rating >= 60:
+
+        grade = "B"
+
+    elif rating >= 40:
+
+        grade = "C"
+
+    else:
+
+        grade = "D"
+
+
+    return {
+
+        "rating":
+
+        rating,
+
+        "grade":
+
+        grade,
+
+        "reasons":
+
+        reasons
+
+    }
+
+
+# ==========================================================
+# AI RATING DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🏅 AI Trade Rating"
+
+    )
+
+
+    ai_rating = calculate_ai_trade_rating()
+
+
+    st.progress(
+
+        ai_rating["rating"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Grade",
+
+        ai_rating["grade"]
+
+    )
+
+
+    st.metric(
+
+        "Rating",
+
+        f'{ai_rating["rating"]}/100'
+
+    )
+
+
+    for reason in ai_rating["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# MARKET ALERT MEMORY
+# ==========================================================
+
+if "alert_memory" not in st.session_state:
+
+    st.session_state.alert_memory = []
+
+
+def save_alert_memory():
+
+    alerts = generate_alert_intelligence()
+
+
+    st.session_state.alert_memory.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Alerts":
+
+            ", ".join(
+
+                alerts
+
+            )
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.alert_memory
+
+    ) > 200:
+
+        st.session_state.alert_memory.pop(
+
+            0
+
+        )
+
+
+save_alert_memory()
+
+
+# ==========================================================
+# ALERT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚨 Alert Memory"
+
+    )
+
+
+    alert_df = pd.DataFrame(
+
+        st.session_state.alert_memory[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        alert_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# GOLD MARKET AI DECISION TREE
+# ==========================================================
+
+def gold_ai_decision_tree():
+
+    rating = calculate_ai_trade_rating()
+
+    command = final_gold_command()
+
+    confirmation = market_confirmation_v2()
+
+
+    if (
+
+        rating["rating"] >= 80
+
+        and
+
+        confirmation["count"] >= 2
+
+    ):
+
+        decision = command["Action"]
+
+    elif rating["rating"] >= 50:
+
+        decision = "WAIT CONFIRMATION"
+
+    else:
+
+        decision = "NO TRADE"
+
+
+    return {
+
+        "decision":
+
+        decision,
+
+        "rating":
+
+        rating["rating"]
+
+    }
+
+
+# ==========================================================
+# DECISION TREE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌳 AI Decision Tree"
+
+    )
+
+
+    tree = gold_ai_decision_tree()
+
+
+    st.metric(
+
+        "AI Decision",
+
+        tree["decision"]
+
+    )
+
+
+    st.metric(
+
+        "AI Score",
+
+        f'{tree["rating"]}/100'
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 095
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 096
+# ==========================================================
+
+# ==========================================================
+# AI MARKET EXPLANATION ENGINE
+# ==========================================================
+
+def generate_market_explanation():
+
+    explanation = []
+
+    decision = gold_ai_decision_tree()
+
+    rating = calculate_ai_trade_rating()
+
+    control = analyze_market_control()
+
+
+    explanation.append(
+
+        f"AI Decision: {decision['decision']}"
+
+    )
+
+
+    explanation.append(
+
+        f"Market Rating: {rating['rating']}/100"
+
+    )
+
+
+    explanation.append(
+
+        f"Market Controller: {control['Controller']}"
+
+    )
+
+
+    for reason in rating["reasons"]:
+
+        explanation.append(
+
+            reason
+
+        )
+
+
+    return explanation
+
+
+# ==========================================================
+# EXPLANATION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 AI Market Explanation"
+
+    )
+
+
+    explanation = generate_market_explanation()
+
+
+    for item in explanation:
+
+        st.write(
+
+            "•",
+
+            item
+
+        )
+
+
+# ==========================================================
+# MARKET SCENARIO SIMULATOR
+# ==========================================================
+
+def simulate_market_scenario():
+
+    scenarios = []
+
+
+    current = gold_data
+
+
+    if current:
+
+        price_change = current["change"]
+
+
+        if price_change > 0:
+
+            scenarios.append(
+
+                {
+
+                    "Scenario":
+
+                    "Continuation Up",
+
+                    "Probability":
+
+                    60
+
+                }
+
+            )
+
+
+        else:
+
+            scenarios.append(
+
+                {
+
+                    "Scenario":
+
+                    "Continuation Down",
+
+                    "Probability":
+
+                    60
+
+                }
+
+            )
+
+
+    scenarios.append(
+
+        {
+
+            "Scenario":
+
+            "Reversal",
+
+            "Probability":
+
+            25
+
+        }
+
+    )
+
+
+    scenarios.append(
+
+        {
+
+            "Scenario":
+
+            "Sideway",
+
+            "Probability":
+
+            15
+
+        }
+
+    )
+
+
+    return pd.DataFrame(
+
+        scenarios
+
+    )
+
+
+# ==========================================================
+# SCENARIO SIMULATION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔮 Scenario Simulator"
+
+    )
+
+
+    scenario_df = simulate_market_scenario()
+
+
+    st.dataframe(
+
+        scenario_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# GOLD RISK MANAGEMENT ENGINE
+# ==========================================================
+
+def gold_risk_management():
+
+    setup = generate_gold_setup()
+
+    management = {
+
+        "Position":
+
+        "Normal",
+
+        "Stop":
+
+        setup["Stop Loss"],
+
+        "Target":
+
+        setup["Take Profit"]
+
+    }
+
+
+    risk = smart_risk_controller()
+
+
+    if risk["score"] < 50:
+
+        management["Position"] = (
+
+            "Reduce Size"
+
+        )
+
+
+    elif risk["score"] < 30:
+
+        management["Position"] = (
+
+            "Stop Trading"
+
+        )
+
+
+    return management
+
+
+# ==========================================================
+# RISK MANAGEMENT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🛡 Gold Risk Management"
+
+    )
+
+
+    risk_management = gold_risk_management()
+
+
+    risk_df = pd.DataFrame(
+
+        {
+
+            "Parameter":
+
+            risk_management.keys(),
+
+            "Value":
+
+            risk_management.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        risk_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# MARKET FINAL CHECKLIST
+# ==========================================================
+
+def final_market_checklist():
+
+    checklist = {
+
+        "Signal":
+
+        False,
+
+        "Risk":
+
+        False,
+
+        "Timing":
+
+        False,
+
+        "Confirmation":
+
+        False,
+
+        "Quality":
+
+        False
+
+    }
+
+
+    if generate_master_signal()["signal"] != "WAIT":
+
+        checklist["Signal"] = True
+
+
+    if smart_risk_controller()["score"] >= 50:
+
+        checklist["Risk"] = True
+
+
+    if calculate_entry_timing()["timing"] != "WAIT":
+
+        checklist["Timing"] = True
+
+
+    if market_confirmation_v2()["count"] >= 2:
+
+        checklist["Confirmation"] = True
+
+
+    if calculate_trade_quality()["score"] >= 50:
+
+        checklist["Quality"] = True
+
+
+    return checklist
+
+
+# ==========================================================
+# CHECKLIST DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Final Market Checklist"
+
+    )
+
+
+    checklist = final_market_checklist()
+
+
+    completed = 0
+
+
+    for item, status in checklist.items():
+
+        if status:
+
+            st.success(
+
+                f"✔ {item}"
+
+            )
+
+            completed += 1
+
+        else:
+
+            st.warning(
+
+                f"✖ {item}"
+
+            )
+
+
+    st.progress(
+
+        completed /
+
+        len(checklist)
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 096
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 097
+# ==========================================================
+
+# ==========================================================
+# MARKET HEALTH MONITOR
+# ==========================================================
+
+def calculate_market_health():
+
+    health = 100
+
+    warnings = []
+
+
+    volatility = calculate_volatility()
+
+    if volatility:
+
+        if volatility["latest"] > (
+
+            volatility["average"]
+
+            *
+
+            2
+
+        ):
+
+            health -= 25
+
+            warnings.append(
+
+                "Extreme volatility"
+
+            )
+
+
+    liquidity = analyze_liquidity()
+
+
+    if liquidity:
+
+        if liquidity["ratio"] < 0.7:
+
+            health -= 20
+
+            warnings.append(
+
+                "Low liquidity"
+
+            )
+
+
+    noise = market_noise_filter()
+
+
+    if noise["noise"] > 60:
+
+        health -= 20
+
+        warnings.append(
+
+            "High market noise"
+
+        )
+
+
+    health = max(
+
+        0,
+
+        health
+
+    )
+
+
+    if health >= 80:
+
+        status = "Healthy Market"
+
+    elif health >= 50:
+
+        status = "Caution Market"
+
+    else:
+
+        status = "Unstable Market"
+
+
+    return {
+
+        "health":
+
+        health,
+
+        "status":
+
+        status,
+
+        "warnings":
+
+        warnings
+
+    }
+
+
+# ==========================================================
+# MARKET HEALTH DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "❤️ Market Health"
+
+    )
+
+
+    health = calculate_market_health()
+
+
+    st.progress(
+
+        health["health"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Health",
+
+        f'{health["health"]}/100'
+
+    )
+
+
+    st.info(
+
+        health["status"]
+
+    )
+
+
+    for warning in health["warnings"]:
+
+        st.warning(
+
+            warning
+
+        )
+
+
+# ==========================================================
+# GOLD MARKET DOMINANCE INDEX
+# ==========================================================
+
+def calculate_gold_dominance():
+
+    score = 50
+
+    reasons = []
+
+
+    gold = gold_data
+
+    dxy = dxy_data
+
+
+    if gold:
+
+        if gold["change"] > 0:
+
+            score += 20
+
+            reasons.append(
+
+                "Gold strength"
+
+            )
+
+        else:
+
+            score -= 20
+
+            reasons.append(
+
+                "Gold weakness"
+
+            )
+
+
+    if dxy:
+
+        if dxy["change"] < 0:
+
+            score += 20
+
+            reasons.append(
+
+                "USD weakness supports gold"
+
+            )
+
+        else:
+
+            score -= 20
+
+            reasons.append(
+
+                "USD strength pressures gold"
+
+            )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    if score >= 70:
+
+        status = "Gold Dominant"
+
+    elif score <= 30:
+
+        status = "USD Dominant"
+
+    else:
+
+        status = "Balanced"
+
+
+    return {
+
+        "score":
+
+        score,
+
+        "status":
+
+        status,
+
+        "reasons":
+
+        reasons
+
+    }
+
+
+# ==========================================================
+# GOLD DOMINANCE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🥇 Gold Dominance Index"
+
+    )
+
+
+    dominance = calculate_gold_dominance()
+
+
+    st.progress(
+
+        dominance["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Status",
+
+        dominance["status"]
+
+    )
+
+
+    for reason in dominance["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# MARKET OPERATOR MODE
+# ==========================================================
+
+def market_operator_mode():
+
+    health = calculate_market_health()
+
+    opportunity = calculate_opportunity_score_v2()
+
+    risk = smart_risk_controller()
+
+
+    if health["health"] < 40:
+
+        return "PROTECT CAPITAL"
+
+
+    if opportunity["score"] >= 70:
+
+        return "HUNT OPPORTUNITY"
+
+
+    if risk["score"] < 50:
+
+        return "REDUCE ACTIVITY"
+
+
+    return "NORMAL OPERATION"
+
+
+# ==========================================================
+# OPERATOR MODE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎛 Operator Mode"
+
+    )
+
+
+    st.info(
+
+        market_operator_mode()
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 097
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 098
+# ==========================================================
+
+# ==========================================================
+# MARKET INTELLIGENCE DASHBOARD ENGINE
+# ==========================================================
+
+def generate_dashboard_summary():
+
+    health = calculate_market_health()
+
+    dominance = calculate_gold_dominance()
+
+    operator = market_operator_mode()
+
+    intelligence = generate_market_intelligence()
+
+
+    summary = {
+
+        "Market Health":
+
+        health["status"],
+
+        "Gold Dominance":
+
+        dominance["status"],
+
+        "Operation":
+
+        operator,
+
+        "Trend":
+
+        intelligence["Trend"],
+
+        "Momentum":
+
+        intelligence["Momentum"],
+
+        "Opportunity":
+
+        intelligence["Opportunity"]
+
+    }
+
+
+    return summary
+
+
+# ==========================================================
+# DASHBOARD SUMMARY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌐 WEOS Intelligence Dashboard"
+
+    )
+
+
+    dashboard_summary = generate_dashboard_summary()
+
+
+    dashboard_df = pd.DataFrame(
+
+        {
+
+            "System":
+
+            dashboard_summary.keys(),
+
+            "Status":
+
+            dashboard_summary.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        dashboard_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# GOLD MARKET AI SCORE FUSION
+# ==========================================================
+
+def calculate_ai_fusion_score():
+
+    scores = []
+
+    reasons = []
+
+
+    final_score = calculate_final_gold_score()
+
+    confidence = calculate_confidence_v2()
+
+    ai_rating = calculate_ai_trade_rating()
+
+    execution = calculate_execution_score()
+
+
+    scores.append(
+
+        final_score["score"]
+
+    )
+
+
+    scores.append(
+
+        confidence["score"]
+
+    )
+
+
+    scores.append(
+
+        ai_rating["rating"]
+
+    )
+
+
+    scores.append(
+
+        execution["score"]
+
+    )
+
+
+    average = sum(scores) / len(scores)
+
+
+    if average >= 80:
+
+        status = "Elite Setup"
+
+    elif average >= 60:
+
+        status = "Strong Setup"
+
+    elif average >= 40:
+
+        status = "Normal Setup"
+
+    else:
+
+        status = "Weak Setup"
+
+
+    if final_score["score"] >= 70:
+
+        reasons.append(
+
+            "Final score strong"
+
+        )
+
+
+    if execution["score"] >= 70:
+
+        reasons.append(
+
+            "Execution condition good"
+
+        )
+
+
+    return {
+
+        "score":
+
+        round(
+
+            average,
+
+            1
+
+        ),
+
+        "status":
+
+        status,
+
+        "reasons":
+
+        reasons
+
+    }
+
+
+# ==========================================================
+# AI FUSION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧬 AI Fusion Score"
+
+    )
+
+
+    fusion = calculate_ai_fusion_score()
+
+
+    st.progress(
+
+        fusion["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Fusion",
+
+        f'{fusion["score"]}/100'
+
+    )
+
+
+    st.info(
+
+        fusion["status"]
+
+    )
+
+
+    for reason in fusion["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# MARKET SIGNAL CONSENSUS ENGINE
+# ==========================================================
+
+def calculate_signal_consensus():
+
+    signals = []
+
+
+    master = generate_master_signal()
+
+    decision = trade_decision_matrix()
+
+    ai_tree = gold_ai_decision_tree()
+
+
+    signals.append(
+
+        master["signal"]
+
+    )
+
+
+    signals.append(
+
+        decision["decision"]
+
+    )
+
+
+    signals.append(
+
+        ai_tree["decision"]
+
+    )
+
+
+    buy = 0
+
+    sell = 0
+
+
+    for signal in signals:
+
+        if "BUY" in signal:
+
+            buy += 1
+
+        elif "SELL" in signal:
+
+            sell += 1
+
+
+    if buy > sell:
+
+        result = "BUY CONSENSUS"
+
+    elif sell > buy:
+
+        result = "SELL CONSENSUS"
+
+    else:
+
+        result = "NO CONSENSUS"
+
+
+    return {
+
+        "result":
+
+        result,
+
+        "buy":
+
+        buy,
+
+        "sell":
+
+        sell
+
+    }
+
+
+# ==========================================================
+# CONSENSUS DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🤝 Signal Consensus"
+
+    )
+
+
+    consensus = calculate_signal_consensus()
+
+
+    st.metric(
+
+        "Consensus",
+
+        consensus["result"]
+
+    )
+
+
+    col1, col2 = st.columns(
+
+        2
+
+    )
+
+
+    with col1:
+
+        st.metric(
+
+            "BUY",
+
+            consensus["buy"]
+
+        )
+
+
+    with col2:
+
+        st.metric(
+
+            "SELL",
+
+            consensus["sell"]
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 098
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 099
+# ==========================================================
+
+# ==========================================================
+# MARKET FINAL AUTHORITY ENGINE
+# ==========================================================
+
+def final_authority_engine():
+
+    authority = {
+
+        "Decision":
+
+        "WAIT",
+
+        "Score":
+
+        0,
+
+        "Reasons":
+
+        []
+
+    }
+
+
+    fusion = calculate_ai_fusion_score()
+
+    consensus = calculate_signal_consensus()
+
+    health = calculate_market_health()
+
+
+    score = 0
+
+
+    if fusion["score"] >= 70:
+
+        score += 40
+
+        authority["Reasons"].append(
+
+            "AI fusion supports setup"
+
+        )
+
+
+    if consensus["result"] != "NO CONSENSUS":
+
+        score += 30
+
+        authority["Reasons"].append(
+
+            "Signal consensus detected"
+
+        )
+
+
+    if health["health"] >= 70:
+
+        score += 30
+
+        authority["Reasons"].append(
+
+            "Market health acceptable"
+
+        )
+
+
+    authority["Score"] = min(
+
+        score,
+
+        100
+
+    )
+
+
+    if (
+
+        authority["Score"] >= 80
+
+        and
+
+        consensus["result"]
+
+        ==
+
+        "BUY CONSENSUS"
+
+    ):
+
+        authority["Decision"] = "BUY"
+
+
+    elif (
+
+        authority["Score"] >= 80
+
+        and
+
+        consensus["result"]
+
+        ==
+
+        "SELL CONSENSUS"
+
+    ):
+
+        authority["Decision"] = "SELL"
+
+
+    elif authority["Score"] >= 50:
+
+        authority["Decision"] = "PREPARE"
+
+
+    return authority
+
+
+# ==========================================================
+# AUTHORITY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "👑 Final Authority Engine"
+
+    )
+
+
+    authority = final_authority_engine()
+
+
+    st.metric(
+
+        "Decision",
+
+        authority["Decision"]
+
+    )
+
+
+    st.progress(
+
+        authority["Score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Authority Score",
+
+        f'{authority["Score"]}/100'
+
+    )
+
+
+    for reason in authority["Reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# WEOS AUTO COMMENTARY ENGINE
+# ==========================================================
+
+def generate_weos_commentary():
+
+    authority = final_authority_engine()
+
+    commentary = []
+
+
+    if authority["Decision"] == "BUY":
+
+        commentary.append(
+
+            "WEOS detects a potential bullish opportunity."
+
+        )
+
+
+    elif authority["Decision"] == "SELL":
+
+        commentary.append(
+
+            "WEOS detects a potential bearish opportunity."
+
+        )
+
+
+    elif authority["Decision"] == "PREPARE":
+
+        commentary.append(
+
+            "Market is preparing but needs confirmation."
+
+        )
+
+
+    else:
+
+        commentary.append(
+
+            "Market conditions are not suitable."
+
+        )
+
+
+    commentary.append(
+
+        f"Confidence score: {authority['Score']}%"
+
+    )
+
+
+    return commentary
+
+
+# ==========================================================
+# COMMENTARY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "💬 WEOS Commentary"
+
+    )
+
+
+    commentary = generate_weos_commentary()
+
+
+    for line in commentary:
+
+        st.info(
+
+            line
+
+        )
+
+
+# ==========================================================
+# MARKET SNAPSHOT DATABASE
+# ==========================================================
+
+if "market_snapshot" not in st.session_state:
+
+    st.session_state.market_snapshot = []
+
+
+def save_market_snapshot():
+
+    authority = final_authority_engine()
+
+    snapshot = {
+
+        "Time":
+
+        current_time(),
+
+        "Decision":
+
+        authority["Decision"],
+
+        "Score":
+
+        authority["Score"],
+
+        "Gold":
+
+        gold_data["price"]
+
+        if gold_data else None
+
+    }
+
+
+    st.session_state.market_snapshot.append(
+
+        snapshot
+
+    )
+
+
+    if len(
+
+        st.session_state.market_snapshot
+
+    ) > 500:
+
+        st.session_state.market_snapshot.pop(
+
+            0
+
+        )
+
+
+save_market_snapshot()
+
+
+# ==========================================================
+# SNAPSHOT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📸 Market Snapshot"
+
+    )
+
+
+    snapshot_df = pd.DataFrame(
+
+        st.session_state.market_snapshot[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        snapshot_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 099
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 100
+# ==========================================================
+
+# ==========================================================
+# MARKET EVOLUTION TRACKER
+# ==========================================================
+
+if "market_evolution" not in st.session_state:
+
+    st.session_state.market_evolution = []
+
+
+def save_market_evolution():
+
+    authority = final_authority_engine()
+
+    fusion = calculate_ai_fusion_score()
+
+    record = {
+
+        "Time":
+
+        current_time(),
+
+        "Decision":
+
+        authority["Decision"],
+
+        "Authority":
+
+        authority["Score"],
+
+        "Fusion":
+
+        fusion["score"],
+
+        "Status":
+
+        fusion["status"]
+
+    }
+
+
+    st.session_state.market_evolution.append(
+
+        record
+
+    )
+
+
+    if len(
+
+        st.session_state.market_evolution
+
+    ) > 300:
+
+        st.session_state.market_evolution.pop(
+
+            0
+
+        )
+
+
+save_market_evolution()
+
+
+# ==========================================================
+# EVOLUTION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📈 Market Evolution"
+
+    )
+
+
+    evolution_df = pd.DataFrame(
+
+        st.session_state.market_evolution[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        evolution_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AUTONOMOUS DECISION CORE
+# ==========================================================
+
+def autonomous_decision_core():
+
+    authority = final_authority_engine()
+
+    risk = smart_risk_controller()
+
+    execution = calculate_execution_score()
+
+
+    core = {
+
+        "Decision":
+
+        "WAIT",
+
+        "Confidence":
+
+        0,
+
+        "Risk":
+
+        risk["status"],
+
+        "Execution":
+
+        execution["score"]
+
+    }
+
+
+    confidence = (
+
+        authority["Score"]
+
+        +
+
+        execution["score"]
+
+    ) / 2
+
+
+    core["Confidence"] = round(
+
+        confidence,
+
+        1
+
+    )
+
+
+    if (
+
+        authority["Decision"]
+
+        in
+
+        [
+
+            "BUY",
+
+            "SELL"
+
+        ]
+
+        and
+
+        confidence >= 80
+
+    ):
+
+        core["Decision"] = authority["Decision"]
+
+
+    elif confidence >= 50:
+
+        core["Decision"] = "PREPARE"
+
+
+    return core
+
+
+# ==========================================================
+# AUTONOMOUS CORE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Autonomous Decision Core"
+
+    )
+
+
+    core = autonomous_decision_core()
+
+
+    core_df = pd.DataFrame(
+
+        {
+
+            "System":
+
+            core.keys(),
+
+            "Value":
+
+            core.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        core_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS FINAL STATUS ENGINE
+# ==========================================================
+
+def weos_final_status():
+
+    core = autonomous_decision_core()
+
+    health = calculate_market_health()
+
+
+    if (
+
+        core["Decision"]
+
+        ==
+
+        "WAIT"
+
+    ):
+
+        status = "Monitoring Market"
+
+
+    elif (
+
+        core["Risk"]
+
+        ==
+
+        "Stop Trading"
+
+    ):
+
+        status = "Risk Protection Mode"
+
+
+    elif (
+
+        core["Confidence"]
+
+        >=
+
+        80
+
+    ):
+
+        status = "High Probability Setup"
+
+
+    else:
+
+        status = "Active Analysis"
+
+
+    return {
+
+        "Status":
+
+        status,
+
+        "Decision":
+
+        core["Decision"],
+
+        "Confidence":
+
+        core["Confidence"],
+
+        "Health":
+
+        health["health"]
+
+    }
+
+
+# ==========================================================
+# FINAL STATUS DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚦 WEOS Final Status"
+
+    )
+
+
+    status = weos_final_status()
+
+
+    status_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            status.keys(),
+
+            "Value":
+
+            status.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        status_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 100
+# ==========================================================
