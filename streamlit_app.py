@@ -3937,3 +3937,2621 @@ st.sidebar.divider()
 # ==========================================================
 # END OF CHUNK 020
 # ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 021
+# ==========================================================
+
+# ==========================================================
+# TRADE PERFORMANCE
+# ==========================================================
+
+def trade_performance():
+
+    if len(st.session_state.journal) == 0:
+
+        return {
+
+            "Average": 0,
+
+            "Best": 0,
+
+            "Worst": 0,
+
+            "WinRate": 0
+
+        }
+
+    pnl_list = [
+
+        trade["PnL"]
+
+        for trade in st.session_state.journal
+
+    ]
+
+    average = sum(pnl_list) / len(pnl_list)
+
+    best = max(pnl_list)
+
+    worst = min(pnl_list)
+
+    wins = len(
+
+        [
+
+            x
+
+            for x in pnl_list
+
+            if x >= 0
+
+        ]
+
+    )
+
+    winrate = wins / len(pnl_list) * 100
+
+    return {
+
+        "Average": average,
+
+        "Best": best,
+
+        "Worst": worst,
+
+        "WinRate": winrate
+
+    }
+
+# ==========================================================
+# PERFORMANCE PAGE
+# ==========================================================
+
+if st.session_state.page == "Trading Journal":
+
+    st.subheader("Performance")
+
+    perf = trade_performance()
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+
+        st.metric(
+
+            "Average",
+
+            round(
+
+                perf["Average"],
+
+                2
+
+            )
+
+        )
+
+        st.metric(
+
+            "Best Trade",
+
+            round(
+
+                perf["Best"],
+
+                2
+
+            )
+
+        )
+
+    with c2:
+
+        st.metric(
+
+            "Worst Trade",
+
+            round(
+
+                perf["Worst"],
+
+                2
+
+            )
+
+        )
+
+        st.metric(
+
+            "Win Rate",
+
+            f'{perf["WinRate"]:.1f}%'
+
+        )
+
+# ==========================================================
+# NOTES
+# ==========================================================
+
+if "notes" not in st.session_state:
+
+    st.session_state.notes = ""
+
+# ==========================================================
+# NOTE PAGE
+# ==========================================================
+
+if st.session_state.page == "Notes":
+
+    st.title("📝 Notes")
+
+    st.session_state.notes = st.text_area(
+
+        "Trading Notes",
+
+        value=st.session_state.notes,
+
+        height=350
+
+    )
+
+    st.download_button(
+
+        "Download Notes",
+
+        st.session_state.notes,
+
+        file_name="notes.txt"
+
+    )
+
+# ==========================================================
+# WATCHLIST EXPORT
+# ==========================================================
+
+def export_watchlist():
+
+    return pd.DataFrame(
+
+        {
+
+            "Symbol":
+
+            st.session_state.watchlist
+
+        }
+
+    )
+
+if len(st.session_state.watchlist) > 0:
+
+    st.sidebar.download_button(
+
+        "Export Watchlist",
+
+        export_watchlist().to_csv(
+
+            index=False
+
+        ),
+
+        file_name="watchlist.csv",
+
+        mime="text/csv"
+
+    )
+
+# ==========================================================
+# MARKET OVERVIEW
+# ==========================================================
+
+def market_overview():
+
+    overview = []
+
+    market = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for name, data in market.items():
+
+        if not data:
+
+            continue
+
+        overview.append(
+
+            {
+
+                "Market": name,
+
+                "Price": round(
+
+                    data["price"],
+
+                    2
+
+                ),
+
+                "Change": round(
+
+                    data["change"],
+
+                    2
+
+                ),
+
+                "Trend": market_trend(
+
+                    data["change"]
+
+                ),
+
+                "Volatility": volatility_level(
+
+                    data["change"]
+
+                )
+
+            }
+
+        )
+
+    return pd.DataFrame(
+
+        overview
+
+    )
+
+# ==========================================================
+# OVERVIEW PAGE
+# ==========================================================
+
+if st.session_state.page == "Overview":
+
+    st.title("🌍 Market Overview")
+
+    st.dataframe(
+
+        market_overview(),
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+# ==========================================================
+# END OF CHUNK 021
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 022
+# ==========================================================
+
+# ==========================================================
+# MARKET CORRELATION
+# ==========================================================
+
+def calculate_correlation():
+
+    result = []
+
+    if gold_data and dxy_data:
+
+        if gold_data["change"] > 0 and dxy_data["change"] < 0:
+
+            relation = "Strong Negative"
+
+        elif gold_data["change"] < 0 and dxy_data["change"] > 0:
+
+            relation = "Strong Negative"
+
+        else:
+
+            relation = "Weak"
+
+        result.append(
+
+            {
+
+                "Pair": "Gold vs DXY",
+
+                "Correlation": relation
+
+            }
+
+        )
+
+    if gold_data and sp500_data:
+
+        result.append(
+
+            {
+
+                "Pair": "Gold vs S&P500",
+
+                "Correlation": "Medium"
+
+            }
+
+        )
+
+    if dxy_data and sp500_data:
+
+        result.append(
+
+            {
+
+                "Pair": "DXY vs S&P500",
+
+                "Correlation": "Negative"
+
+            }
+
+        )
+
+    return pd.DataFrame(result)
+
+# ==========================================================
+# CORRELATION PAGE
+# ==========================================================
+
+if st.session_state.page == "Correlation":
+
+    st.title("🔗 Market Correlation")
+
+    df = calculate_correlation()
+
+    st.dataframe(
+
+        df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+# ==========================================================
+# MARKET TIMER
+# ==========================================================
+
+def seconds_from_start():
+
+    delta = datetime.now() - st.session_state.startup_time
+
+    return int(delta.total_seconds())
+
+runtime = seconds_from_start()
+
+st.sidebar.subheader(
+
+    "Runtime"
+
+)
+
+st.sidebar.metric(
+
+    "Seconds",
+
+    runtime
+
+)
+
+st.sidebar.metric(
+
+    "Minutes",
+
+    runtime // 60
+
+)
+
+st.sidebar.metric(
+
+    "Hours",
+
+    round(
+
+        runtime / 3600,
+
+        2
+
+    )
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# SIMPLE AI SIGNAL
+# ==========================================================
+
+def ai_signal():
+
+    score, _ = calculate_market_sentiment()
+
+    macro, _ = macro_score()
+
+    total = (score + macro) / 2
+
+    if total >= 80:
+
+        return "🟢 STRONG BUY"
+
+    elif total >= 60:
+
+        return "🟢 BUY"
+
+    elif total >= 40:
+
+        return "🟡 WAIT"
+
+    elif total >= 20:
+
+        return "🔴 SELL"
+
+    return "🔴 STRONG SELL"
+
+# ==========================================================
+# SIGNAL PAGE
+# ==========================================================
+
+if st.session_state.page == "AI Analysis":
+
+    st.subheader("AI Signal")
+
+    signal = ai_signal()
+
+    st.success(signal)
+
+    st.divider()
+
+# ==========================================================
+# LIVE STATUS
+# ==========================================================
+
+st.sidebar.subheader(
+
+    "Live"
+
+)
+
+st.sidebar.success(
+
+    "Running"
+
+)
+
+st.sidebar.write(
+
+    f"Current Time : {current_time()}"
+
+)
+
+st.sidebar.write(
+
+    f"Runtime : {runtime}s"
+
+)
+
+st.sidebar.write(
+
+    f"Market Bias : {bias}"
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 022
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 023
+# ==========================================================
+
+# ==========================================================
+# PORTFOLIO MANAGER
+# ==========================================================
+
+if "portfolio" not in st.session_state:
+
+    st.session_state.portfolio = []
+
+def add_portfolio(
+
+    symbol,
+
+    volume,
+
+    average_price
+
+):
+
+    st.session_state.portfolio.append(
+
+        {
+
+            "Symbol": symbol,
+
+            "Volume": volume,
+
+            "Average": average_price,
+
+            "Created": current_time()
+
+        }
+
+    )
+
+# ==========================================================
+# PORTFOLIO PAGE
+# ==========================================================
+
+if st.session_state.page == "Portfolio":
+
+    st.title("💼 Portfolio")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+
+        symbol = st.selectbox(
+
+            "Market",
+
+            [
+
+                "Gold",
+
+                "DXY",
+
+                "S&P500",
+
+                "NASDAQ"
+
+            ],
+
+            key="portfolio_symbol"
+
+        )
+
+    with col2:
+
+        volume = st.number_input(
+
+            "Volume",
+
+            value=0.01,
+
+            step=0.01,
+
+            key="portfolio_volume"
+
+        )
+
+    with col3:
+
+        average = st.number_input(
+
+            "Average Price",
+
+            value=0.0,
+
+            key="portfolio_average"
+
+        )
+
+    if st.button(
+
+        "Add Position"
+
+    ):
+
+        add_portfolio(
+
+            symbol,
+
+            volume,
+
+            average
+
+        )
+
+        st.success(
+
+            "Position Added"
+
+        )
+
+    st.divider()
+
+    if len(st.session_state.portfolio) > 0:
+
+        portfolio_df = pd.DataFrame(
+
+            st.session_state.portfolio
+
+        )
+
+        st.dataframe(
+
+            portfolio_df,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+    else:
+
+        st.info(
+
+            "Portfolio Empty"
+
+        )
+
+# ==========================================================
+# CURRENT PRICE
+# ==========================================================
+
+def current_market_price(symbol):
+
+    market = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    data = market.get(symbol)
+
+    if data:
+
+        return data["price"]
+
+    return None
+
+# ==========================================================
+# PORTFOLIO SUMMARY
+# ==========================================================
+
+def portfolio_summary():
+
+    rows = []
+
+    for item in st.session_state.portfolio:
+
+        current = current_market_price(
+
+            item["Symbol"]
+
+        )
+
+        if current is None:
+
+            continue
+
+        pnl = (
+
+            current -
+
+            item["Average"]
+
+        ) * item["Volume"]
+
+        rows.append(
+
+            {
+
+                "Symbol": item["Symbol"],
+
+                "Average": item["Average"],
+
+                "Current": round(
+
+                    current,
+
+                    2
+
+                ),
+
+                "Volume": item["Volume"],
+
+                "PnL": round(
+
+                    pnl,
+
+                    2
+
+                )
+
+            }
+
+        )
+
+    return pd.DataFrame(rows)
+
+# ==========================================================
+# PORTFOLIO TABLE
+# ==========================================================
+
+if st.session_state.page == "Portfolio":
+
+    st.subheader(
+
+        "Open Positions"
+
+    )
+
+    summary = portfolio_summary()
+
+    if len(summary) > 0:
+
+        st.dataframe(
+
+            summary,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+    else:
+
+        st.info(
+
+            "No Open Position"
+
+        )
+
+# ==========================================================
+# SIDEBAR PORTFOLIO
+# ==========================================================
+
+st.sidebar.subheader(
+
+    "Portfolio"
+
+)
+
+st.sidebar.metric(
+
+    "Positions",
+
+    len(
+
+        st.session_state.portfolio
+
+    )
+
+)
+
+if len(st.session_state.portfolio) > 0:
+
+    st.sidebar.success(
+
+        "Tracking Enabled"
+
+    )
+
+else:
+
+    st.sidebar.info(
+
+        "No Position"
+
+    )
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 023
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 024
+# ==========================================================
+
+# ==========================================================
+# MARKET SCANNER
+# ==========================================================
+
+def build_market_scanner():
+
+    scanner = []
+
+    market = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for symbol, data in market.items():
+
+        if not data:
+
+            continue
+
+        change = data["change"]
+
+        if change >= 1:
+
+            signal = "Strong Buy"
+
+        elif change > 0:
+
+            signal = "Buy"
+
+        elif change <= -1:
+
+            signal = "Strong Sell"
+
+        elif change < 0:
+
+            signal = "Sell"
+
+        else:
+
+            signal = "Wait"
+
+        scanner.append(
+
+            {
+
+                "Market": symbol,
+
+                "Price": round(
+
+                    data["price"],
+
+                    2
+
+                ),
+
+                "Change": round(
+
+                    change,
+
+                    2
+
+                ),
+
+                "Signal": signal
+
+            }
+
+        )
+
+    return pd.DataFrame(scanner)
+
+# ==========================================================
+# SCANNER PAGE
+# ==========================================================
+
+if st.session_state.page == "Scanner":
+
+    st.title("📡 Market Scanner")
+
+    scanner_df = build_market_scanner()
+
+    st.dataframe(
+
+        scanner_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+    st.divider()
+
+# ==========================================================
+# SIGNAL COUNTER
+# ==========================================================
+
+def signal_counter():
+
+    scanner = build_market_scanner()
+
+    result = {
+
+        "Buy":0,
+
+        "Sell":0,
+
+        "Wait":0
+
+    }
+
+    for _, row in scanner.iterrows():
+
+        signal = row["Signal"]
+
+        if "Buy" in signal:
+
+            result["Buy"] += 1
+
+        elif "Sell" in signal:
+
+            result["Sell"] += 1
+
+        else:
+
+            result["Wait"] += 1
+
+    return result
+
+# ==========================================================
+# SIDEBAR SIGNAL SUMMARY
+# ==========================================================
+
+signal = signal_counter()
+
+st.sidebar.subheader(
+
+    "Signals"
+
+)
+
+st.sidebar.metric(
+
+    "Buy",
+
+    signal["Buy"]
+
+)
+
+st.sidebar.metric(
+
+    "Sell",
+
+    signal["Sell"]
+
+)
+
+st.sidebar.metric(
+
+    "Wait",
+
+    signal["Wait"]
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# TOP GAINER / LOSER
+# ==========================================================
+
+def top_market():
+
+    scanner = build_market_scanner()
+
+    if len(scanner) == 0:
+
+        return None, None
+
+    gainer = scanner.sort_values(
+
+        "Change",
+
+        ascending=False
+
+    ).iloc[0]
+
+    loser = scanner.sort_values(
+
+        "Change"
+
+    ).iloc[0]
+
+    return gainer, loser
+
+# ==========================================================
+# DASHBOARD TOP MARKET
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    gainer, loser = top_market()
+
+    if gainer is not None:
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.success(
+
+                f"🏆 Top Gainer\n\n"
+                f"{gainer['Market']} "
+                f"({gainer['Change']:.2f}%)"
+
+            )
+
+        with col2:
+
+            st.error(
+
+                f"📉 Top Loser\n\n"
+                f"{loser['Market']} "
+                f"({loser['Change']:.2f}%)"
+
+            )
+
+# ==========================================================
+# END OF CHUNK 024
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 025
+# ==========================================================
+
+# ==========================================================
+# MARKET SCORE ENGINE
+# ==========================================================
+
+def calculate_market_score():
+
+    score = 50
+
+    if gold_data:
+
+        score += gold_data["change"] * 5
+
+    if dxy_data:
+
+        score -= dxy_data["change"] * 5
+
+    if sp500_data:
+
+        score += sp500_data["change"] * 3
+
+    if nasdaq_data:
+
+        score += nasdaq_data["change"] * 3
+
+    score = max(
+
+        0,
+
+        min(
+
+            round(score),
+
+            100
+
+        )
+
+    )
+
+    return score
+
+# ==========================================================
+# SCORE PAGE
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader("📊 Market Score")
+
+    score = calculate_market_score()
+
+    st.progress(
+
+        score / 100
+
+    )
+
+    st.metric(
+
+        "Score",
+
+        f"{score}/100"
+
+    )
+
+    if score >= 80:
+
+        st.success(
+
+            "Strong Bullish"
+
+        )
+
+    elif score >= 60:
+
+        st.info(
+
+            "Bullish"
+
+        )
+
+    elif score >= 40:
+
+        st.warning(
+
+            "Neutral"
+
+        )
+
+    else:
+
+        st.error(
+
+            "Bearish"
+
+        )
+
+# ==========================================================
+# GOLD ANALYZER
+# ==========================================================
+
+def analyze_gold():
+
+    if not gold_data:
+
+        return []
+
+    result = []
+
+    change = gold_data["change"]
+
+    if change > 1:
+
+        result.append(
+
+            "Gold Momentum Strong"
+
+        )
+
+    elif change > 0:
+
+        result.append(
+
+            "Gold Momentum Positive"
+
+        )
+
+    elif change < -1:
+
+        result.append(
+
+            "Gold Momentum Very Weak"
+
+        )
+
+    else:
+
+        result.append(
+
+            "Gold Momentum Negative"
+
+        )
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            result.append(
+
+                "USD Weakness Supports Gold"
+
+            )
+
+        else:
+
+            result.append(
+
+                "USD Strength Pressures Gold"
+
+            )
+
+    return result
+
+# ==========================================================
+# GOLD PAGE
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.subheader(
+
+        "Gold Analyzer"
+
+    )
+
+    for line in analyze_gold():
+
+        st.write(
+
+            "•",
+
+            line
+
+        )
+
+# ==========================================================
+# DASHBOARD SUMMARY
+# ==========================================================
+
+st.sidebar.subheader(
+
+    "Summary"
+
+)
+
+st.sidebar.write(
+
+    "Gold",
+
+    metric_value(gold_data)
+
+    if gold_data else "-"
+
+)
+
+st.sidebar.write(
+
+    "DXY",
+
+    metric_value(dxy_data)
+
+    if dxy_data else "-"
+
+)
+
+st.sidebar.write(
+
+    "Market Score",
+
+    calculate_market_score()
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 025
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 026
+# ==========================================================
+
+# ==========================================================
+# ECONOMIC EVENT DATABASE
+# ==========================================================
+
+economic_events = [
+
+    {
+        "Event": "FOMC",
+        "Impact": "⭐⭐⭐",
+        "Gold": "High"
+    },
+
+    {
+        "Event": "CPI",
+        "Impact": "⭐⭐⭐",
+        "Gold": "High"
+    },
+
+    {
+        "Event": "PPI",
+        "Impact": "⭐⭐",
+        "Gold": "Medium"
+    },
+
+    {
+        "Event": "NFP",
+        "Impact": "⭐⭐⭐",
+        "Gold": "High"
+    },
+
+    {
+        "Event": "GDP",
+        "Impact": "⭐⭐",
+        "Gold": "Medium"
+    },
+
+    {
+        "Event": "Retail Sales",
+        "Impact": "⭐⭐",
+        "Gold": "Medium"
+    },
+
+    {
+        "Event": "Jobless Claims",
+        "Impact": "⭐",
+        "Gold": "Low"
+    }
+
+]
+
+# ==========================================================
+# EVENT PAGE
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.subheader("Economic Events")
+
+    st.dataframe(
+
+        pd.DataFrame(economic_events),
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+    st.divider()
+
+# ==========================================================
+# MARKET CONDITION
+# ==========================================================
+
+def market_condition():
+
+    score = calculate_market_score()
+
+    if score >= 80:
+
+        return "TRENDING"
+
+    elif score >= 60:
+
+        return "BULLISH"
+
+    elif score >= 40:
+
+        return "RANGING"
+
+    elif score >= 20:
+
+        return "BEARISH"
+
+    return "PANIC"
+
+# ==========================================================
+# SIDEBAR CONDITION
+# ==========================================================
+
+st.sidebar.subheader(
+
+    "Condition"
+
+)
+
+condition = market_condition()
+
+if condition == "TRENDING":
+
+    st.sidebar.success(condition)
+
+elif condition == "BULLISH":
+
+    st.sidebar.info(condition)
+
+elif condition == "RANGING":
+
+    st.sidebar.warning(condition)
+
+else:
+
+    st.sidebar.error(condition)
+
+st.sidebar.divider()
+
+# ==========================================================
+# GOLD CHECKLIST
+# ==========================================================
+
+def gold_checklist():
+
+    checklist = []
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            checklist.append(
+
+                ("Gold Trend", True)
+
+            )
+
+        else:
+
+            checklist.append(
+
+                ("Gold Trend", False)
+
+            )
+
+    if dxy_data:
+
+        checklist.append(
+
+            (
+
+                "USD Weak",
+
+                dxy_data["change"] < 0
+
+            )
+
+        )
+
+    if sp500_data:
+
+        checklist.append(
+
+            (
+
+                "Risk On",
+
+                sp500_data["change"] > 0
+
+            )
+
+        )
+
+    return checklist
+
+# ==========================================================
+# GOLD CHECK PAGE
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.subheader("Gold Checklist")
+
+    for name, status in gold_checklist():
+
+        if status:
+
+            st.success(f"✔ {name}")
+
+        else:
+
+            st.error(f"✖ {name}")
+
+# ==========================================================
+# SESSION COUNTER
+# ==========================================================
+
+if "session_counter" not in st.session_state:
+
+    st.session_state.session_counter = 1
+
+st.sidebar.subheader(
+
+    "Session"
+
+)
+
+st.sidebar.metric(
+
+    "Launch",
+
+    st.session_state.session_counter
+
+)
+
+st.sidebar.metric(
+
+    "Runtime",
+
+    calculate_uptime()
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 026
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 027
+# ==========================================================
+
+# ==========================================================
+# MARKET MOMENTUM ENGINE
+# ==========================================================
+
+def market_momentum():
+
+    result = []
+
+    markets = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for symbol, data in markets.items():
+
+        if not data:
+
+            continue
+
+        change = data["change"]
+
+        momentum = abs(change)
+
+        if momentum >= 2:
+
+            level = "Extreme"
+
+        elif momentum >= 1:
+
+            level = "Strong"
+
+        elif momentum >= 0.5:
+
+            level = "Medium"
+
+        else:
+
+            level = "Weak"
+
+        result.append(
+
+            {
+
+                "Market": symbol,
+
+                "Momentum": level,
+
+                "Value": round(
+
+                    momentum,
+
+                    2
+
+                )
+
+            }
+
+        )
+
+    return pd.DataFrame(result)
+
+# ==========================================================
+# MOMENTUM PAGE
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader("🚀 Market Momentum")
+
+    momentum_df = market_momentum()
+
+    st.dataframe(
+
+        momentum_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+    st.divider()
+
+# ==========================================================
+# GOLD BIAS
+# ==========================================================
+
+def gold_bias():
+
+    score = 0
+
+    reasons = []
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            score += 1
+
+            reasons.append(
+
+                "Gold tăng"
+
+            )
+
+        else:
+
+            score -= 1
+
+            reasons.append(
+
+                "Gold giảm"
+
+            )
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            score += 1
+
+            reasons.append(
+
+                "USD suy yếu"
+
+            )
+
+        else:
+
+            score -= 1
+
+            reasons.append(
+
+                "USD mạnh"
+
+            )
+
+    if sp500_data:
+
+        if sp500_data["change"] > 0:
+
+            reasons.append(
+
+                "Risk On"
+
+            )
+
+        else:
+
+            reasons.append(
+
+                "Risk Off"
+
+            )
+
+    if score >= 2:
+
+        signal = "🟢 Strong Buy"
+
+    elif score == 1:
+
+        signal = "🟢 Buy"
+
+    elif score == 0:
+
+        signal = "🟡 Neutral"
+
+    elif score == -1:
+
+        signal = "🔴 Sell"
+
+    else:
+
+        signal = "🔴 Strong Sell"
+
+    return signal, reasons
+
+# ==========================================================
+# GOLD AI PANEL
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.subheader("🤖 Gold AI Bias")
+
+    signal, reasons = gold_bias()
+
+    st.success(
+
+        signal
+
+    )
+
+    st.divider()
+
+    for reason in reasons:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+# ==========================================================
+# SIDEBAR AI STATUS
+# ==========================================================
+
+st.sidebar.subheader(
+
+    "AI Status"
+
+)
+
+st.sidebar.success(
+
+    "Online"
+
+)
+
+st.sidebar.metric(
+
+    "Signal",
+
+    ai_signal()
+
+)
+
+st.sidebar.metric(
+
+    "Macro",
+
+    macro_score()[0]
+
+)
+
+st.sidebar.metric(
+
+    "Score",
+
+    calculate_market_score()
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 027
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 028
+# ==========================================================
+
+# ==========================================================
+# GOLD MARKET STRUCTURE
+# ==========================================================
+
+def gold_market_structure():
+
+    if not gold_data:
+
+        return "Unknown"
+
+    change = gold_data["change"]
+
+    if change >= 2:
+
+        return "Strong Uptrend"
+
+    elif change >= 0.5:
+
+        return "Uptrend"
+
+    elif change <= -2:
+
+        return "Strong Downtrend"
+
+    elif change <= -0.5:
+
+        return "Downtrend"
+
+    return "Sideway"
+
+# ==========================================================
+# GOLD STRUCTURE PAGE
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.subheader("Market Structure")
+
+    structure = gold_market_structure()
+
+    st.info(structure)
+
+    st.divider()
+
+# ==========================================================
+# MARKET SCORE DETAIL
+# ==========================================================
+
+def score_breakdown():
+
+    rows = []
+
+    market = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for symbol, data in market.items():
+
+        if not data:
+
+            continue
+
+        rows.append(
+
+            {
+
+                "Market": symbol,
+
+                "Price": round(
+
+                    data["price"],
+
+                    2
+
+                ),
+
+                "Change": round(
+
+                    data["change"],
+
+                    2
+
+                ),
+
+                "Trend": market_trend(
+
+                    data["change"]
+
+                ),
+
+                "Momentum": volatility_level(
+
+                    data["change"]
+
+                )
+
+            }
+
+        )
+
+    return pd.DataFrame(rows)
+
+# ==========================================================
+# DASHBOARD SCORE DETAIL
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader("Market Details")
+
+    st.dataframe(
+
+        score_breakdown(),
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+    st.divider()
+
+# ==========================================================
+# NEWS SENTIMENT
+# ==========================================================
+
+positive_words = [
+
+    "rise",
+
+    "gain",
+
+    "growth",
+
+    "bull",
+
+    "strong",
+
+    "record",
+
+    "higher"
+
+]
+
+negative_words = [
+
+    "fall",
+
+    "drop",
+
+    "weak",
+
+    "bear",
+
+    "lower",
+
+    "risk",
+
+    "decline"
+
+]
+
+def analyze_news_sentiment():
+
+    positive = 0
+
+    negative = 0
+
+    for title in st.session_state.news:
+
+        text = title.lower()
+
+        for word in positive_words:
+
+            if word in text:
+
+                positive += 1
+
+        for word in negative_words:
+
+            if word in text:
+
+                negative += 1
+
+    return positive, negative
+
+# ==========================================================
+# NEWS PAGE
+# ==========================================================
+
+if st.session_state.page == "News":
+
+    st.subheader("News Sentiment")
+
+    pos, neg = analyze_news_sentiment()
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+
+        st.metric(
+
+            "Positive",
+
+            pos
+
+        )
+
+    with c2:
+
+        st.metric(
+
+            "Negative",
+
+            neg
+
+        )
+
+# ==========================================================
+# SIDEBAR SUMMARY
+# ==========================================================
+
+st.sidebar.subheader("Overview")
+
+st.sidebar.metric(
+
+    "Market Structure",
+
+    gold_market_structure()
+
+)
+
+st.sidebar.metric(
+
+    "AI Signal",
+
+    ai_signal()
+
+)
+
+st.sidebar.metric(
+
+    "Health",
+
+    f"{system_health()}%"
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 028
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 029
+# ==========================================================
+
+# ==========================================================
+# MARKET REGIME ENGINE
+# ==========================================================
+
+def market_regime():
+
+    score = calculate_market_score()
+
+    volatility = 0
+
+    count = 0
+
+    market = [
+
+        gold_data,
+
+        dxy_data,
+
+        sp500_data,
+
+        nasdaq_data
+
+    ]
+
+    for data in market:
+
+        if data:
+
+            volatility += abs(
+
+                data["change"]
+
+            )
+
+            count += 1
+
+    if count > 0:
+
+        volatility /= count
+
+    if score >= 70 and volatility >= 1:
+
+        return "Trending Bull"
+
+    elif score <= 30 and volatility >= 1:
+
+        return "Trending Bear"
+
+    elif volatility < 0.5:
+
+        return "Range"
+
+    return "Mixed"
+
+# ==========================================================
+# MARKET REGIME PAGE
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader("🌍 Market Regime")
+
+    regime = market_regime()
+
+    st.metric(
+
+        "Current Regime",
+
+        regime
+
+    )
+
+    st.divider()
+
+# ==========================================================
+# GOLD SCORE ENGINE
+# ==========================================================
+
+def gold_score():
+
+    score = 50
+
+    detail = []
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            score += 20
+
+            detail.append(
+
+                "Gold +20"
+
+            )
+
+        else:
+
+            score -= 20
+
+            detail.append(
+
+                "Gold -20"
+
+            )
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            score += 15
+
+            detail.append(
+
+                "USD Weak +15"
+
+            )
+
+        else:
+
+            score -= 15
+
+            detail.append(
+
+                "USD Strong -15"
+
+            )
+
+    if sp500_data:
+
+        if sp500_data["change"] > 0:
+
+            score += 5
+
+            detail.append(
+
+                "Risk On +5"
+
+            )
+
+        else:
+
+            score -= 5
+
+            detail.append(
+
+                "Risk Off -5"
+
+            )
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+    return score, detail
+
+# ==========================================================
+# GOLD SCORE PAGE
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.subheader("📊 Gold Score")
+
+    score, detail = gold_score()
+
+    st.progress(
+
+        score / 100
+
+    )
+
+    st.metric(
+
+        "Gold Score",
+
+        f"{score}/100"
+
+    )
+
+    for item in detail:
+
+        st.write(
+
+            "•",
+
+            item
+
+        )
+
+    st.divider()
+
+# ==========================================================
+# WATCHLIST STATISTICS
+# ==========================================================
+
+def watchlist_statistics():
+
+    return {
+
+        "Total":
+
+            len(
+
+                st.session_state.watchlist
+
+            ),
+
+        "Favorites":
+
+            len(
+
+                st.session_state.favorites
+
+            ),
+
+        "Alerts":
+
+            len(
+
+                st.session_state.alerts
+
+            )
+
+    }
+
+stats = watchlist_statistics()
+
+st.sidebar.subheader(
+
+    "Watchlist"
+
+)
+
+st.sidebar.metric(
+
+    "Symbols",
+
+    stats["Total"]
+
+)
+
+st.sidebar.metric(
+
+    "Favorites",
+
+    stats["Favorites"]
+
+)
+
+st.sidebar.metric(
+
+    "Alerts",
+
+    stats["Alerts"]
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 029
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 030
+# ==========================================================
+
+# ==========================================================
+# MARKET DASHBOARD ENGINE
+# ==========================================================
+
+def dashboard_summary():
+
+    summary = []
+
+    markets = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for symbol, data in markets.items():
+
+        if not data:
+
+            continue
+
+        summary.append(
+
+            {
+
+                "Market": symbol,
+
+                "Price": round(
+
+                    data["price"],
+
+                    2
+
+                ),
+
+                "Change": round(
+
+                    data["change"],
+
+                    2
+
+                ),
+
+                "Trend": market_trend(
+
+                    data["change"]
+
+                ),
+
+                "Volatility": volatility_level(
+
+                    data["change"]
+
+                ),
+
+                "Signal": ai_signal()
+
+            }
+
+        )
+
+    return pd.DataFrame(summary)
+
+# ==========================================================
+# DASHBOARD TABLE
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader("📋 Dashboard Summary")
+
+    st.dataframe(
+
+        dashboard_summary(),
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+    st.divider()
+
+# ==========================================================
+# GOLD CONFIDENCE SCORE
+# ==========================================================
+
+def gold_confidence():
+
+    score = 0
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            score += 40
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            score += 30
+
+    if sp500_data:
+
+        if sp500_data["change"] > 0:
+
+            score += 15
+
+    if nasdaq_data:
+
+        if nasdaq_data["change"] > 0:
+
+            score += 15
+
+    return score
+
+# ==========================================================
+# GOLD CONFIDENCE PAGE
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.subheader("Confidence")
+
+    confidence = gold_confidence()
+
+    st.progress(
+
+        confidence / 100
+
+    )
+
+    st.metric(
+
+        "Confidence",
+
+        f"{confidence}%"
+
+    )
+
+    if confidence >= 80:
+
+        st.success(
+
+            "High Probability"
+
+        )
+
+    elif confidence >= 60:
+
+        st.info(
+
+            "Moderate Probability"
+
+        )
+
+    else:
+
+        st.warning(
+
+            "Low Probability"
+
+        )
+
+    st.divider()
+
+# ==========================================================
+# NEWS COUNTER
+# ==========================================================
+
+def news_statistics():
+
+    positive, negative = analyze_news_sentiment()
+
+    total = len(
+
+        st.session_state.news
+
+    )
+
+    neutral = max(
+
+        total - positive - negative,
+
+        0
+
+    )
+
+    return {
+
+        "Total": total,
+
+        "Positive": positive,
+
+        "Negative": negative,
+
+        "Neutral": neutral
+
+    }
+
+# ==========================================================
+# SIDEBAR NEWS PANEL
+# ==========================================================
+
+news = news_statistics()
+
+st.sidebar.subheader(
+
+    "News"
+
+)
+
+st.sidebar.metric(
+
+    "Total",
+
+    news["Total"]
+
+)
+
+st.sidebar.metric(
+
+    "Positive",
+
+    news["Positive"]
+
+)
+
+st.sidebar.metric(
+
+    "Negative",
+
+    news["Negative"]
+
+)
+
+st.sidebar.metric(
+
+    "Neutral",
+
+    news["Neutral"]
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 030
+# ==========================================================
