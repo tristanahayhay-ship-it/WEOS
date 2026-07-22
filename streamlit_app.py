@@ -9778,3 +9778,1843 @@ if st.session_state.page == "Gold":
 # ==========================================================
 # KẾT THÚC ĐOẠN 053
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 054
+# ==========================================================
+
+# ==========================================================
+# MARKET REGIME DETECTOR
+# ==========================================================
+
+def detect_market_regime():
+
+    trend_score = 0
+
+    volatility_score = 0
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            trend_score += 1
+
+        else:
+
+            trend_score -= 1
+
+        if abs(
+
+            gold_data["change"]
+
+        ) > 1:
+
+            volatility_score += 1
+
+
+    if dxy_data:
+
+        if dxy_data["change"] > 0:
+
+            trend_score -= 1
+
+        else:
+
+            trend_score += 1
+
+
+        if abs(
+
+            dxy_data["change"]
+
+        ) > 0.5:
+
+            volatility_score += 1
+
+
+    if volatility_score >= 2:
+
+        volatility = "High"
+
+    else:
+
+        volatility = "Normal"
+
+
+    if trend_score >= 2:
+
+        regime = "Bull Market"
+
+    elif trend_score <= -2:
+
+        regime = "Bear Market"
+
+    else:
+
+        regime = "Sideway Market"
+
+
+    return {
+
+        "regime": regime,
+
+        "volatility": volatility,
+
+        "trend_score": trend_score
+
+    }
+
+
+# ==========================================================
+# REGIME DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌐 Market Regime"
+
+    )
+
+    regime = detect_market_regime()
+
+    col1, col2 = st.columns(
+
+        2
+
+    )
+
+    with col1:
+
+        st.metric(
+
+            "Regime",
+
+            regime["regime"]
+
+        )
+
+    with col2:
+
+        st.metric(
+
+            "Volatility",
+
+            regime["volatility"]
+
+        )
+
+
+# ==========================================================
+# GOLD TRADE CONFIDENCE
+# ==========================================================
+
+def gold_trade_confidence():
+
+    confidence = 50
+
+    reasons = []
+
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            confidence += 15
+
+            reasons.append(
+
+                "Gold momentum positive"
+
+            )
+
+        else:
+
+            confidence -= 15
+
+            reasons.append(
+
+                "Gold momentum negative"
+
+            )
+
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            confidence += 20
+
+            reasons.append(
+
+                "USD supports Gold"
+
+            )
+
+        else:
+
+            confidence -= 20
+
+            reasons.append(
+
+                "USD pressures Gold"
+
+            )
+
+
+    confidence = max(
+
+        0,
+
+        min(
+
+            confidence,
+
+            100
+
+        )
+
+    )
+
+
+    return {
+
+        "confidence": confidence,
+
+        "reasons": reasons
+
+    }
+
+
+# ==========================================================
+# CONFIDENCE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Trade Confidence"
+
+    )
+
+    confidence = gold_trade_confidence()
+
+    st.progress(
+
+        confidence["confidence"]
+
+        /
+
+        100
+
+    )
+
+    st.metric(
+
+        "Confidence",
+
+        f'{confidence["confidence"]}%'
+
+    )
+
+    for reason in confidence["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 054
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 055
+# ==========================================================
+
+# ==========================================================
+# MARKET NEWS SENTIMENT ENGINE
+# ==========================================================
+
+def analyze_news_sentiment():
+
+    positive_words = [
+
+        "rise",
+
+        "gain",
+
+        "growth",
+
+        "bullish",
+
+        "strong",
+
+        "higher",
+
+        "support"
+
+    ]
+
+    negative_words = [
+
+        "fall",
+
+        "drop",
+
+        "weak",
+
+        "bearish",
+
+        "lower",
+
+        "risk",
+
+        "pressure"
+
+    ]
+
+    positive = 0
+
+    negative = 0
+
+    total = 0
+
+
+    for article in st.session_state.news:
+
+        text = str(
+
+            article
+
+        ).lower()
+
+        total += 1
+
+        for word in positive_words:
+
+            if word in text:
+
+                positive += 1
+
+        for word in negative_words:
+
+            if word in text:
+
+                negative += 1
+
+
+    if positive > negative:
+
+        sentiment = "Positive"
+
+    elif negative > positive:
+
+        sentiment = "Negative"
+
+    else:
+
+        sentiment = "Neutral"
+
+
+    return {
+
+        "positive": positive,
+
+        "negative": negative,
+
+        "total": total,
+
+        "sentiment": sentiment
+
+    }
+
+
+# ==========================================================
+# NEWS SENTIMENT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "News":
+
+    st.divider()
+
+    st.subheader(
+
+        "📰 News Sentiment"
+
+    )
+
+    news_sentiment = analyze_news_sentiment()
+
+    col1, col2, col3 = st.columns(
+
+        3
+
+    )
+
+    with col1:
+
+        st.metric(
+
+            "Positive",
+
+            news_sentiment["positive"]
+
+        )
+
+    with col2:
+
+        st.metric(
+
+            "Negative",
+
+            news_sentiment["negative"]
+
+        )
+
+    with col3:
+
+        st.metric(
+
+            "Total",
+
+            news_sentiment["total"]
+
+        )
+
+
+    st.info(
+
+        news_sentiment["sentiment"]
+
+    )
+
+
+# ==========================================================
+# ECONOMIC IMPACT RATING
+# ==========================================================
+
+def economic_rating():
+
+    score = 50
+
+    reasons = []
+
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            score += 10
+
+            reasons.append(
+
+                "Gold strength"
+
+            )
+
+        else:
+
+            score -= 10
+
+            reasons.append(
+
+                "Gold weakness"
+
+            )
+
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            score += 20
+
+            reasons.append(
+
+                "USD weakness"
+
+            )
+
+        else:
+
+            score -= 20
+
+            reasons.append(
+
+                "USD strength"
+
+            )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    return {
+
+        "score": score,
+
+        "reasons": reasons
+
+    }
+
+
+# ==========================================================
+# ECONOMIC RATING DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 Economic Rating"
+
+    )
+
+    economic = economic_rating()
+
+    st.progress(
+
+        economic["score"]
+
+        /
+
+        100
+
+    )
+
+    st.metric(
+
+        "Macro Score",
+
+        f'{economic["score"]}/100'
+
+    )
+
+    for reason in economic["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 055
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 056
+# ==========================================================
+
+# ==========================================================
+# MARKET ALERT PRIORITY ENGINE
+# ==========================================================
+
+def calculate_alert_priority():
+
+    priority = []
+
+    markets = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for name, data in markets.items():
+
+        if data is None:
+
+            continue
+
+        change = abs(
+
+            data["change"]
+
+        )
+
+        if change >= 3:
+
+            level = "Critical"
+
+        elif change >= 1.5:
+
+            level = "High"
+
+        elif change >= 0.5:
+
+            level = "Medium"
+
+        else:
+
+            level = "Low"
+
+
+        priority.append(
+
+            {
+
+                "Market": name,
+
+                "Movement": round(
+
+                    data["change"],
+
+                    2
+
+                ),
+
+                "Priority": level
+
+            }
+
+        )
+
+
+    return pd.DataFrame(
+
+        priority
+
+    )
+
+
+# ==========================================================
+# ALERT PRIORITY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚨 Alert Priority"
+
+    )
+
+    priority_df = calculate_alert_priority()
+
+    st.dataframe(
+
+        priority_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# GOLD ENTRY QUALITY SCORE
+# ==========================================================
+
+def calculate_entry_quality():
+
+    score = 50
+
+    reasons = []
+
+
+    trend = analyze_gold_trend()
+
+    rsi = calculate_rsi()
+
+    macd = calculate_macd()
+
+
+    if trend:
+
+        if "Uptrend" in trend["trend"]:
+
+            score += 15
+
+            reasons.append(
+
+                "Trend supports buyers"
+
+            )
+
+        elif "Downtrend" in trend["trend"]:
+
+            score -= 15
+
+            reasons.append(
+
+                "Trend supports sellers"
+
+            )
+
+
+    if rsi:
+
+        if rsi["signal"] == "Oversold":
+
+            score += 10
+
+            reasons.append(
+
+                "RSI oversold"
+
+            )
+
+        elif rsi["signal"] == "Overbought":
+
+            score -= 10
+
+            reasons.append(
+
+                "RSI overbought"
+
+            )
+
+
+    if macd:
+
+        if macd["histogram"] > 0:
+
+            score += 10
+
+            reasons.append(
+
+                "MACD positive"
+
+            )
+
+        else:
+
+            score -= 10
+
+            reasons.append(
+
+                "MACD negative"
+
+            )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    return {
+
+        "score": score,
+
+        "reasons": reasons
+
+    }
+
+
+# ==========================================================
+# ENTRY QUALITY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Entry Quality"
+
+    )
+
+
+    quality = calculate_entry_quality()
+
+
+    st.progress(
+
+        quality["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Quality Score",
+
+        f'{quality["score"]}/100'
+
+    )
+
+
+    for reason in quality["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 056
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 057
+# ==========================================================
+
+# ==========================================================
+# GOLD MARKET STRUCTURE ANALYZER
+# ==========================================================
+
+def analyze_market_structure():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="3mo"
+
+    )
+
+    if history.empty:
+
+        return None
+
+
+    recent_high = float(
+
+        history["High"].tail(
+
+            20
+
+        ).max()
+
+    )
+
+
+    recent_low = float(
+
+        history["Low"].tail(
+
+            20
+
+        ).min()
+
+    )
+
+
+    current_price = float(
+
+        history["Close"].iloc[-1]
+
+    )
+
+
+    if current_price > recent_high * 0.98:
+
+        structure = "Near Resistance"
+
+    elif current_price < recent_low * 1.02:
+
+        structure = "Near Support"
+
+    else:
+
+        structure = "Middle Range"
+
+
+    return {
+
+        "high": recent_high,
+
+        "low": recent_low,
+
+        "price": current_price,
+
+        "structure": structure
+
+    }
+
+
+# ==========================================================
+# STRUCTURE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🏗 Market Structure"
+
+    )
+
+
+    structure = analyze_market_structure()
+
+
+    if structure:
+
+        structure_df = pd.DataFrame(
+
+            {
+
+                "Level":
+
+                [
+
+                    "Resistance",
+
+                    "Current",
+
+                    "Support"
+
+                ],
+
+                "Price":
+
+                [
+
+                    structure["high"],
+
+                    structure["price"],
+
+                    structure["low"]
+
+                ]
+
+            }
+
+        )
+
+
+        st.dataframe(
+
+            structure_df,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+
+        st.info(
+
+            structure["structure"]
+
+        )
+
+
+# ==========================================================
+# SMART ENTRY ASSISTANT
+# ==========================================================
+
+def smart_entry_assistant():
+
+    result = {
+
+        "Action": "WAIT",
+
+        "Reason": []
+
+    }
+
+
+    confidence = calculate_entry_quality()
+
+
+    if confidence["score"] >= 75:
+
+        result["Action"] = "HIGH QUALITY SETUP"
+
+    elif confidence["score"] >= 60:
+
+        result["Action"] = "POSSIBLE SETUP"
+
+    else:
+
+        result["Action"] = "NO TRADE"
+
+
+    result["Reason"] = confidence["reasons"]
+
+
+    return result
+
+
+# ==========================================================
+# SMART ENTRY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🤖 Smart Entry Assistant"
+
+    )
+
+
+    assistant = smart_entry_assistant()
+
+
+    st.metric(
+
+        "Recommendation",
+
+        assistant["Action"]
+
+    )
+
+
+    for item in assistant["Reason"]:
+
+        st.write(
+
+            "•",
+
+            item
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 057
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 058
+# ==========================================================
+
+# ==========================================================
+# MARKET PHASE DETECTOR
+# ==========================================================
+
+def detect_market_phase():
+
+    phase_score = 0
+
+    factors = []
+
+
+    trend = analyze_gold_trend()
+
+    volatility = calculate_volatility()
+
+    momentum = calculate_market_momentum()
+
+
+    if trend:
+
+        if "Uptrend" in trend["trend"]:
+
+            phase_score += 1
+
+            factors.append(
+
+                "Price trend is positive"
+
+            )
+
+        elif "Downtrend" in trend["trend"]:
+
+            phase_score -= 1
+
+            factors.append(
+
+                "Price trend is negative"
+
+            )
+
+
+    if volatility:
+
+        if volatility["latest"] > volatility["average"]:
+
+            factors.append(
+
+                "High volatility environment"
+
+            )
+
+        else:
+
+            factors.append(
+
+                "Normal volatility environment"
+
+            )
+
+
+    if momentum is not None:
+
+        if not momentum.empty:
+
+            gold_row = momentum[
+
+                momentum["Market"]
+
+                ==
+
+                "Gold"
+
+            ]
+
+            if not gold_row.empty:
+
+                value = float(
+
+                    gold_row["Value"].iloc[0]
+
+                )
+
+                if value > 1:
+
+                    phase_score += 1
+
+                    factors.append(
+
+                        "Strong momentum"
+
+                    )
+
+
+    if phase_score >= 2:
+
+        phase = "Expansion"
+
+    elif phase_score <= -1:
+
+        phase = "Contraction"
+
+    else:
+
+        phase = "Accumulation"
+
+
+    return {
+
+        "phase": phase,
+
+        "score": phase_score,
+
+        "factors": factors
+
+    }
+
+
+# ==========================================================
+# MARKET PHASE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌊 Market Phase"
+
+    )
+
+
+    phase = detect_market_phase()
+
+
+    st.metric(
+
+        "Current Phase",
+
+        phase["phase"]
+
+    )
+
+
+    for factor in phase["factors"]:
+
+        st.write(
+
+            "•",
+
+            factor
+
+        )
+
+
+# ==========================================================
+# SUPPORT ZONE QUALITY
+# ==========================================================
+
+def support_zone_quality():
+
+    sr = calculate_support_resistance()
+
+    if sr is None:
+
+        return None
+
+
+    distance = abs(
+
+        sr["price"]
+
+        -
+
+        sr["support"]
+
+    )
+
+
+    if distance < 20:
+
+        quality = "Strong Support Zone"
+
+    elif distance < 50:
+
+        quality = "Medium Support Zone"
+
+    else:
+
+        quality = "Weak Support Zone"
+
+
+    return {
+
+        "distance": distance,
+
+        "quality": quality
+
+    }
+
+
+# ==========================================================
+# SUPPORT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🟢 Support Analysis"
+
+    )
+
+
+    support = support_zone_quality()
+
+
+    if support:
+
+        st.metric(
+
+            "Distance To Support",
+
+            format_price(
+
+                support["distance"]
+
+            )
+
+        )
+
+
+        st.info(
+
+            support["quality"]
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 058
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 059
+# ==========================================================
+
+# ==========================================================
+# RESISTANCE ZONE QUALITY
+# ==========================================================
+
+def resistance_zone_quality():
+
+    sr = calculate_support_resistance()
+
+    if sr is None:
+
+        return None
+
+
+    distance = abs(
+
+        sr["resistance"]
+
+        -
+
+        sr["price"]
+
+    )
+
+
+    if distance < 20:
+
+        quality = "Strong Resistance Zone"
+
+    elif distance < 50:
+
+        quality = "Medium Resistance Zone"
+
+    else:
+
+        quality = "Weak Resistance Zone"
+
+
+    return {
+
+        "distance": distance,
+
+        "quality": quality
+
+    }
+
+
+# ==========================================================
+# RESISTANCE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔴 Resistance Analysis"
+
+    )
+
+
+    resistance = resistance_zone_quality()
+
+
+    if resistance:
+
+        st.metric(
+
+            "Distance To Resistance",
+
+            format_price(
+
+                resistance["distance"]
+
+            )
+
+        )
+
+
+        st.info(
+
+            resistance["quality"]
+
+        )
+
+
+# ==========================================================
+# GOLD POSITION BIAS
+# ==========================================================
+
+def calculate_position_bias():
+
+    buy_score = 0
+
+    sell_score = 0
+
+    reasons = []
+
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            buy_score += 1
+
+            reasons.append(
+
+                "Gold daily movement positive"
+
+            )
+
+        else:
+
+            sell_score += 1
+
+            reasons.append(
+
+                "Gold daily movement negative"
+
+            )
+
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            buy_score += 1
+
+            reasons.append(
+
+                "Dollar weakness"
+
+            )
+
+        else:
+
+            sell_score += 1
+
+            reasons.append(
+
+                "Dollar strength"
+
+            )
+
+
+    if buy_score > sell_score:
+
+        bias = "BUY BIAS"
+
+    elif sell_score > buy_score:
+
+        bias = "SELL BIAS"
+
+    else:
+
+        bias = "NEUTRAL"
+
+
+    return {
+
+        "buy": buy_score,
+
+        "sell": sell_score,
+
+        "bias": bias,
+
+        "reasons": reasons
+
+    }
+
+
+# ==========================================================
+# POSITION BIAS DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚖ Position Bias"
+
+    )
+
+
+    bias = calculate_position_bias()
+
+
+    st.metric(
+
+        "Current Bias",
+
+        bias["bias"]
+
+    )
+
+
+    col1, col2 = st.columns(
+
+        2
+
+    )
+
+
+    with col1:
+
+        st.metric(
+
+            "Buy Score",
+
+            bias["buy"]
+
+        )
+
+
+    with col2:
+
+        st.metric(
+
+            "Sell Score",
+
+            bias["sell"]
+
+        )
+
+
+    for reason in bias["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 059
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 060
+# ==========================================================
+
+# ==========================================================
+# TRADE DECISION MATRIX
+# ==========================================================
+
+def trade_decision_matrix():
+
+    factors = {
+
+        "Trend":
+
+        0,
+
+        "Momentum":
+
+        0,
+
+        "USD":
+
+        0,
+
+        "Volatility":
+
+        0
+
+    }
+
+
+    trend = analyze_gold_trend()
+
+    if trend:
+
+        if "Uptrend" in trend["trend"]:
+
+            factors["Trend"] = 1
+
+        elif "Downtrend" in trend["trend"]:
+
+            factors["Trend"] = -1
+
+
+    momentum = calculate_market_momentum()
+
+    if momentum is not None:
+
+        if not momentum.empty:
+
+            gold = momentum[
+
+                momentum["Market"]
+
+                ==
+
+                "Gold"
+
+            ]
+
+            if not gold.empty:
+
+                value = float(
+
+                    gold["Value"].iloc[0]
+
+                )
+
+                if value > 1:
+
+                    factors["Momentum"] = 1
+
+                elif value < 0.5:
+
+                    factors["Momentum"] = -1
+
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            factors["USD"] = 1
+
+        else:
+
+            factors["USD"] = -1
+
+
+    volatility = calculate_volatility()
+
+    if volatility:
+
+        if volatility["latest"] < volatility["average"]:
+
+            factors["Volatility"] = 1
+
+        else:
+
+            factors["Volatility"] = -1
+
+
+    total = sum(
+
+        factors.values()
+
+    )
+
+
+    if total >= 3:
+
+        decision = "STRONG BUY"
+
+    elif total >= 1:
+
+        decision = "BUY"
+
+    elif total <= -3:
+
+        decision = "STRONG SELL"
+
+    elif total <= -1:
+
+        decision = "SELL"
+
+    else:
+
+        decision = "WAIT"
+
+
+    return {
+
+        "decision": decision,
+
+        "score": total,
+
+        "factors": factors
+
+    }
+
+
+# ==========================================================
+# DECISION MATRIX DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧩 Trade Decision Matrix"
+
+    )
+
+
+    matrix = trade_decision_matrix()
+
+
+    st.metric(
+
+        "Final Decision",
+
+        matrix["decision"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        matrix["score"]
+
+    )
+
+
+    matrix_df = pd.DataFrame(
+
+        {
+
+            "Factor":
+
+            matrix["factors"].keys(),
+
+            "Value":
+
+            matrix["factors"].values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        matrix_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# TRADE WARNING SYSTEM
+# ==========================================================
+
+def trade_warning():
+
+    warnings = []
+
+
+    if calculate_drawdown() > 10:
+
+        warnings.append(
+
+            "High drawdown detected"
+
+        )
+
+
+    if not check_daily_loss():
+
+        warnings.append(
+
+            "Daily loss limit reached"
+
+        )
+
+
+    if len(
+
+        st.session_state.psychology_notes
+
+    ) > 0:
+
+        last = st.session_state.psychology_notes[-1]
+
+        if last["Emotion"] in [
+
+            "Fear",
+
+            "Greed",
+
+            "Angry",
+
+            "Stress"
+
+        ]:
+
+            warnings.append(
+
+                "Emotional trading risk"
+
+            )
+
+
+    return warnings
+
+
+# ==========================================================
+# WARNING DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    warnings = trade_warning()
+
+
+    if len(warnings) > 0:
+
+        st.divider()
+
+        st.subheader(
+
+            "⚠ Trading Warnings"
+
+        )
+
+
+        for warning in warnings:
+
+            st.warning(
+
+                warning
+
+            )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 060
+# ==========================================================
