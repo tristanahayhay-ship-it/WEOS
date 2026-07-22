@@ -18,6 +18,9 @@ app = FastAPI(
     description="World Economic Operating System"
 )
 
+# Tự động tạo bảng PostgreSQL khi khởi động
+create_tables()
+
 
 @app.get("/")
 def root():
