@@ -1,42 +1,40 @@
 """
 WEOS Timeline API
-Version: 0.5.0
+Version: 0.9.0
 """
 
 from fastapi import APIRouter
-
-from app.repositories.timeline_repository import TimelineRepository
-from app.models.timeline_model import TimelineEventModel
+from app.db.timeline import TimelineEvent
+from app.services.timeline_service import TimelineService
 
 router = APIRouter(
     prefix="/timeline",
     tags=["Timeline"]
 )
 
-repository = TimelineRepository()
+service = TimelineService()
 
 
 @router.get("/")
-def get_events():
-    return repository.all()
+def get_all_events():
+    return service.get_all()
 
 
-@router.get("/type/{event_type}")
-def get_by_type(event_type: str):
-    return repository.by_type(event_type)
+@router.get("/{timeline_id}")
+def get_event(timeline_id: str):
+    return service.get(timeline_id)
 
 
 @router.post("/")
-def create_event(event: TimelineEventModel):
-    repository.save(event)
-    return {
-        "message": "Timeline event created",
-        "event": event
-    }
+def create_event(event: TimelineEvent):
+    return service.create(event)
 
 
-@router.get("/count")
-def count_events():
-    return {
-        "count": repository.count()
-    }
+@router.put("/")
+def update_event(event: TimelineEvent):
+    return service.update(event)
+
+
+@router.delete("/{timeline_id}")
+def delete_event(timeline_id: str):
+    return service.delete(timeline_id)
