@@ -1,47 +1,91 @@
 """
 WEOS Flow Repository
-Version: 0.4.0
+Version: 0.7.0
 """
 
-from typing import List
+from sqlalchemy.orm import Session
 
-from app.models.flow_model import FlowModel
+from app.core.postgres import SessionLocal
+from app.db.flow import Flow
 
 
 class FlowRepository:
 
-    def __init__(self):
-        self.flows: List[FlowModel] = []
+    def get_db(self) -> Session:
+        return SessionLocal()
 
-    def save(self, flow: FlowModel):
-        self.flows.append(flow)
+    def all(self):
+        db = self.get_db()
+        try:
+            return db.query(Flow).all()
+        finally:
+            db.close()
 
-    def all(self) -> List[FlowModel]:
-        return self.flows
+    def get(self, flow_id: int):
+        db = self.get_db()
+        try:
+            return (
+                db.query(Flow)
+                .filter(Flow.id == flow_id)
+                .first()
+            )
+        finally:
+            db.close()
 
-    def by_source(self, source: str) -> List[FlowModel]:
-        return [
-            f
-            for f in self.flows
-            if f.source == source
-        ]
+    def by_source(self, source: str):
+        db = self.get_db()
+        try:
+            return (
+                db.query(Flow)
+                .filter(Flow.source == source)
+                .all()
+            )
+        finally:
+            db.close()
 
-    def by_target(self, target: str) -> List[FlowModel]:
-        return [
-            f
-            for f in self.flows
-            if f.target == target
-        ]
+    def by_target(self, target: str):
+        db = self.get_db()
+        try:
+            return (
+                db.query(Flow)
+                .filter(Flow.target == target)
+                .all()
+            )
+        finally:
+            db.close()
 
-    def by_type(self, flow_type: str) -> List[FlowModel]:
-        return [
-            f
-            for f in self.flows
-            if f.flow_type == flow_type
-        ]
+    def create(self, flow: Flow):
+        db = self.get_db()
+        try:
+            db.add(flow)
+            db.commit()
+            db.refresh(flow)
+            return flow
+        finally:
+            db.close()
 
-    def count(self):
-        return len(self.flows)
+    def update(self, flow: Flow):
+        db = self.get_db()
+        try:
+            db.merge(flow)
+            db.commit()
+            return flow
+        finally:
+            db.close()
 
-    def clear(self):
-        self.flows.clear()
+    def delete(self, flow_id: int):
+        db = self.get_db()
+        try:
+            flow = (
+                db.query(Flow)
+                .filter(Flow.id == flow_id)
+                .first()
+            )
+
+            if flow:
+                db.delete(flow)
+                db.commit()
+
+            return flow
+        finally:
+            db.close()
