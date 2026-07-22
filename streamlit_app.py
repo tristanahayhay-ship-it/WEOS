@@ -11618,3 +11618,1556 @@ if st.session_state.page == "Dashboard":
 # ==========================================================
 # KẾT THÚC ĐOẠN 060
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 061
+# ==========================================================
+
+# ==========================================================
+# MARKET OPENING ANALYZER
+# ==========================================================
+
+def analyze_market_opening():
+
+    utc_hour = datetime.utcnow().hour
+
+    if 0 <= utc_hour < 8:
+
+        session = "Asian Session"
+
+        liquidity = "Medium"
+
+    elif 8 <= utc_hour < 16:
+
+        session = "London Session"
+
+        liquidity = "High"
+
+    elif 16 <= utc_hour < 22:
+
+        session = "New York Session"
+
+        liquidity = "Very High"
+
+    else:
+
+        session = "Market Transition"
+
+        liquidity = "Low"
+
+
+    return {
+
+        "session": session,
+
+        "liquidity": liquidity
+
+    }
+
+
+# ==========================================================
+# OPENING DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌅 Market Opening"
+
+    )
+
+
+    opening = analyze_market_opening()
+
+
+    col1, col2 = st.columns(
+
+        2
+
+    )
+
+
+    with col1:
+
+        st.metric(
+
+            "Session",
+
+            opening["session"]
+
+        )
+
+
+    with col2:
+
+        st.metric(
+
+            "Liquidity",
+
+            opening["liquidity"]
+
+        )
+
+
+# ==========================================================
+# GOLD VOLATILITY WARNING
+# ==========================================================
+
+def gold_volatility_warning():
+
+    warnings = []
+
+    volatility = calculate_volatility()
+
+
+    if volatility:
+
+        current = volatility["latest"]
+
+        average = volatility["average"]
+
+
+        if current > average * 2:
+
+            warnings.append(
+
+                "Gold volatility extremely high"
+
+            )
+
+        elif current > average:
+
+            warnings.append(
+
+                "Gold volatility above average"
+
+            )
+
+
+    return warnings
+
+
+# ==========================================================
+# VOLATILITY WARNING DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    volatility_warning = gold_volatility_warning()
+
+
+    if len(
+
+        volatility_warning
+
+    ) > 0:
+
+        st.divider()
+
+        st.subheader(
+
+            "⚡ Volatility Alert"
+
+        )
+
+
+        for warning in volatility_warning:
+
+            st.warning(
+
+                warning
+
+            )
+
+
+# ==========================================================
+# MARKET CONFIRMATION ENGINE
+# ==========================================================
+
+def market_confirmation():
+
+    confirmations = []
+
+    confirmations_count = 0
+
+
+    trend = analyze_gold_trend()
+
+    if trend:
+
+        if "Uptrend" in trend["trend"]:
+
+            confirmations.append(
+
+                "Trend confirms BUY"
+
+            )
+
+            confirmations_count += 1
+
+
+        elif "Downtrend" in trend["trend"]:
+
+            confirmations.append(
+
+                "Trend confirms SELL"
+
+            )
+
+            confirmations_count += 1
+
+
+    rsi = calculate_rsi()
+
+    if rsi:
+
+        if rsi["signal"] != "Neutral":
+
+            confirmations.append(
+
+                f'RSI {rsi["signal"]}'
+
+            )
+
+            confirmations_count += 1
+
+
+    macd = calculate_macd()
+
+    if macd:
+
+        if macd["histogram"] > 0:
+
+            confirmations.append(
+
+                "MACD bullish"
+
+            )
+
+            confirmations_count += 1
+
+        else:
+
+            confirmations.append(
+
+                "MACD bearish"
+
+            )
+
+            confirmations_count += 1
+
+
+    return {
+
+        "count": confirmations_count,
+
+        "details": confirmations
+
+    }
+
+
+# ==========================================================
+# CONFIRMATION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Market Confirmation"
+
+    )
+
+
+    confirmation = market_confirmation()
+
+
+    st.metric(
+
+        "Confirmations",
+
+        confirmation["count"]
+
+    )
+
+
+    for item in confirmation["details"]:
+
+        st.write(
+
+            "•",
+
+            item
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 061
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 062
+# ==========================================================
+
+# ==========================================================
+# MARKET SCENARIO GENERATOR
+# ==========================================================
+
+def generate_market_scenario():
+
+    scenario = {
+
+        "Scenario": "Neutral",
+
+        "Probability": 50,
+
+        "Action": "Wait"
+
+    }
+
+
+    decision = trade_decision_matrix()
+
+
+    if decision["decision"] in [
+
+        "STRONG BUY",
+
+        "BUY"
+
+    ]:
+
+        scenario["Scenario"] = (
+
+            "Bullish Gold Scenario"
+
+        )
+
+        scenario["Probability"] = 70
+
+        scenario["Action"] = (
+
+            "Look for Buy opportunities"
+
+        )
+
+
+    elif decision["decision"] in [
+
+        "STRONG SELL",
+
+        "SELL"
+
+    ]:
+
+        scenario["Scenario"] = (
+
+            "Bearish Gold Scenario"
+
+        )
+
+        scenario["Probability"] = 70
+
+        scenario["Action"] = (
+
+            "Look for Sell opportunities"
+
+        )
+
+
+    return scenario
+
+
+# ==========================================================
+# SCENARIO DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔮 Market Scenario"
+
+    )
+
+
+    scenario = generate_market_scenario()
+
+
+    col1, col2 = st.columns(
+
+        2
+
+    )
+
+
+    with col1:
+
+        st.metric(
+
+            "Scenario",
+
+            scenario["Scenario"]
+
+        )
+
+
+    with col2:
+
+        st.metric(
+
+            "Probability",
+
+            f'{scenario["Probability"]}%'
+
+        )
+
+
+    st.info(
+
+        scenario["Action"]
+
+    )
+
+
+# ==========================================================
+# PRICE DISTANCE CALCULATOR
+# ==========================================================
+
+def calculate_price_distance():
+
+    sr = calculate_support_resistance()
+
+
+    if sr is None:
+
+        return None
+
+
+    current = sr["price"]
+
+    support = sr["support"]
+
+    resistance = sr["resistance"]
+
+
+    return {
+
+        "Support Distance":
+
+            current - support,
+
+        "Resistance Distance":
+
+            resistance - current
+
+    }
+
+
+# ==========================================================
+# DISTANCE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📏 Price Distance"
+
+    )
+
+
+    distance = calculate_price_distance()
+
+
+    if distance:
+
+        distance_df = pd.DataFrame(
+
+            {
+
+                "Level":
+
+                [
+
+                    "Support",
+
+                    "Resistance"
+
+                ],
+
+                "Distance":
+
+                [
+
+                    distance["Support Distance"],
+
+                    distance["Resistance Distance"]
+
+                ]
+
+            }
+
+        )
+
+
+        st.dataframe(
+
+            distance_df,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+
+# ==========================================================
+# MARKET BALANCE INDEX
+# ==========================================================
+
+def calculate_market_balance():
+
+    balance = 50
+
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            balance += 10
+
+        else:
+
+            balance -= 10
+
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            balance += 15
+
+        else:
+
+            balance -= 15
+
+
+    balance = max(
+
+        0,
+
+        min(
+
+            balance,
+
+            100
+
+        )
+
+    )
+
+
+    return balance
+
+
+# ==========================================================
+# BALANCE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚖ Market Balance"
+
+    )
+
+
+    balance = calculate_market_balance()
+
+
+    st.progress(
+
+        balance / 100
+
+    )
+
+
+    st.metric(
+
+        "Balance Index",
+
+        f"{balance}/100"
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 062
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 063
+# ==========================================================
+
+# ==========================================================
+# MARKET OPPORTUNITY SCANNER
+# ==========================================================
+
+def scan_market_opportunity():
+
+    opportunities = []
+
+    decision = trade_decision_matrix()
+
+    confidence = gold_trade_confidence()
+
+    entry_quality = calculate_entry_quality()
+
+
+    if confidence["confidence"] >= 70:
+
+        opportunities.append(
+
+            {
+
+                "Type": "Confidence",
+
+                "Status": "High",
+
+                "Value":
+
+                confidence["confidence"]
+
+            }
+
+        )
+
+
+    if entry_quality["score"] >= 70:
+
+        opportunities.append(
+
+            {
+
+                "Type": "Entry Quality",
+
+                "Status": "Good",
+
+                "Value":
+
+                entry_quality["score"]
+
+            }
+
+        )
+
+
+    opportunities.append(
+
+        {
+
+            "Type": "Decision",
+
+            "Status":
+
+            decision["decision"],
+
+            "Value":
+
+            decision["score"]
+
+        }
+
+    )
+
+
+    return pd.DataFrame(
+
+        opportunities
+
+    )
+
+
+# ==========================================================
+# OPPORTUNITY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Opportunity Scanner"
+
+    )
+
+
+    opportunity_df = scan_market_opportunity()
+
+
+    st.dataframe(
+
+        opportunity_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# TRADE EXECUTION CHECK
+# ==========================================================
+
+def trade_execution_check():
+
+    checklist = {
+
+        "Signal":
+
+        False,
+
+        "Risk":
+
+        False,
+
+        "Emotion":
+
+        False,
+
+        "Confirmation":
+
+        False
+
+    }
+
+
+    decision = trade_decision_matrix()
+
+
+    if decision["decision"] != "WAIT":
+
+        checklist["Signal"] = True
+
+
+    if check_daily_loss():
+
+        checklist["Risk"] = True
+
+
+    if len(
+
+        st.session_state.psychology_notes
+
+    ) == 0:
+
+        checklist["Emotion"] = True
+
+
+    confirmation = market_confirmation()
+
+
+    if confirmation["count"] >= 2:
+
+        checklist["Confirmation"] = True
+
+
+    return checklist
+
+
+# ==========================================================
+# EXECUTION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚔ Trade Execution Check"
+
+    )
+
+
+    execution = trade_execution_check()
+
+
+    completed = 0
+
+
+    for name, status in execution.items():
+
+        if status:
+
+            st.success(
+
+                f"✔ {name}"
+
+            )
+
+            completed += 1
+
+        else:
+
+            st.warning(
+
+                f"✖ {name}"
+
+            )
+
+
+    st.progress(
+
+        completed /
+
+        len(execution)
+
+    )
+
+
+# ==========================================================
+# MARKET CONDITION MEMORY
+# ==========================================================
+
+if "condition_history" not in st.session_state:
+
+    st.session_state.condition_history = []
+
+
+def save_condition():
+
+    condition = {
+
+        "Time":
+
+        current_time(),
+
+        "Condition":
+
+        market_condition()
+
+    }
+
+
+    st.session_state.condition_history.append(
+
+        condition
+
+    )
+
+
+save_condition()
+
+
+# ==========================================================
+# CONDITION HISTORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader(
+
+        "🗂 Condition History"
+
+    )
+
+
+    condition_df = pd.DataFrame(
+
+        st.session_state.condition_history[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        condition_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 063
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 064
+# ==========================================================
+
+# ==========================================================
+# MARKET MEMORY ENGINE
+# ==========================================================
+
+if "market_memory" not in st.session_state:
+
+    st.session_state.market_memory = []
+
+
+def save_market_memory():
+
+    memory = {
+
+        "Time":
+
+        current_time(),
+
+        "Gold":
+
+        gold_data["change"]
+
+        if gold_data else None,
+
+        "DXY":
+
+        dxy_data["change"]
+
+        if dxy_data else None,
+
+        "Condition":
+
+        market_condition()
+
+    }
+
+
+    st.session_state.market_memory.append(
+
+        memory
+
+    )
+
+
+    if len(
+
+        st.session_state.market_memory
+
+    ) > 300:
+
+        st.session_state.market_memory.pop(
+
+            0
+
+        )
+
+
+save_market_memory()
+
+
+# ==========================================================
+# MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Market Memory"
+
+    )
+
+
+    memory_df = pd.DataFrame(
+
+        st.session_state.market_memory[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# GOLD MOMENTUM SCORE
+# ==========================================================
+
+def calculate_gold_momentum_score():
+
+    score = 50
+
+    factors = []
+
+
+    if gold_data:
+
+        change = gold_data["change"]
+
+        if change > 0:
+
+            score += 15
+
+            factors.append(
+
+                "Price momentum positive"
+
+            )
+
+        else:
+
+            score -= 15
+
+            factors.append(
+
+                "Price momentum negative"
+
+            )
+
+
+    rsi = calculate_rsi()
+
+
+    if rsi:
+
+        if rsi["rsi"] < 30:
+
+            score += 10
+
+            factors.append(
+
+                "RSI oversold"
+
+            )
+
+        elif rsi["rsi"] > 70:
+
+            score -= 10
+
+            factors.append(
+
+                "RSI overbought"
+
+            )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    return {
+
+        "score": score,
+
+        "factors": factors
+
+    }
+
+
+# ==========================================================
+# MOMENTUM DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚀 Gold Momentum Score"
+
+    )
+
+
+    momentum_score = calculate_gold_momentum_score()
+
+
+    st.progress(
+
+        momentum_score["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Momentum",
+
+        f'{momentum_score["score"]}/100'
+
+    )
+
+
+    for factor in momentum_score["factors"]:
+
+        st.write(
+
+            "•",
+
+            factor
+
+        )
+
+
+# ==========================================================
+# MARKET DIRECTION ENGINE
+# ==========================================================
+
+def market_direction():
+
+    score = 0
+
+
+    if gold_data:
+
+        score += 1 if gold_data["change"] > 0 else -1
+
+
+    if dxy_data:
+
+        score += 1 if dxy_data["change"] < 0 else -1
+
+
+    if sp500_data:
+
+        score += 1 if sp500_data["change"] > 0 else -1
+
+
+    if score >= 2:
+
+        return "UP"
+
+    elif score <= -2:
+
+        return "DOWN"
+
+    else:
+
+        return "SIDEWAY"
+
+
+# ==========================================================
+# DIRECTION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧭 Market Direction"
+
+    )
+
+
+    st.metric(
+
+        "Direction",
+
+        market_direction()
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 064
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 065
+# ==========================================================
+
+# ==========================================================
+# MARKET DECISION HISTORY
+# ==========================================================
+
+if "decision_history" not in st.session_state:
+
+    st.session_state.decision_history = []
+
+
+def save_decision_history():
+
+    decision = trade_decision_matrix()
+
+    record = {
+
+        "Time":
+
+        current_time(),
+
+        "Decision":
+
+        decision["decision"],
+
+        "Score":
+
+        decision["score"]
+
+    }
+
+    st.session_state.decision_history.append(
+
+        record
+
+    )
+
+
+    if len(
+
+        st.session_state.decision_history
+
+    ) > 200:
+
+        st.session_state.decision_history.pop(
+
+            0
+
+        )
+
+
+save_decision_history()
+
+
+# ==========================================================
+# DECISION HISTORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📚 Decision History"
+
+    )
+
+
+    decision_df = pd.DataFrame(
+
+        st.session_state.decision_history[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        decision_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# GOLD TREND REVERSAL DETECTOR
+# ==========================================================
+
+def detect_trend_reversal():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="3mo"
+
+    )
+
+
+    if history.empty:
+
+        return None
+
+
+    close = history["Close"]
+
+
+    short_ma = close.rolling(
+
+        10
+
+    ).mean()
+
+
+    long_ma = close.rolling(
+
+        30
+
+    ).mean()
+
+
+    current_short = float(
+
+        short_ma.iloc[-1]
+
+    )
+
+
+    current_long = float(
+
+        long_ma.iloc[-1]
+
+    )
+
+
+    previous_short = float(
+
+        short_ma.iloc[-2]
+
+    )
+
+
+    previous_long = float(
+
+        long_ma.iloc[-2]
+
+    )
+
+
+    if (
+
+        previous_short < previous_long
+
+        and
+
+        current_short > current_long
+
+    ):
+
+        signal = "Bullish Reversal"
+
+
+    elif (
+
+        previous_short > previous_long
+
+        and
+
+        current_short < current_long
+
+    ):
+
+        signal = "Bearish Reversal"
+
+
+    else:
+
+        signal = "No Reversal"
+
+
+    return {
+
+        "signal":
+
+        signal,
+
+        "short_ma":
+
+        current_short,
+
+        "long_ma":
+
+        current_long
+
+    }
+
+
+# ==========================================================
+# REVERSAL DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Trend Reversal Detector"
+
+    )
+
+
+    reversal = detect_trend_reversal()
+
+
+    if reversal:
+
+        st.metric(
+
+            "Signal",
+
+            reversal["signal"]
+
+        )
+
+
+        col1, col2 = st.columns(
+
+            2
+
+        )
+
+
+        with col1:
+
+            st.metric(
+
+                "MA10",
+
+                format_price(
+
+                    reversal["short_ma"]
+
+                )
+
+            )
+
+
+        with col2:
+
+            st.metric(
+
+                "MA30",
+
+                format_price(
+
+                    reversal["long_ma"]
+
+                )
+
+            )
+
+
+# ==========================================================
+# GOLD PRICE ACTION ANALYZER
+# ==========================================================
+
+def analyze_price_action():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="1mo"
+
+    )
+
+
+    if history.empty:
+
+        return None
+
+
+    last = history.iloc[-1]
+
+
+    body = abs(
+
+        last["Close"]
+
+        -
+
+        last["Open"]
+
+    )
+
+
+    candle_range = (
+
+        last["High"]
+
+        -
+
+        last["Low"]
+
+    )
+
+
+    if candle_range == 0:
+
+        return "Neutral"
+
+
+    ratio = body / candle_range
+
+
+    if ratio > 0.7:
+
+        return "Strong Momentum Candle"
+
+    elif ratio < 0.3:
+
+        return "Indecision Candle"
+
+    else:
+
+        return "Normal Candle"
+
+
+# ==========================================================
+# PRICE ACTION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🕯 Price Action"
+
+    )
+
+
+    action = analyze_price_action()
+
+
+    if action:
+
+        st.info(
+
+            action
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 065
+# ==========================================================
