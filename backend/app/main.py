@@ -1,25 +1,40 @@
 """
-WEOS Backend Entry Point
-Version: 0.2.0
+WEOS Backend
+Version: 0.5.0
 """
 
-import uvicorn
-from app.api import app
+from fastapi import FastAPI
+
+from app.api.entity_api import router as entity_router
+from app.api.relationship_api import router as relationship_router
+from app.api.flow_api import router as flow_router
+from app.api.timeline_api import router as timeline_router
 
 
-def main():
-    print("===================================")
-    print(" WEOS Backend")
-    print(" Version : 0.2.0")
-    print(" Status  : Starting...")
-    print("===================================")
-
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=8000,
-    )
+app = FastAPI(
+    title="WEOS",
+    version="0.5.0",
+    description="World Economic Operating System"
+)
 
 
-if __name__ == "__main__":
-    main()
+@app.get("/")
+def root():
+    return {
+        "name": "WEOS",
+        "version": "0.5.0",
+        "status": "running"
+    }
+
+
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy"
+    }
+
+
+app.include_router(entity_router)
+app.include_router(relationship_router)
+app.include_router(flow_router)
+app.include_router(timeline_router)
