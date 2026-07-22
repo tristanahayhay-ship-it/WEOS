@@ -124,3 +124,145 @@ if "database_ready" not in st.session_state:
 # ==========================================================
 # KẾT THÚC ĐOẠN 001
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 002
+# ==========================================================
+
+# ==========================================================
+# LOGGING SYSTEM
+# ==========================================================
+
+def current_time():
+
+    return datetime.now().strftime(
+
+        "%Y-%m-%d %H:%M:%S"
+
+    )
+
+def log(
+
+    level,
+
+    message
+
+):
+
+    record = {
+
+        "time": current_time(),
+
+        "level": level,
+
+        "message": message
+
+    }
+
+    st.session_state.logs.append(
+
+        record
+
+    )
+
+    cursor.execute(
+
+        """
+        INSERT INTO system_logs
+        (
+            time,
+            level,
+            message
+        )
+        VALUES
+        (
+            ?,
+            ?,
+            ?
+        )
+        """,
+
+        (
+
+            record["time"],
+
+            record["level"],
+
+            record["message"]
+
+        )
+
+    )
+
+    connection.commit()
+
+# ==========================================================
+# FORMAT FUNCTIONS
+# ==========================================================
+
+def format_price(
+
+    value
+
+):
+
+    try:
+
+        return f"{value:,.2f}"
+
+    except Exception:
+
+        return "-"
+
+def format_percent(
+
+    value
+
+):
+
+    try:
+
+        return f"{value:.2f}%"
+
+    except Exception:
+
+        return "-"
+
+def metric_value(
+
+    data
+
+):
+
+    if data is None:
+
+        return "-"
+
+    return format_price(
+
+        data["price"]
+
+    )
+
+# ==========================================================
+# STARTUP LOG
+# ==========================================================
+
+if len(
+
+    st.session_state.logs
+
+) == 0:
+
+    log(
+
+        "INFO",
+
+        "WEOS started successfully."
+
+    )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 002
+# ==========================================================
+
