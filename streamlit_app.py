@@ -2406,3 +2406,1534 @@ st.sidebar.caption(
 # ==========================================================
 # END OF CHUNK 014
 # ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 015
+# ==========================================================
+
+# ==========================================================
+# RISK CALCULATOR
+# ==========================================================
+
+def calculate_position_size(
+
+    balance,
+
+    risk_percent,
+
+    stoploss_usd
+
+):
+
+    if stoploss_usd <= 0:
+
+        return 0
+
+    risk_money = balance * risk_percent / 100
+
+    lot = risk_money / stoploss_usd
+
+    return round(lot, 2)
+
+# ==========================================================
+# RISK PAGE
+# ==========================================================
+
+if st.session_state.page == "Risk Calculator":
+
+    st.title("🛡 Risk Calculator")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        balance = st.number_input(
+
+            "Account Balance",
+
+            value=100.0,
+
+            step=10.0
+
+        )
+
+    with col2:
+
+        risk = st.slider(
+
+            "Risk (%)",
+
+            0.5,
+
+            10.0,
+
+            2.0,
+
+            0.5
+
+        )
+
+    stoploss = st.number_input(
+
+        "Stop Loss ($)",
+
+        value=10.0,
+
+        step=1.0
+
+    )
+
+    lot = calculate_position_size(
+
+        balance,
+
+        risk,
+
+        stoploss
+
+    )
+
+    st.divider()
+
+    st.metric(
+
+        "Recommended Lot",
+
+        lot
+
+    )
+
+    st.metric(
+
+        "Maximum Loss",
+
+        f"${balance*risk/100:.2f}"
+
+    )
+
+# ==========================================================
+# ACCOUNT SNAPSHOT
+# ==========================================================
+
+if "account" not in st.session_state:
+
+    st.session_state.account = {
+
+        "balance":100,
+
+        "equity":100,
+
+        "profit":0,
+
+        "win":0,
+
+        "loss":0
+
+    }
+
+# ==========================================================
+# ACCOUNT PAGE
+# ==========================================================
+
+if st.session_state.page == "Account":
+
+    st.title("💰 Account")
+
+    acc = st.session_state.account
+
+    c1,c2,c3 = st.columns(3)
+
+    with c1:
+
+        st.metric(
+
+            "Balance",
+
+            f"${acc['balance']:.2f}"
+
+        )
+
+    with c2:
+
+        st.metric(
+
+            "Equity",
+
+            f"${acc['equity']:.2f}"
+
+        )
+
+    with c3:
+
+        st.metric(
+
+            "Profit",
+
+            f"${acc['profit']:.2f}"
+
+        )
+
+    st.divider()
+
+    total = acc["win"] + acc["loss"]
+
+    winrate = 0
+
+    if total > 0:
+
+        winrate = acc["win"] / total * 100
+
+    st.metric(
+
+        "Win Rate",
+
+        f"{winrate:.1f}%"
+
+    )
+
+# ==========================================================
+# MARKET TREND ENGINE
+# ==========================================================
+
+def market_trend(change):
+
+    if change > 1:
+
+        return "🟢 Strong Bull"
+
+    elif change > 0:
+
+        return "🟢 Bull"
+
+    elif change < -1:
+
+        return "🔴 Strong Bear"
+
+    elif change < 0:
+
+        return "🔴 Bear"
+
+    return "🟡 Sideway"
+
+# ==========================================================
+# TREND SUMMARY
+# ==========================================================
+
+st.sidebar.subheader("Trend")
+
+market_map = {
+
+    "Gold":gold_data,
+
+    "DXY":dxy_data,
+
+    "S&P500":sp500_data,
+
+    "NASDAQ":nasdaq_data
+
+}
+
+for symbol,data in market_map.items():
+
+    if data:
+
+        st.sidebar.write(
+
+            symbol,
+
+            market_trend(
+
+                data["change"]
+
+            )
+
+        )
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 015
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 016
+# ==========================================================
+
+# ==========================================================
+# CURRENCY STRENGTH
+# ==========================================================
+
+def calculate_currency_strength():
+
+    strength = {
+
+        "USD": 50,
+        "EUR": 50,
+        "JPY": 50,
+        "GBP": 50
+
+    }
+
+    if dxy_data:
+
+        if dxy_data["change"] > 0:
+
+            strength["USD"] += 20
+
+        else:
+
+            strength["USD"] -= 20
+
+    if sp500_data:
+
+        if sp500_data["change"] > 0:
+
+            strength["USD"] -= 5
+
+    return strength
+
+# ==========================================================
+# CURRENCY PAGE
+# ==========================================================
+
+if st.session_state.page == "Currency Strength":
+
+    st.title("💵 Currency Strength")
+
+    data = calculate_currency_strength()
+
+    df = pd.DataFrame(
+
+        {
+
+            "Currency": list(data.keys()),
+
+            "Strength": list(data.values())
+
+        }
+
+    )
+
+    st.dataframe(
+
+        df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+    st.divider()
+
+    for currency, value in data.items():
+
+        st.write(currency)
+
+        st.progress(value / 100)
+
+# ==========================================================
+# MARKET HEATMAP
+# ==========================================================
+
+def market_heat():
+
+    result = []
+
+    symbols = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for symbol, data in symbols.items():
+
+        if not data:
+
+            continue
+
+        result.append(
+
+            {
+
+                "Market": symbol,
+
+                "Price": data["price"],
+
+                "Change": data["change"],
+
+                "Trend": market_trend(
+
+                    data["change"]
+
+                )
+
+            }
+
+        )
+
+    return pd.DataFrame(result)
+
+# ==========================================================
+# HEATMAP PAGE
+# ==========================================================
+
+if st.session_state.page == "Heatmap":
+
+    st.title("🔥 Market Heatmap")
+
+    heat = market_heat()
+
+    st.dataframe(
+
+        heat,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+# ==========================================================
+# AUTO REFRESH
+# ==========================================================
+
+if "auto_refresh" not in st.session_state:
+
+    st.session_state.auto_refresh = False
+
+st.sidebar.subheader("Auto Refresh")
+
+st.session_state.auto_refresh = st.sidebar.checkbox(
+
+    "Enable",
+
+    value=st.session_state.auto_refresh
+
+)
+
+refresh_interval = st.sidebar.selectbox(
+
+    "Interval",
+
+    [
+
+        30,
+
+        60,
+
+        120,
+
+        300
+
+    ],
+
+    index=1
+
+)
+
+if st.session_state.auto_refresh:
+
+    st.sidebar.success(
+
+        f"Refresh mỗi {refresh_interval} giây"
+
+    )
+
+# ==========================================================
+# CONNECTION STATUS
+# ==========================================================
+
+def check_connection():
+
+    try:
+
+        requests.get(
+
+            "https://www.google.com",
+
+            timeout=3
+
+        )
+
+        return True
+
+    except Exception:
+
+        return False
+
+connected = check_connection()
+
+st.sidebar.subheader("Connection")
+
+if connected:
+
+    st.sidebar.success("🟢 Online")
+
+else:
+
+    st.sidebar.error("🔴 Offline")
+
+# ==========================================================
+# END OF CHUNK 016
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 017
+# ==========================================================
+
+# ==========================================================
+# SESSION REPORT
+# ==========================================================
+
+def build_session_report():
+
+    account = st.session_state.account
+
+    score, _ = calculate_market_sentiment()
+
+    report = {
+
+        "Time": current_time(),
+
+        "Gold": metric_value(gold_data) if gold_data else "-",
+
+        "DXY": metric_value(dxy_data) if dxy_data else "-",
+
+        "S&P500": metric_value(sp500_data) if sp500_data else "-",
+
+        "NASDAQ": metric_value(nasdaq_data) if nasdaq_data else "-",
+
+        "Sentiment": score,
+
+        "Balance": account["balance"],
+
+        "Profit": account["profit"],
+
+        "Alerts": len(st.session_state.alerts),
+
+        "Watchlist": len(st.session_state.watchlist)
+
+    }
+
+    return report
+
+# ==========================================================
+# REPORT PAGE
+# ==========================================================
+
+if st.session_state.page == "Report":
+
+    st.title("📊 Session Report")
+
+    report = build_session_report()
+
+    df = pd.DataFrame(
+
+        {
+
+            "Item": report.keys(),
+
+            "Value": report.values()
+
+        }
+
+    )
+
+    st.dataframe(
+
+        df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+    st.divider()
+
+    json_data = json.dumps(
+
+        report,
+
+        indent=4
+
+    )
+
+    st.download_button(
+
+        "⬇ Download JSON",
+
+        json_data,
+
+        file_name="session_report.json",
+
+        mime="application/json"
+
+    )
+
+# ==========================================================
+# PRICE HISTORY
+# ==========================================================
+
+if "price_history" not in st.session_state:
+
+    st.session_state.price_history = []
+
+def update_price_history():
+
+    if not gold_data:
+
+        return
+
+    st.session_state.price_history.append(
+
+        {
+
+            "time": current_time(),
+
+            "gold": gold_data["price"]
+
+        }
+
+    )
+
+    if len(st.session_state.price_history) > 500:
+
+        st.session_state.price_history.pop(0)
+
+update_price_history()
+
+# ==========================================================
+# HISTORY PAGE
+# ==========================================================
+
+if st.session_state.page == "History":
+
+    st.title("📈 Gold History")
+
+    if len(st.session_state.price_history) == 0:
+
+        st.info("No Data")
+
+    else:
+
+        df = pd.DataFrame(
+
+            st.session_state.price_history
+
+        )
+
+        st.line_chart(
+
+            df.set_index("time")
+
+        )
+
+        st.dataframe(
+
+            df.tail(20),
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+# ==========================================================
+# MARKET SCOREBOARD
+# ==========================================================
+
+st.sidebar.subheader("Scoreboard")
+
+score, _ = calculate_market_sentiment()
+
+st.sidebar.metric(
+
+    "Market Score",
+
+    f"{score}/100"
+
+)
+
+st.sidebar.metric(
+
+    "Gold",
+
+    metric_value(gold_data)
+
+    if gold_data else "-"
+
+)
+
+st.sidebar.metric(
+
+    "DXY",
+
+    metric_value(dxy_data)
+
+    if dxy_data else "-"
+
+)
+
+st.sidebar.metric(
+
+    "S&P500",
+
+    metric_value(sp500_data)
+
+    if sp500_data else "-"
+
+)
+
+st.sidebar.metric(
+
+    "NASDAQ",
+
+    metric_value(nasdaq_data)
+
+    if nasdaq_data else "-"
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 017
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 018
+# ==========================================================
+
+# ==========================================================
+# MARKET SNAPSHOT
+# ==========================================================
+
+def get_market_snapshot():
+
+    snapshot = []
+
+    market = {
+
+        "Gold": gold_data,
+        "DXY": dxy_data,
+        "S&P500": sp500_data,
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for symbol, data in market.items():
+
+        if not data:
+
+            continue
+
+        snapshot.append(
+
+            {
+
+                "Market": symbol,
+
+                "Price": round(
+
+                    data["price"],
+
+                    2
+
+                ),
+
+                "Change %": round(
+
+                    data["change"],
+
+                    2
+
+                ),
+
+                "Trend": market_trend(
+
+                    data["change"]
+
+                )
+
+            }
+
+        )
+
+    return pd.DataFrame(snapshot)
+
+# ==========================================================
+# DASHBOARD SNAPSHOT
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader("📊 Market Snapshot")
+
+    snapshot = get_market_snapshot()
+
+    st.dataframe(
+
+        snapshot,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+    st.divider()
+
+# ==========================================================
+# MARKET RANKING
+# ==========================================================
+
+def ranking_table():
+
+    ranking = []
+
+    symbols = {
+
+        "Gold": gold_data,
+        "DXY": dxy_data,
+        "S&P500": sp500_data,
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for name, data in symbols.items():
+
+        if not data:
+
+            continue
+
+        ranking.append(
+
+            (
+
+                name,
+
+                data["change"]
+
+            )
+
+        )
+
+    ranking.sort(
+
+        key=lambda x: x[1],
+
+        reverse=True
+
+    )
+
+    return ranking
+
+# ==========================================================
+# RANKING PAGE
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader("🏆 Daily Ranking")
+
+    rank = ranking_table()
+
+    for index, item in enumerate(
+
+        rank,
+
+        start=1
+
+    ):
+
+        col1, col2 = st.columns(
+
+            [
+
+                1,
+
+                3
+
+            ]
+
+        )
+
+        with col1:
+
+            st.write(
+
+                f"#{index}"
+
+            )
+
+        with col2:
+
+            st.write(
+
+                f"{item[0]} ({item[1]:.2f}%)"
+
+            )
+
+# ==========================================================
+# SESSION SAVE
+# ==========================================================
+
+def save_session():
+
+    session = {
+
+        "startup":
+
+            st.session_state.startup_time.strftime(
+
+                "%Y-%m-%d %H:%M:%S"
+
+            ),
+
+        "logs":
+
+            st.session_state.logs,
+
+        "alerts":
+
+            st.session_state.alerts,
+
+        "watchlist":
+
+            st.session_state.watchlist,
+
+        "favorites":
+
+            st.session_state.favorites,
+
+        "history":
+
+            st.session_state.price_history
+
+    }
+
+    return json.dumps(
+
+        session,
+
+        indent=4
+
+    )
+
+# ==========================================================
+# SIDEBAR SAVE
+# ==========================================================
+
+st.sidebar.subheader(
+
+    "Backup"
+
+)
+
+st.sidebar.download_button(
+
+    "💾 Save Session",
+
+    save_session(),
+
+    file_name="weos_session.json",
+
+    mime="application/json"
+
+)
+
+# ==========================================================
+# DAILY MARKET BIAS
+# ==========================================================
+
+score, _ = calculate_market_sentiment()
+
+if score >= 80:
+
+    bias = "🟢 Strong Bullish"
+
+elif score >= 60:
+
+    bias = "🟢 Bullish"
+
+elif score >= 40:
+
+    bias = "🟡 Neutral"
+
+elif score >= 20:
+
+    bias = "🔴 Bearish"
+
+else:
+
+    bias = "🔴 Strong Bearish"
+
+st.sidebar.subheader(
+
+    "Daily Bias"
+
+)
+
+st.sidebar.success(
+
+    bias
+
+)
+
+# ==========================================================
+# END OF CHUNK 018
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 019
+# ==========================================================
+
+# ==========================================================
+# MACRO SCORE ENGINE
+# ==========================================================
+
+def macro_score():
+
+    score = 50
+
+    reason = []
+
+    if gold_data and dxy_data:
+
+        if gold_data["change"] > 0 and dxy_data["change"] < 0:
+
+            score += 20
+            reason.append("Gold ↑ + DXY ↓")
+
+        elif gold_data["change"] < 0 and dxy_data["change"] > 0:
+
+            score -= 20
+            reason.append("Gold ↓ + DXY ↑")
+
+    if sp500_data:
+
+        if sp500_data["change"] > 0:
+
+            score += 10
+            reason.append("Risk On")
+
+        else:
+
+            score -= 10
+            reason.append("Risk Off")
+
+    score = max(0, min(score, 100))
+
+    return score, reason
+
+# ==========================================================
+# MACRO PAGE
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.subheader("Global Macro Score")
+
+    macro, reasons = macro_score()
+
+    st.metric(
+
+        "Macro Score",
+
+        macro
+
+    )
+
+    st.progress(
+
+        macro / 100
+
+    )
+
+    st.divider()
+
+    for item in reasons:
+
+        st.write(
+
+            "•",
+
+            item
+
+        )
+
+# ==========================================================
+# MARKET VOLATILITY
+# ==========================================================
+
+def volatility_level(change):
+
+    value = abs(change)
+
+    if value < 0.20:
+
+        return "Very Low"
+
+    elif value < 0.50:
+
+        return "Low"
+
+    elif value < 1:
+
+        return "Medium"
+
+    elif value < 2:
+
+        return "High"
+
+    return "Extreme"
+
+# ==========================================================
+# VOLATILITY PAGE
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader("⚡ Market Volatility")
+
+    market = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    table = []
+
+    for symbol, data in market.items():
+
+        if not data:
+
+            continue
+
+        table.append(
+
+            {
+
+                "Market": symbol,
+
+                "Volatility": volatility_level(
+
+                    data["change"]
+
+                )
+
+            }
+
+        )
+
+    st.dataframe(
+
+        pd.DataFrame(table),
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+# ==========================================================
+# MARKET OPEN STATUS
+# ==========================================================
+
+def market_status():
+
+    hour = datetime.utcnow().hour
+
+    if 13 <= hour <= 21:
+
+        return "🟢 US Session"
+
+    elif 7 <= hour < 13:
+
+        return "🟡 London Session"
+
+    elif 0 <= hour < 7:
+
+        return "🔵 Asia Session"
+
+    return "⚪ Closed"
+
+st.sidebar.subheader(
+
+    "Trading Session"
+
+)
+
+st.sidebar.info(
+
+    market_status()
+
+)
+
+# ==========================================================
+# SYSTEM HEALTH
+# ==========================================================
+
+def system_health():
+
+    score = 100
+
+    if not connected:
+
+        score -= 40
+
+    if not gold_data:
+
+        score -= 20
+
+    if not dxy_data:
+
+        score -= 20
+
+    if len(st.session_state.logs) > 500:
+
+        score -= 10
+
+    score = max(score, 0)
+
+    return score
+
+health = system_health()
+
+st.sidebar.subheader(
+
+    "System Health"
+
+)
+
+st.sidebar.progress(
+
+    health / 100
+
+)
+
+st.sidebar.metric(
+
+    "Health",
+
+    f"{health}%"
+
+)
+
+# ==========================================================
+# END OF CHUNK 019
+# ==========================================================
+
+# ==========================================================
+# WEOS
+# ĐOẠN 020
+# ==========================================================
+
+# ==========================================================
+# TRADING JOURNAL
+# ==========================================================
+
+if "journal" not in st.session_state:
+
+    st.session_state.journal = []
+
+def add_trade(
+
+    symbol,
+
+    direction,
+
+    entry,
+
+    exit_price,
+
+    lot,
+
+    note
+
+):
+
+    pnl = round(
+
+        exit_price - entry,
+
+        2
+
+    )
+
+    if direction == "SELL":
+
+        pnl *= -1
+
+    trade = {
+
+        "Time": current_time(),
+
+        "Symbol": symbol,
+
+        "Direction": direction,
+
+        "Entry": entry,
+
+        "Exit": exit_price,
+
+        "Lot": lot,
+
+        "PnL": pnl,
+
+        "Note": note
+
+    }
+
+    st.session_state.journal.append(
+
+        trade
+
+    )
+
+# ==========================================================
+# JOURNAL PAGE
+# ==========================================================
+
+if st.session_state.page == "Trading Journal":
+
+    st.title("📒 Trading Journal")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        symbol = st.selectbox(
+
+            "Symbol",
+
+            [
+
+                "Gold",
+
+                "DXY",
+
+                "S&P500",
+
+                "NASDAQ"
+
+            ]
+
+        )
+
+    with col2:
+
+        direction = st.selectbox(
+
+            "Direction",
+
+            [
+
+                "BUY",
+
+                "SELL"
+
+            ]
+
+        )
+
+    entry = st.number_input(
+
+        "Entry",
+
+        value=0.0
+
+    )
+
+    exit_price = st.number_input(
+
+        "Exit",
+
+        value=0.0
+
+    )
+
+    lot = st.number_input(
+
+        "Lot",
+
+        value=0.01,
+
+        step=0.01
+
+    )
+
+    note = st.text_area(
+
+        "Note"
+
+    )
+
+    if st.button(
+
+        "Save Trade"
+
+    ):
+
+        add_trade(
+
+            symbol,
+
+            direction,
+
+            entry,
+
+            exit_price,
+
+            lot,
+
+            note
+
+        )
+
+        st.success(
+
+            "Trade Saved."
+
+        )
+
+    st.divider()
+
+    if len(
+
+        st.session_state.journal
+
+    ) > 0:
+
+        df = pd.DataFrame(
+
+            st.session_state.journal
+
+        )
+
+        st.dataframe(
+
+            df,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+# ==========================================================
+# JOURNAL STATISTICS
+# ==========================================================
+
+def journal_statistics():
+
+    total = len(
+
+        st.session_state.journal
+
+    )
+
+    wins = 0
+
+    losses = 0
+
+    pnl = 0
+
+    for trade in st.session_state.journal:
+
+        pnl += trade["PnL"]
+
+        if trade["PnL"] >= 0:
+
+            wins += 1
+
+        else:
+
+            losses += 1
+
+    return {
+
+        "Total": total,
+
+        "Wins": wins,
+
+        "Losses": losses,
+
+        "PnL": pnl
+
+    }
+
+# ==========================================================
+# SIDEBAR JOURNAL
+# ==========================================================
+
+stats = journal_statistics()
+
+st.sidebar.subheader(
+
+    "Journal"
+
+)
+
+st.sidebar.metric(
+
+    "Trades",
+
+    stats["Total"]
+
+)
+
+st.sidebar.metric(
+
+    "Wins",
+
+    stats["Wins"]
+
+)
+
+st.sidebar.metric(
+
+    "Losses",
+
+    stats["Losses"]
+
+)
+
+st.sidebar.metric(
+
+    "PnL",
+
+    round(
+
+        stats["PnL"],
+
+        2
+
+    )
+
+)
+
+st.sidebar.divider()
+
+# ==========================================================
+# END OF CHUNK 020
+# ==========================================================
