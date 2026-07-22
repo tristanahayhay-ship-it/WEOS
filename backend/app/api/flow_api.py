@@ -1,47 +1,40 @@
 """
 WEOS Flow API
-Version: 0.5.0
+Version: 0.9.0
 """
 
 from fastapi import APIRouter
-
-from app.repositories.flow_repository import FlowRepository
-from app.models.flow_model import FlowModel
+from app.db.flow import Flow
+from app.services.flow_service import FlowService
 
 router = APIRouter(
     prefix="/flows",
     tags=["Flows"]
 )
 
-repository = FlowRepository()
+service = FlowService()
 
 
 @router.get("/")
-def get_flows():
-    return repository.all()
+def get_all_flows():
+    return service.get_all()
 
 
-@router.get("/source/{source}")
-def get_by_source(source: str):
-    return repository.by_source(source)
-
-
-@router.get("/target/{target}")
-def get_by_target(target: str):
-    return repository.by_target(target)
+@router.get("/{flow_id}")
+def get_flow(flow_id: str):
+    return service.get(flow_id)
 
 
 @router.post("/")
-def create_flow(flow: FlowModel):
-    repository.save(flow)
-    return {
-        "message": "Flow created",
-        "flow": flow
-    }
+def create_flow(flow: Flow):
+    return service.create(flow)
 
 
-@router.get("/count")
-def count_flows():
-    return {
-        "count": repository.count()
-    }
+@router.put("/")
+def update_flow(flow: Flow):
+    return service.update(flow)
+
+
+@router.delete("/{flow_id}")
+def delete_flow(flow_id: str):
+    return service.delete(flow_id)
