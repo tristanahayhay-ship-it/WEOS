@@ -2839,3 +2839,3909 @@ if st.session_state.page == "Gold":
 # ==========================================================
 # KẾT THÚC ĐOẠN 020
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 021
+# ==========================================================
+
+# ==========================================================
+# RSI CALCULATOR
+# ==========================================================
+
+def calculate_rsi(
+
+    period=14
+
+):
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="6mo"
+
+    )
+
+    if history.empty:
+
+        return None
+
+    delta = history[
+
+        "Close"
+
+    ].diff()
+
+    gain = delta.where(
+
+        delta > 0,
+
+        0
+
+    )
+
+    loss = -delta.where(
+
+        delta < 0,
+
+        0
+
+    )
+
+    average_gain = gain.rolling(
+
+        period
+
+    ).mean()
+
+    average_loss = loss.rolling(
+
+        period
+
+    ).mean()
+
+    rs = average_gain / average_loss
+
+    rsi = 100 - (
+
+        100 / (
+
+            1 + rs
+
+        )
+
+    )
+
+    latest = float(
+
+        rsi.iloc[-1]
+
+    )
+
+    if latest >= 70:
+
+        signal = "Overbought"
+
+    elif latest <= 30:
+
+        signal = "Oversold"
+
+    else:
+
+        signal = "Neutral"
+
+    return {
+
+        "rsi": latest,
+
+        "signal": signal
+
+    }
+
+# ==========================================================
+# GOLD RSI
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "RSI Indicator"
+
+    )
+
+    rsi_data = calculate_rsi()
+
+    if rsi_data is None:
+
+        st.warning(
+
+            "Không thể tính RSI."
+
+        )
+
+    else:
+
+        st.metric(
+
+            "RSI (14)",
+
+            round(
+
+                rsi_data["rsi"],
+
+                2
+
+            )
+
+        )
+
+        st.write(
+
+            "Signal:",
+
+            rsi_data["signal"]
+
+        )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 021
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 022
+# ==========================================================
+
+# ==========================================================
+# MACD CALCULATOR
+# ==========================================================
+
+def calculate_macd():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="6mo"
+
+    )
+
+    if history.empty:
+
+        return None
+
+    close = history[
+
+        "Close"
+
+    ]
+
+    ema12 = close.ewm(
+
+        span=12,
+
+        adjust=False
+
+    ).mean()
+
+    ema26 = close.ewm(
+
+        span=26,
+
+        adjust=False
+
+    ).mean()
+
+    macd = ema12 - ema26
+
+    signal = macd.ewm(
+
+        span=9,
+
+        adjust=False
+
+    ).mean()
+
+    histogram = macd - signal
+
+    return {
+
+        "macd": float(
+
+            macd.iloc[-1]
+
+        ),
+
+        "signal": float(
+
+            signal.iloc[-1]
+
+        ),
+
+        "histogram": float(
+
+            histogram.iloc[-1]
+
+        )
+
+    }
+
+# ==========================================================
+# GOLD MACD
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "MACD Indicator"
+
+    )
+
+    macd_data = calculate_macd()
+
+    if macd_data is None:
+
+        st.warning(
+
+            "Không thể tính MACD."
+
+        )
+
+    else:
+
+        col1, col2, col3 = st.columns(
+
+            3
+
+        )
+
+        with col1:
+
+            st.metric(
+
+                "MACD",
+
+                round(
+
+                    macd_data["macd"],
+
+                    4
+
+                )
+
+            )
+
+        with col2:
+
+            st.metric(
+
+                "Signal",
+
+                round(
+
+                    macd_data["signal"],
+
+                    4
+
+                )
+
+            )
+
+        with col3:
+
+            st.metric(
+
+                "Histogram",
+
+                round(
+
+                    macd_data["histogram"],
+
+                    4
+
+                )
+
+            )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 022
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 023
+# ==========================================================
+
+# ==========================================================
+# BOLLINGER BANDS
+# ==========================================================
+
+def calculate_bollinger_bands(
+
+    period=20,
+
+    std_multiplier=2
+
+):
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="6mo"
+
+    )
+
+    if history.empty:
+
+        return None
+
+    close = history[
+
+        "Close"
+
+    ]
+
+    middle = close.rolling(
+
+        period
+
+    ).mean()
+
+    deviation = close.rolling(
+
+        period
+
+    ).std()
+
+    upper = middle + (
+
+        deviation
+
+        * std_multiplier
+
+    )
+
+    lower = middle - (
+
+        deviation
+
+        * std_multiplier
+
+    )
+
+    latest_price = float(
+
+        close.iloc[-1]
+
+    )
+
+    latest_upper = float(
+
+        upper.iloc[-1]
+
+    )
+
+    latest_middle = float(
+
+        middle.iloc[-1]
+
+    )
+
+    latest_lower = float(
+
+        lower.iloc[-1]
+
+    )
+
+    if latest_price > latest_upper:
+
+        signal = "Breakout Above"
+
+    elif latest_price < latest_lower:
+
+        signal = "Breakout Below"
+
+    else:
+
+        signal = "Inside Bands"
+
+    return {
+
+        "upper": latest_upper,
+
+        "middle": latest_middle,
+
+        "lower": latest_lower,
+
+        "price": latest_price,
+
+        "signal": signal
+
+    }
+
+# ==========================================================
+# GOLD BOLLINGER BANDS
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "Bollinger Bands"
+
+    )
+
+    bb = calculate_bollinger_bands()
+
+    if bb is None:
+
+        st.warning(
+
+            "Không thể tính Bollinger Bands."
+
+        )
+
+    else:
+
+        col1, col2, col3 = st.columns(
+
+            3
+
+        )
+
+        with col1:
+
+            st.metric(
+
+                "Upper",
+
+                format_price(
+
+                    bb["upper"]
+
+                )
+
+            )
+
+        with col2:
+
+            st.metric(
+
+                "Middle",
+
+                format_price(
+
+                    bb["middle"]
+
+                )
+
+            )
+
+        with col3:
+
+            st.metric(
+
+                "Lower",
+
+                format_price(
+
+                    bb["lower"]
+
+                )
+
+            )
+
+        st.write(
+
+            "Signal:",
+
+            bb["signal"]
+
+        )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 023
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 024
+# ==========================================================
+
+# ==========================================================
+# ATR CALCULATOR
+# ==========================================================
+
+def calculate_atr(
+
+    period=14
+
+):
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="6mo"
+
+    )
+
+    if history.empty:
+
+        return None
+
+    high = history[
+
+        "High"
+
+    ]
+
+    low = history[
+
+        "Low"
+
+    ]
+
+    close = history[
+
+        "Close"
+
+    ]
+
+    previous_close = close.shift(
+
+        1
+
+    )
+
+    tr = pd.concat(
+
+        [
+
+            high - low,
+
+            (high - previous_close).abs(),
+
+            (low - previous_close).abs()
+
+        ],
+
+        axis=1
+
+    ).max(
+
+        axis=1
+
+    )
+
+    atr = tr.rolling(
+
+        period
+
+    ).mean()
+
+    latest = float(
+
+        atr.iloc[-1]
+
+    )
+
+    return latest
+
+# ==========================================================
+# GOLD ATR
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "Average True Range"
+
+    )
+
+    atr_value = calculate_atr()
+
+    if atr_value is None:
+
+        st.warning(
+
+            "Không thể tính ATR."
+
+        )
+
+    else:
+
+        st.metric(
+
+            "ATR (14)",
+
+            format_price(
+
+                atr_value
+
+            )
+
+        )
+
+        if atr_value >= 40:
+
+            st.error(
+
+                "Biến động rất mạnh."
+
+            )
+
+        elif atr_value >= 25:
+
+            st.warning(
+
+                "Biến động cao."
+
+            )
+
+        elif atr_value >= 10:
+
+            st.info(
+
+                "Biến động trung bình."
+
+            )
+
+        else:
+
+            st.success(
+
+                "Biến động thấp."
+
+            )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 024
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 025
+# ==========================================================
+
+# ==========================================================
+# STOCHASTIC OSCILLATOR
+# ==========================================================
+
+def calculate_stochastic(
+
+    period=14,
+
+    smooth=3
+
+):
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="6mo"
+
+    )
+
+    if history.empty:
+
+        return None
+
+    lowest_low = history[
+
+        "Low"
+
+    ].rolling(
+
+        period
+
+    ).min()
+
+    highest_high = history[
+
+        "High"
+
+    ].rolling(
+
+        period
+
+    ).max()
+
+    k = (
+
+        (
+
+            history["Close"]
+
+            - lowest_low
+
+        )
+
+        /
+
+        (
+
+            highest_high
+
+            - lowest_low
+
+        )
+
+    ) * 100
+
+    d = k.rolling(
+
+        smooth
+
+    ).mean()
+
+    latest_k = float(
+
+        k.iloc[-1]
+
+    )
+
+    latest_d = float(
+
+        d.iloc[-1]
+
+    )
+
+    if latest_k >= 80:
+
+        signal = "Overbought"
+
+    elif latest_k <= 20:
+
+        signal = "Oversold"
+
+    else:
+
+        signal = "Neutral"
+
+    return {
+
+        "k": latest_k,
+
+        "d": latest_d,
+
+        "signal": signal
+
+    }
+
+# ==========================================================
+# GOLD STOCHASTIC
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "Stochastic Oscillator"
+
+    )
+
+    stochastic = calculate_stochastic()
+
+    if stochastic is None:
+
+        st.warning(
+
+            "Không thể tính Stochastic."
+
+        )
+
+    else:
+
+        col1, col2 = st.columns(
+
+            2
+
+        )
+
+        with col1:
+
+            st.metric(
+
+                "%K",
+
+                round(
+
+                    stochastic["k"],
+
+                    2
+
+                )
+
+            )
+
+        with col2:
+
+            st.metric(
+
+                "%D",
+
+                round(
+
+                    stochastic["d"],
+
+                    2
+
+                )
+
+            )
+
+        st.write(
+
+            "Signal:",
+
+            stochastic["signal"]
+
+        )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 025
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 026
+# ==========================================================
+
+# ==========================================================
+# EMA ANALYZER
+# ==========================================================
+
+def calculate_ema_signal():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="6mo"
+
+    )
+
+    if history.empty:
+
+        return None
+
+    close = history[
+
+        "Close"
+
+    ]
+
+    ema20 = close.ewm(
+
+        span=20,
+
+        adjust=False
+
+    ).mean()
+
+    ema50 = close.ewm(
+
+        span=50,
+
+        adjust=False
+
+    ).mean()
+
+    ema200 = close.ewm(
+
+        span=200,
+
+        adjust=False
+
+    ).mean()
+
+    latest_price = float(
+
+        close.iloc[-1]
+
+    )
+
+    latest_ema20 = float(
+
+        ema20.iloc[-1]
+
+    )
+
+    latest_ema50 = float(
+
+        ema50.iloc[-1]
+
+    )
+
+    latest_ema200 = float(
+
+        ema200.iloc[-1]
+
+    )
+
+    if latest_price > latest_ema20 > latest_ema50 > latest_ema200:
+
+        signal = "Strong Bullish"
+
+    elif latest_price < latest_ema20 < latest_ema50 < latest_ema200:
+
+        signal = "Strong Bearish"
+
+    else:
+
+        signal = "Neutral"
+
+    return {
+
+        "ema20": latest_ema20,
+
+        "ema50": latest_ema50,
+
+        "ema200": latest_ema200,
+
+        "signal": signal
+
+    }
+
+# ==========================================================
+# GOLD EMA
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "EMA Analysis"
+
+    )
+
+    ema_data = calculate_ema_signal()
+
+    if ema_data is None:
+
+        st.warning(
+
+            "Không thể tính EMA."
+
+        )
+
+    else:
+
+        col1, col2, col3 = st.columns(
+
+            3
+
+        )
+
+        with col1:
+
+            st.metric(
+
+                "EMA20",
+
+                format_price(
+
+                    ema_data["ema20"]
+
+                )
+
+            )
+
+        with col2:
+
+            st.metric(
+
+                "EMA50",
+
+                format_price(
+
+                    ema_data["ema50"]
+
+                )
+
+            )
+
+        with col3:
+
+            st.metric(
+
+                "EMA200",
+
+                format_price(
+
+                    ema_data["ema200"]
+
+                )
+
+            )
+
+        st.write(
+
+            "Signal:",
+
+            ema_data["signal"]
+
+        )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 026
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 027
+# ==========================================================
+
+# ==========================================================
+# TREND STRENGTH ANALYZER
+# ==========================================================
+
+def calculate_trend_strength():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="6mo"
+
+    )
+
+    if history.empty:
+
+        return None
+
+    close = history["Close"]
+
+    change = (
+
+        close.iloc[-1]
+
+        -
+
+        close.iloc[-20]
+
+    )
+
+    percentage = (
+
+        change
+
+        /
+
+        close.iloc[-20]
+
+    ) * 100
+
+    if percentage >= 5:
+
+        strength = "Very Strong Uptrend"
+
+    elif percentage >= 2:
+
+        strength = "Strong Uptrend"
+
+    elif percentage > 0:
+
+        strength = "Weak Uptrend"
+
+    elif percentage <= -5:
+
+        strength = "Very Strong Downtrend"
+
+    elif percentage <= -2:
+
+        strength = "Strong Downtrend"
+
+    elif percentage < 0:
+
+        strength = "Weak Downtrend"
+
+    else:
+
+        strength = "Sideway"
+
+    return {
+
+        "change": float(change),
+
+        "percentage": float(percentage),
+
+        "strength": strength
+
+    }
+
+# ==========================================================
+# GOLD TREND STRENGTH
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "Trend Strength"
+
+    )
+
+    trend_strength = calculate_trend_strength()
+
+    if trend_strength is None:
+
+        st.warning(
+
+            "Không thể phân tích trend."
+
+        )
+
+    else:
+
+        col1, col2 = st.columns(
+
+            2
+
+        )
+
+        with col1:
+
+            st.metric(
+
+                "20 Day Change",
+
+                format_percent(
+
+                    trend_strength["percentage"]
+
+                )
+
+            )
+
+        with col2:
+
+            st.metric(
+
+                "Strength",
+
+                trend_strength["strength"]
+
+            )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 027
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 028
+# ==========================================================
+
+# ==========================================================
+# MARKET CORRELATION ANALYZER
+# ==========================================================
+
+def calculate_market_correlation():
+
+    data = {}
+
+    symbols = {
+
+        "Gold": MARKET_SYMBOLS["Gold"],
+
+        "DXY": MARKET_SYMBOLS["DXY"],
+
+        "S&P500": MARKET_SYMBOLS["S&P500"],
+
+        "NASDAQ": MARKET_SYMBOLS["NASDAQ"]
+
+    }
+
+    for name, symbol in symbols.items():
+
+        history = load_price_history(
+
+            symbol,
+
+            period="6mo"
+
+        )
+
+        if not history.empty:
+
+            data[name] = history["Close"]
+
+    if len(data) < 2:
+
+        return None
+
+    price_df = pd.DataFrame(
+
+        data
+
+    )
+
+    correlation = price_df.corr()
+
+    return correlation
+
+# ==========================================================
+# CORRELATION PAGE
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "Market Correlation"
+
+    )
+
+    correlation = calculate_market_correlation()
+
+    if correlation is None:
+
+        st.warning(
+
+            "Không đủ dữ liệu."
+
+        )
+
+    else:
+
+        st.dataframe(
+
+            correlation,
+
+            use_container_width=True
+
+        )
+
+# ==========================================================
+# DXY ANALYSIS
+# ==========================================================
+
+def analyze_dxy():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["DXY"],
+
+        period="6mo"
+
+    )
+
+    if history.empty:
+
+        return None
+
+    close = history["Close"]
+
+    change = (
+
+        close.iloc[-1]
+
+        -
+
+        close.iloc[-20]
+
+    )
+
+    percent = (
+
+        change
+
+        /
+
+        close.iloc[-20]
+
+    ) * 100
+
+    if percent > 2:
+
+        trend = "USD Strong"
+
+    elif percent < -2:
+
+        trend = "USD Weak"
+
+    else:
+
+        trend = "USD Neutral"
+
+    return {
+
+        "change": percent,
+
+        "trend": trend
+
+    }
+
+# ==========================================================
+# DXY PAGE
+# ==========================================================
+
+if st.session_state.page == "Forex":
+
+    st.divider()
+
+    st.subheader(
+
+        "DXY Analysis"
+
+    )
+
+    dxy_analysis = analyze_dxy()
+
+    if dxy_analysis:
+
+        st.metric(
+
+            "6 Month Change",
+
+            format_percent(
+
+                dxy_analysis["change"]
+
+            )
+
+        )
+
+        st.info(
+
+            dxy_analysis["trend"]
+
+        )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 028
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 029
+# ==========================================================
+
+# ==========================================================
+# MARKET RISK ANALYZER
+# ==========================================================
+
+def calculate_market_risk():
+
+    risk_score = 50
+
+    reasons = []
+
+    if gold_data:
+
+        if abs(gold_data["change"]) > 2:
+
+            risk_score += 15
+
+            reasons.append(
+
+                "Gold biến động mạnh."
+
+            )
+
+        else:
+
+            risk_score -= 5
+
+            reasons.append(
+
+                "Gold ổn định."
+
+            )
+
+    if dxy_data:
+
+        if abs(dxy_data["change"]) > 1:
+
+            risk_score += 15
+
+            reasons.append(
+
+                "USD biến động cao."
+
+            )
+
+        else:
+
+            risk_score -= 5
+
+            reasons.append(
+
+                "USD ổn định."
+
+            )
+
+    if sp500_data:
+
+        if sp500_data["change"] < -1:
+
+            risk_score += 20
+
+            reasons.append(
+
+                "Chứng khoán giảm mạnh."
+
+            )
+
+        elif sp500_data["change"] > 1:
+
+            risk_score -= 5
+
+            reasons.append(
+
+                "Thị trường tích cực."
+
+            )
+
+    risk_score = max(
+
+        0,
+
+        min(
+
+            risk_score,
+
+            100
+
+        )
+
+    )
+
+    if risk_score >= 80:
+
+        level = "High Risk"
+
+    elif risk_score >= 60:
+
+        level = "Medium Risk"
+
+    else:
+
+        level = "Low Risk"
+
+    return {
+
+        "score": risk_score,
+
+        "level": level,
+
+        "reasons": reasons
+
+    }
+
+# ==========================================================
+# RISK PAGE
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "Market Risk"
+
+    )
+
+    risk = calculate_market_risk()
+
+    st.progress(
+
+        risk["score"] / 100
+
+    )
+
+    st.metric(
+
+        "Risk Score",
+
+        f'{risk["score"]}/100'
+
+    )
+
+    st.info(
+
+        risk["level"]
+
+    )
+
+    for reason in risk["reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 029
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 030
+# ==========================================================
+
+# ==========================================================
+# AI MARKET SUMMARY
+# ==========================================================
+
+def generate_ai_summary():
+
+    summary = []
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            summary.append(
+
+                "Gold đang có lực mua."
+
+            )
+
+        elif gold_data["change"] < 0:
+
+            summary.append(
+
+                "Gold đang chịu áp lực bán."
+
+            )
+
+        else:
+
+            summary.append(
+
+                "Gold đang cân bằng."
+
+            )
+
+    if dxy_data:
+
+        if dxy_data["change"] > 0:
+
+            summary.append(
+
+                "USD đang mạnh lên."
+
+            )
+
+        elif dxy_data["change"] < 0:
+
+            summary.append(
+
+                "USD đang suy yếu."
+
+            )
+
+        else:
+
+            summary.append(
+
+                "USD đi ngang."
+
+            )
+
+    if sp500_data:
+
+        if sp500_data["change"] > 0:
+
+            summary.append(
+
+                "Tâm lý rủi ro tích cực."
+
+            )
+
+        else:
+
+            summary.append(
+
+                "Tâm lý thị trường thận trọng."
+
+            )
+
+    return summary
+
+# ==========================================================
+# AI ANALYSIS PAGE
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🤖 AI Market Summary"
+
+    )
+
+    ai_summary = generate_ai_summary()
+
+    for item in ai_summary:
+
+        st.write(
+
+            "•",
+
+            item
+
+        )
+
+# ==========================================================
+# MARKET OPEN HOURS
+# ==========================================================
+
+def market_session():
+
+    hour = datetime.utcnow().hour
+
+    if 0 <= hour < 7:
+
+        return "Asia Session"
+
+    elif 7 <= hour < 13:
+
+        return "London Session"
+
+    elif 13 <= hour < 21:
+
+        return "New York Session"
+
+    else:
+
+        return "Market Transition"
+
+# ==========================================================
+# SESSION DISPLAY
+# ==========================================================
+
+st.sidebar.divider()
+
+st.sidebar.subheader(
+
+    "Market Session"
+
+)
+
+st.sidebar.info(
+
+    market_session()
+
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 030
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 031
+# ==========================================================
+
+# ==========================================================
+# TRADING SESSION ANALYZER
+# ==========================================================
+
+def analyze_trading_session():
+
+    hour = datetime.utcnow().hour
+
+    if 0 <= hour < 8:
+
+        return {
+
+            "session": "Asia",
+
+            "volatility": "Medium"
+
+        }
+
+    elif 8 <= hour < 16:
+
+        return {
+
+            "session": "London",
+
+            "volatility": "High"
+
+        }
+
+    elif 16 <= hour < 24:
+
+        return {
+
+            "session": "New York",
+
+            "volatility": "Very High"
+
+        }
+
+    return {
+
+        "session": "Unknown",
+
+        "volatility": "Low"
+
+    }
+
+# ==========================================================
+# SESSION PANEL
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⏰ Trading Session"
+
+    )
+
+    session_data = analyze_trading_session()
+
+    col1, col2 = st.columns(
+
+        2
+
+    )
+
+    with col1:
+
+        st.metric(
+
+            "Current Session",
+
+            session_data["session"]
+
+        )
+
+    with col2:
+
+        st.metric(
+
+            "Expected Volatility",
+
+            session_data["volatility"]
+
+        )
+
+# ==========================================================
+# MARKET CONDITION ENGINE
+# ==========================================================
+
+def market_condition():
+
+    score = 0
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            score += 1
+
+        else:
+
+            score -= 1
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            score += 1
+
+        else:
+
+            score -= 1
+
+    if sp500_data:
+
+        if sp500_data["change"] > 0:
+
+            score += 1
+
+        else:
+
+            score -= 1
+
+    if score >= 2:
+
+        return "Bullish Environment"
+
+    elif score <= -2:
+
+        return "Bearish Environment"
+
+    return "Mixed Environment"
+
+# ==========================================================
+# CONDITION DISPLAY
+# ==========================================================
+
+st.sidebar.subheader(
+
+    "Market Condition"
+
+)
+
+st.sidebar.success(
+
+    market_condition()
+
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 031
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 032
+# ==========================================================
+
+# ==========================================================
+# MARKET ALERT SYSTEM
+# ==========================================================
+
+if "alerts" not in st.session_state:
+
+    st.session_state.alerts = []
+
+
+def add_alert(
+
+    symbol,
+
+    target,
+
+    condition
+
+):
+
+    alert = {
+
+        "symbol": symbol,
+
+        "target": target,
+
+        "condition": condition,
+
+        "created": current_time(),
+
+        "active": True
+
+    }
+
+    st.session_state.alerts.append(
+
+        alert
+
+    )
+
+    log(
+
+        "INFO",
+
+        f"Created alert {symbol}"
+
+    )
+
+
+# ==========================================================
+# ALERT PAGE
+# ==========================================================
+
+if st.session_state.page == "Settings":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔔 Price Alert"
+
+    )
+
+    alert_symbol = st.selectbox(
+
+        "Symbol",
+
+        list(
+
+            MARKET_SYMBOLS.keys()
+
+        ),
+
+        key="alert_symbol"
+
+    )
+
+    alert_price = st.number_input(
+
+        "Target Price",
+
+        value=0.0,
+
+        key="alert_price"
+
+    )
+
+    alert_condition = st.selectbox(
+
+        "Condition",
+
+        [
+
+            "Above",
+
+            "Below"
+
+        ],
+
+        key="alert_condition"
+
+    )
+
+    if st.button(
+
+        "Create Alert"
+
+    ):
+
+        add_alert(
+
+            alert_symbol,
+
+            alert_price,
+
+            alert_condition
+
+        )
+
+        st.success(
+
+            "Alert created"
+
+        )
+
+
+# ==========================================================
+# ALERT CHECK ENGINE
+# ==========================================================
+
+def check_alerts():
+
+    triggered = []
+
+    market_data = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for alert in st.session_state.alerts:
+
+        if not alert["active"]:
+
+            continue
+
+        data = market_data.get(
+
+            alert["symbol"]
+
+        )
+
+        if data is None:
+
+            continue
+
+        price = data["price"]
+
+        if alert["condition"] == "Above":
+
+            if price >= alert["target"]:
+
+                triggered.append(
+
+                    alert
+
+                )
+
+        if alert["condition"] == "Below":
+
+            if price <= alert["target"]:
+
+                triggered.append(
+
+                    alert
+
+                )
+
+    return triggered
+
+
+# ==========================================================
+# ALERT STATUS
+# ==========================================================
+
+active_alerts = check_alerts()
+
+if len(active_alerts) > 0:
+
+    for alert in active_alerts:
+
+        st.toast(
+
+            f'{alert["symbol"]} reached target'
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 032
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 033
+# ==========================================================
+
+# ==========================================================
+# PORTFOLIO TRACKER
+# ==========================================================
+
+if "portfolio" not in st.session_state:
+
+    st.session_state.portfolio = []
+
+
+def add_position(
+
+    symbol,
+
+    amount,
+
+    entry_price
+
+):
+
+    position = {
+
+        "symbol": symbol,
+
+        "amount": amount,
+
+        "entry_price": entry_price,
+
+        "time": current_time()
+
+    }
+
+    st.session_state.portfolio.append(
+
+        position
+
+    )
+
+    log(
+
+        "INFO",
+
+        f"Added position {symbol}"
+
+    )
+
+
+# ==========================================================
+# PORTFOLIO PAGE
+# ==========================================================
+
+if st.session_state.page == "Settings":
+
+    st.divider()
+
+    st.subheader(
+
+        "💼 Portfolio"
+
+    )
+
+    portfolio_symbol = st.selectbox(
+
+        "Market",
+
+        list(
+
+            MARKET_SYMBOLS.keys()
+
+        ),
+
+        key="portfolio_symbol"
+
+    )
+
+    portfolio_amount = st.number_input(
+
+        "Amount",
+
+        min_value=0.0,
+
+        value=0.01,
+
+        step=0.01,
+
+        key="portfolio_amount"
+
+    )
+
+    portfolio_entry = st.number_input(
+
+        "Entry Price",
+
+        min_value=0.0,
+
+        value=0.0,
+
+        key="portfolio_entry"
+
+    )
+
+
+    if st.button(
+
+        "Add Position"
+
+    ):
+
+        add_position(
+
+            portfolio_symbol,
+
+            portfolio_amount,
+
+            portfolio_entry
+
+        )
+
+        st.success(
+
+            "Position added"
+
+        )
+
+
+# ==========================================================
+# PORTFOLIO CALCULATOR
+# ==========================================================
+
+def calculate_portfolio():
+
+    result = []
+
+    market = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for item in st.session_state.portfolio:
+
+        current = market.get(
+
+            item["symbol"]
+
+        )
+
+        if current is None:
+
+            continue
+
+        pnl = (
+
+            current["price"]
+
+            -
+
+            item["entry_price"]
+
+        ) * item["amount"]
+
+        result.append(
+
+            {
+
+                "Symbol": item["symbol"],
+
+                "Amount": item["amount"],
+
+                "Entry": item["entry_price"],
+
+                "Current": current["price"],
+
+                "PnL": round(
+
+                    pnl,
+
+                    2
+
+                )
+
+            }
+
+        )
+
+    return pd.DataFrame(
+
+        result
+
+    )
+
+
+# ==========================================================
+# PORTFOLIO DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Settings":
+
+    if len(
+
+        st.session_state.portfolio
+
+    ) > 0:
+
+        st.subheader(
+
+            "Current Positions"
+
+        )
+
+        st.dataframe(
+
+            calculate_portfolio(),
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 033
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 034
+# ==========================================================
+
+# ==========================================================
+# TRADING JOURNAL
+# ==========================================================
+
+if "journal" not in st.session_state:
+
+    st.session_state.journal = []
+
+
+def add_trade_record(
+
+    symbol,
+
+    direction,
+
+    entry,
+
+    exit_price,
+
+    volume,
+
+    note
+
+):
+
+    profit = (
+
+        exit_price - entry
+
+    ) * volume
+
+    if direction == "SELL":
+
+        profit = (
+
+            entry - exit_price
+
+        ) * volume
+
+    trade = {
+
+        "Time": current_time(),
+
+        "Symbol": symbol,
+
+        "Direction": direction,
+
+        "Entry": entry,
+
+        "Exit": exit_price,
+
+        "Volume": volume,
+
+        "Profit": round(
+
+            profit,
+
+            2
+
+        ),
+
+        "Note": note
+
+    }
+
+    st.session_state.journal.append(
+
+        trade
+
+    )
+
+    log(
+
+        "INFO",
+
+        f"Trade saved {symbol}"
+
+    )
+
+
+# ==========================================================
+# JOURNAL PAGE
+# ==========================================================
+
+if st.session_state.page == "Settings":
+
+    st.divider()
+
+    st.subheader(
+
+        "📒 Trading Journal"
+
+    )
+
+    journal_symbol = st.selectbox(
+
+        "Symbol",
+
+        list(
+
+            MARKET_SYMBOLS.keys()
+
+        ),
+
+        key="journal_symbol"
+
+    )
+
+    journal_direction = st.selectbox(
+
+        "Direction",
+
+        [
+
+            "BUY",
+
+            "SELL"
+
+        ],
+
+        key="journal_direction"
+
+    )
+
+    journal_entry = st.number_input(
+
+        "Entry",
+
+        value=0.0,
+
+        key="journal_entry"
+
+    )
+
+    journal_exit = st.number_input(
+
+        "Exit",
+
+        value=0.0,
+
+        key="journal_exit"
+
+    )
+
+    journal_volume = st.number_input(
+
+        "Volume",
+
+        value=0.01,
+
+        step=0.01,
+
+        key="journal_volume"
+
+    )
+
+    journal_note = st.text_input(
+
+        "Note",
+
+        key="journal_note"
+
+    )
+
+
+    if st.button(
+
+        "Save Trade"
+
+    ):
+
+        add_trade_record(
+
+            journal_symbol,
+
+            journal_direction,
+
+            journal_entry,
+
+            journal_exit,
+
+            journal_volume,
+
+            journal_note
+
+        )
+
+        st.success(
+
+            "Trade saved"
+
+        )
+
+
+# ==========================================================
+# JOURNAL DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Settings":
+
+    if len(
+
+        st.session_state.journal
+
+    ) > 0:
+
+        st.subheader(
+
+            "Trade History"
+
+        )
+
+        journal_df = pd.DataFrame(
+
+            st.session_state.journal
+
+        )
+
+        st.dataframe(
+
+            journal_df,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 034
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 035
+# ==========================================================
+
+# ==========================================================
+# TRADING PERFORMANCE ANALYZER
+# ==========================================================
+
+def analyze_trading_performance():
+
+    if len(
+
+        st.session_state.journal
+
+    ) == 0:
+
+        return {
+
+            "total": 0,
+
+            "wins": 0,
+
+            "losses": 0,
+
+            "winrate": 0,
+
+            "profit": 0
+
+        }
+
+    total = len(
+
+        st.session_state.journal
+
+    )
+
+    wins = 0
+
+    losses = 0
+
+    total_profit = 0
+
+    for trade in st.session_state.journal:
+
+        profit = trade["Profit"]
+
+        total_profit += profit
+
+        if profit > 0:
+
+            wins += 1
+
+        else:
+
+            losses += 1
+
+    winrate = (
+
+        wins
+
+        /
+
+        total
+
+    ) * 100
+
+    return {
+
+        "total": total,
+
+        "wins": wins,
+
+        "losses": losses,
+
+        "winrate": winrate,
+
+        "profit": total_profit
+
+    }
+
+
+# ==========================================================
+# PERFORMANCE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Settings":
+
+    st.divider()
+
+    st.subheader(
+
+        "📈 Trading Performance"
+
+    )
+
+    performance = analyze_trading_performance()
+
+    col1, col2, col3, col4 = st.columns(
+
+        4
+
+    )
+
+    with col1:
+
+        st.metric(
+
+            "Total Trades",
+
+            performance["total"]
+
+        )
+
+    with col2:
+
+        st.metric(
+
+            "Wins",
+
+            performance["wins"]
+
+        )
+
+    with col3:
+
+        st.metric(
+
+            "Win Rate",
+
+            f'{performance["winrate"]:.2f}%'
+
+        )
+
+    with col4:
+
+        st.metric(
+
+            "Profit",
+
+            round(
+
+                performance["profit"],
+
+                2
+
+            )
+
+        )
+
+
+# ==========================================================
+# RISK MANAGEMENT CALCULATOR
+# ==========================================================
+
+def calculate_risk_reward(
+
+    entry,
+
+    stop_loss,
+
+    take_profit
+
+):
+
+    risk = abs(
+
+        entry - stop_loss
+
+    )
+
+    reward = abs(
+
+        take_profit - entry
+
+    )
+
+    if risk == 0:
+
+        return 0
+
+    return reward / risk
+
+
+# ==========================================================
+# RISK REWARD PAGE
+# ==========================================================
+
+if st.session_state.page == "Settings":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚖ Risk Reward Calculator"
+
+    )
+
+    entry_price = st.number_input(
+
+        "Entry Price",
+
+        value=0.0,
+
+        key="rr_entry"
+
+    )
+
+    stop_price = st.number_input(
+
+        "Stop Loss",
+
+        value=0.0,
+
+        key="rr_stop"
+
+    )
+
+    target_price = st.number_input(
+
+        "Take Profit",
+
+        value=0.0,
+
+        key="rr_target"
+
+    )
+
+    rr = calculate_risk_reward(
+
+        entry_price,
+
+        stop_price,
+
+        target_price
+
+    )
+
+    st.metric(
+
+        "Risk Reward Ratio",
+
+        f"1:{rr:.2f}"
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 035
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 036
+# ==========================================================
+
+# ==========================================================
+# TRADING PLAN GENERATOR
+# ==========================================================
+
+def generate_trading_plan():
+
+    signal, reasons = generate_gold_signal()
+
+    trend = analyze_gold_trend()
+
+    plan = {
+
+        "Signal": signal,
+
+        "Reasons": reasons,
+
+        "Trend": "Unknown",
+
+        "Strategy": "Wait"
+
+    }
+
+    if trend:
+
+        plan["Trend"] = trend["trend"]
+
+    if signal == "BUY":
+
+        plan["Strategy"] = (
+
+            "Look for Buy setup "
+
+            "near support"
+
+        )
+
+    elif signal == "SELL":
+
+        plan["Strategy"] = (
+
+            "Look for Sell setup "
+
+            "near resistance"
+
+        )
+
+    else:
+
+        plan["Strategy"] = (
+
+            "Wait for confirmation"
+
+        )
+
+    return plan
+
+
+# ==========================================================
+# TRADING PLAN PAGE
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📋 Trading Plan"
+
+    )
+
+    plan = generate_trading_plan()
+
+    st.write(
+
+        "Signal:",
+
+        plan["Signal"]
+
+    )
+
+    st.write(
+
+        "Trend:",
+
+        plan["Trend"]
+
+    )
+
+    st.write(
+
+        "Strategy:",
+
+        plan["Strategy"]
+
+    )
+
+    st.subheader(
+
+        "Reasons"
+
+    )
+
+    for reason in plan["Reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# TRADE CHECKLIST
+# ==========================================================
+
+if "checklist" not in st.session_state:
+
+    st.session_state.checklist = {
+
+        "Trend Checked": False,
+
+        "Risk Checked": False,
+
+        "News Checked": False,
+
+        "Entry Checked": False
+
+    }
+
+
+# ==========================================================
+# CHECKLIST PAGE
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Trade Checklist"
+
+    )
+
+    for item in st.session_state.checklist:
+
+        st.session_state.checklist[item] = st.checkbox(
+
+            item,
+
+            value=st.session_state.checklist[item]
+
+        )
+
+
+    completed = sum(
+
+        st.session_state.checklist.values()
+
+    )
+
+
+    st.progress(
+
+        completed / len(
+
+            st.session_state.checklist
+
+        )
+
+    )
+
+
+    st.write(
+
+        f"Completed: {completed}/"
+
+        f"{len(st.session_state.checklist)}"
+
+    )
+
+
+# ==========================================================
+# MARKET TIMER
+# ==========================================================
+
+def get_market_timer():
+
+    now = datetime.utcnow()
+
+    return {
+
+        "UTC": now.strftime(
+
+            "%H:%M:%S"
+
+        ),
+
+        "Date": now.strftime(
+
+            "%Y-%m-%d"
+
+        )
+
+    }
+
+
+# ==========================================================
+# TIMER DISPLAY
+# ==========================================================
+
+timer = get_market_timer()
+
+st.sidebar.divider()
+
+st.sidebar.subheader(
+
+    "Market Time"
+
+)
+
+st.sidebar.write(
+
+    timer["Date"]
+
+)
+
+st.sidebar.write(
+
+    timer["UTC"]
+
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 036
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 037
+# ==========================================================
+
+# ==========================================================
+# DAILY REPORT GENERATOR
+# ==========================================================
+
+def generate_daily_report():
+
+    sentiment, details = calculate_market_sentiment()
+
+    risk = calculate_market_risk()
+
+    fear_greed = calculate_fear_greed()
+
+    report = {
+
+        "Time":
+
+            current_time(),
+
+        "Market Sentiment":
+
+            sentiment,
+
+        "Fear Greed":
+
+            fear_greed,
+
+        "Risk Level":
+
+            risk["level"],
+
+        "Risk Score":
+
+            risk["score"],
+
+        "Details":
+
+            details
+
+    }
+
+    return report
+
+
+# ==========================================================
+# REPORT PAGE
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📄 Daily Market Report"
+
+    )
+
+    report = generate_daily_report()
+
+    report_df = pd.DataFrame(
+
+        {
+
+            "Item":
+
+            report.keys(),
+
+            "Value":
+
+            report.values()
+
+        }
+
+    )
+
+    st.dataframe(
+
+        report_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# EXPORT REPORT
+# ==========================================================
+
+def export_report():
+
+    report = generate_daily_report()
+
+    return json.dumps(
+
+        report,
+
+        indent=4,
+
+        ensure_ascii=False
+
+    )
+
+
+# ==========================================================
+# DOWNLOAD REPORT
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.download_button(
+
+        "⬇ Download Report",
+
+        export_report(),
+
+        file_name="WEOS_Report.json",
+
+        mime="application/json"
+
+    )
+
+
+# ==========================================================
+# DATA CACHE MANAGEMENT
+# ==========================================================
+
+def clear_cache():
+
+    st.cache_data.clear()
+
+    log(
+
+        "INFO",
+
+        "Cache cleared"
+
+    )
+
+
+# ==========================================================
+# CACHE CONTROL
+# ==========================================================
+
+if st.session_state.page == "Settings":
+
+    st.divider()
+
+    st.subheader(
+
+        "System Maintenance"
+
+    )
+
+    if st.button(
+
+        "Clear Data Cache"
+
+    ):
+
+        clear_cache()
+
+        st.success(
+
+            "Cache cleared successfully"
+
+        )
+
+
+# ==========================================================
+# APPLICATION UPTIME
+# ==========================================================
+
+def calculate_uptime():
+
+    uptime = datetime.now() - st.session_state.startup_time
+
+    return str(
+
+        uptime
+
+    )
+
+
+st.sidebar.divider()
+
+st.sidebar.write(
+
+    "⏱ Uptime:",
+
+    calculate_uptime()
+
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 037
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 038
+# ==========================================================
+
+# ==========================================================
+# AI DECISION ENGINE
+# ==========================================================
+
+def ai_decision_engine():
+
+    score = 50
+
+    factors = []
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            score += 15
+
+            factors.append(
+
+                "Gold momentum positive"
+
+            )
+
+        else:
+
+            score -= 15
+
+            factors.append(
+
+                "Gold momentum negative"
+
+            )
+
+    if dxy_data:
+
+        if dxy_data["change"] < 0:
+
+            score += 15
+
+            factors.append(
+
+                "USD weakness supports Gold"
+
+            )
+
+        else:
+
+            score -= 15
+
+            factors.append(
+
+                "USD strength pressures Gold"
+
+            )
+
+    if sp500_data:
+
+        if sp500_data["change"] > 0:
+
+            score += 10
+
+            factors.append(
+
+                "Risk appetite positive"
+
+            )
+
+        else:
+
+            score -= 10
+
+            factors.append(
+
+                "Risk sentiment weak"
+
+            )
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+    if score >= 75:
+
+        decision = "BUY BIAS"
+
+    elif score <= 25:
+
+        decision = "SELL BIAS"
+
+    else:
+
+        decision = "WAIT"
+
+    return {
+
+        "score": score,
+
+        "decision": decision,
+
+        "factors": factors
+
+    }
+
+
+# ==========================================================
+# AI DECISION PANEL
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 AI Decision Engine"
+
+    )
+
+    decision = ai_decision_engine()
+
+    st.progress(
+
+        decision["score"]
+
+        /
+
+        100
+
+    )
+
+    st.metric(
+
+        "AI Score",
+
+        f'{decision["score"]}/100'
+
+    )
+
+    st.info(
+
+        decision["decision"]
+
+    )
+
+    for factor in decision["factors"]:
+
+        st.write(
+
+            "•",
+
+            factor
+
+        )
+
+
+# ==========================================================
+# MARKET MONITOR
+# ==========================================================
+
+def market_monitor():
+
+    monitor = []
+
+    markets = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for name, data in markets.items():
+
+        if data:
+
+            monitor.append(
+
+                {
+
+                    "Market": name,
+
+                    "Price": data["price"],
+
+                    "Change": data["change"]
+
+                }
+
+            )
+
+    return pd.DataFrame(
+
+        monitor
+
+    )
+
+
+# ==========================================================
+# MONITOR DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader(
+
+        "📡 Market Monitor"
+
+    )
+
+    monitor_df = market_monitor()
+
+    st.dataframe(
+
+        monitor_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 038
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 039
+# ==========================================================
+
+# ==========================================================
+# MARKET DATA STORAGE
+# ==========================================================
+
+if "market_history" not in st.session_state:
+
+    st.session_state.market_history = []
+
+
+def save_market_snapshot():
+
+    snapshot = {
+
+        "time": current_time(),
+
+        "gold":
+
+            gold_data["price"]
+
+            if gold_data else None,
+
+        "dxy":
+
+            dxy_data["price"]
+
+            if dxy_data else None,
+
+        "sp500":
+
+            sp500_data["price"]
+
+            if sp500_data else None,
+
+        "nasdaq":
+
+            nasdaq_data["price"]
+
+            if nasdaq_data else None
+
+    }
+
+    st.session_state.market_history.append(
+
+        snapshot
+
+    )
+
+    if len(
+
+        st.session_state.market_history
+
+    ) > 500:
+
+        st.session_state.market_history.pop(
+
+            0
+
+        )
+
+
+save_market_snapshot()
+
+
+# ==========================================================
+# MARKET HISTORY PAGE
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📈 Market History"
+
+    )
+
+    history_df = pd.DataFrame(
+
+        st.session_state.market_history
+
+    )
+
+    if not history_df.empty:
+
+        st.dataframe(
+
+            history_df.tail(
+
+                20
+
+            ),
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+
+# ==========================================================
+# MARKET CHANGE TRACKER
+# ==========================================================
+
+def calculate_change_tracker():
+
+    result = []
+
+    markets = {
+
+        "Gold": gold_data,
+
+        "DXY": dxy_data,
+
+        "S&P500": sp500_data,
+
+        "NASDAQ": nasdaq_data
+
+    }
+
+    for name, data in markets.items():
+
+        if data:
+
+            result.append(
+
+                {
+
+                    "Market": name,
+
+                    "Change %":
+
+                    round(
+
+                        data["change"],
+
+                        2
+
+                    )
+
+                }
+
+            )
+
+    return pd.DataFrame(
+
+        result
+
+    )
+
+
+# ==========================================================
+# CHANGE TRACKER DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader(
+
+        "📊 Daily Change Tracker"
+
+    )
+
+    change_df = calculate_change_tracker()
+
+    st.dataframe(
+
+        change_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 039
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 040
+# ==========================================================
+
+# ==========================================================
+# ECONOMIC IMPACT ENGINE
+# ==========================================================
+
+def calculate_economic_impact():
+
+    impact_score = 50
+
+    factors = []
+
+    if dxy_data:
+
+        if dxy_data["change"] > 0:
+
+            impact_score -= 10
+
+            factors.append(
+
+                "USD strength may pressure Gold"
+
+            )
+
+        else:
+
+            impact_score += 10
+
+            factors.append(
+
+                "USD weakness supports Gold"
+
+            )
+
+    if gold_data:
+
+        if gold_data["change"] > 0:
+
+            impact_score += 10
+
+            factors.append(
+
+                "Gold momentum positive"
+
+            )
+
+        else:
+
+            impact_score -= 10
+
+            factors.append(
+
+                "Gold momentum negative"
+
+            )
+
+    if sp500_data:
+
+        if sp500_data["change"] < 0:
+
+            impact_score += 5
+
+            factors.append(
+
+                "Risk aversion increases"
+
+            )
+
+        else:
+
+            factors.append(
+
+                "Risk appetite stable"
+
+            )
+
+    impact_score = max(
+
+        0,
+
+        min(
+
+            impact_score,
+
+            100
+
+        )
+
+    )
+
+    if impact_score >= 70:
+
+        status = "Positive For Gold"
+
+    elif impact_score <= 30:
+
+        status = "Negative For Gold"
+
+    else:
+
+        status = "Neutral"
+
+
+    return {
+
+        "score": impact_score,
+
+        "status": status,
+
+        "factors": factors
+
+    }
+
+
+# ==========================================================
+# ECONOMIC IMPACT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌎 Economic Impact"
+
+    )
+
+    economic = calculate_economic_impact()
+
+    st.progress(
+
+        economic["score"]
+
+        /
+
+        100
+
+    )
+
+    st.metric(
+
+        "Gold Impact Score",
+
+        f'{economic["score"]}/100'
+
+    )
+
+    st.info(
+
+        economic["status"]
+
+    )
+
+    for factor in economic["factors"]:
+
+        st.write(
+
+            "•",
+
+            factor
+
+        )
+
+
+# ==========================================================
+# MARKET TREND SUMMARY
+# ==========================================================
+
+def trend_summary():
+
+    summary = []
+
+    if gold_data:
+
+        summary.append(
+
+            {
+
+                "Asset": "Gold",
+
+                "Trend":
+
+                "Up"
+
+                if gold_data["change"] > 0
+
+                else "Down"
+
+            }
+
+        )
+
+    if dxy_data:
+
+        summary.append(
+
+            {
+
+                "Asset": "DXY",
+
+                "Trend":
+
+                "Up"
+
+                if dxy_data["change"] > 0
+
+                else "Down"
+
+            }
+
+        )
+
+    return pd.DataFrame(
+
+        summary
+
+    )
+
+
+# ==========================================================
+# TREND SUMMARY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.subheader(
+
+        "Trend Summary"
+
+    )
+
+    st.dataframe(
+
+        trend_summary(),
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 040
+# ==========================================================
