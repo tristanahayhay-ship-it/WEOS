@@ -1,10 +1,11 @@
 """
 WEOS Timeline Engine
-Version: 0.1.0
+Version: 0.2.0
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
+from typing import List
 
 
 @dataclass
@@ -16,23 +17,50 @@ class TimelineEvent:
     description: str
 
     def to_dict(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "timestamp": self.timestamp.isoformat(),
-            "event_type": self.event_type,
-            "description": self.description,
-        }
+        return asdict(self)
+
+
+class Timeline:
+
+    def __init__(self):
+        self.events: List[TimelineEvent] = []
+
+    def add(self, event: TimelineEvent):
+        self.events.append(event)
+
+    def all(self):
+        return sorted(
+            self.events,
+            key=lambda e: e.timestamp
+        )
+
+    def count(self):
+        return len(self.events)
+
+    def latest(self):
+        if not self.events:
+            return None
+
+        return max(
+            self.events,
+            key=lambda e: e.timestamp
+        )
 
 
 if __name__ == "__main__":
 
-    event = TimelineEvent(
-        id="EVENT-001",
-        title="Fed Interest Rate Decision",
-        timestamp=datetime.now(),
-        event_type="Monetary Policy",
-        description="Federal Reserve keeps interest rates unchanged."
+    timeline = Timeline()
+
+    timeline.add(
+        TimelineEvent(
+            id="E001",
+            title="Gold Price Increased",
+            timestamp=datetime.now(),
+            event_type="Market",
+            description="Gold price reached a new high."
+        )
     )
 
-    print(event.to_dict())
+    print(timeline.count())
+
+    print(timeline.latest().to_dict())
