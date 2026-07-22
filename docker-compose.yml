@@ -1,4 +1,7 @@
-WEOS/
-├── backend/
-├── docker-compose.yml
-└── README.md
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
