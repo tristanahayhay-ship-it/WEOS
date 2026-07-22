@@ -13171,3 +13171,1594 @@ if st.session_state.page == "Gold":
 # ==========================================================
 # KẾT THÚC ĐOẠN 065
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 066
+# ==========================================================
+
+# ==========================================================
+# CANDLE PATTERN DETECTOR
+# ==========================================================
+
+def detect_candle_pattern():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="3mo"
+
+    )
+
+
+    if history.empty:
+
+        return None
+
+
+    last = history.iloc[-1]
+
+    previous = history.iloc[-2]
+
+
+    current_body = abs(
+
+        last["Close"]
+
+        -
+
+        last["Open"]
+
+    )
+
+
+    previous_body = abs(
+
+        previous["Close"]
+
+        -
+
+        previous["Open"]
+
+    )
+
+
+    if (
+
+        last["Close"] > last["Open"]
+
+        and
+
+        previous["Close"] < previous["Open"]
+
+        and
+
+        current_body > previous_body
+
+    ):
+
+        pattern = "Bullish Engulfing"
+
+
+    elif (
+
+        last["Close"] < last["Open"]
+
+        and
+
+        previous["Close"] > previous["Open"]
+
+        and
+
+        current_body > previous_body
+
+    ):
+
+        pattern = "Bearish Engulfing"
+
+
+    elif current_body < (
+
+        last["High"]
+
+        -
+
+        last["Low"]
+
+    ) * 0.2:
+
+        pattern = "Doji"
+
+
+    else:
+
+        pattern = "Normal"
+
+
+    return pattern
+
+
+# ==========================================================
+# CANDLE PATTERN DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🕯 Candle Pattern"
+
+    )
+
+
+    candle_pattern = detect_candle_pattern()
+
+
+    if candle_pattern:
+
+        st.metric(
+
+            "Pattern",
+
+            candle_pattern
+
+        )
+
+
+# ==========================================================
+# GOLD BUY SELL PRESSURE
+# ==========================================================
+
+def calculate_buy_sell_pressure():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="1mo"
+
+    )
+
+
+    if history.empty:
+
+        return None
+
+
+    buyers = 0
+
+    sellers = 0
+
+
+    for _, candle in history.iterrows():
+
+        if candle["Close"] > candle["Open"]:
+
+            buyers += 1
+
+        elif candle["Close"] < candle["Open"]:
+
+            sellers += 1
+
+
+    total = buyers + sellers
+
+
+    if total == 0:
+
+        return None
+
+
+    buy_percent = (
+
+        buyers
+
+        /
+
+        total
+
+    ) * 100
+
+
+    sell_percent = (
+
+        sellers
+
+        /
+
+        total
+
+    ) * 100
+
+
+    return {
+
+        "buy":
+
+        buy_percent,
+
+        "sell":
+
+        sell_percent
+
+    }
+
+
+# ==========================================================
+# PRESSURE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚔ Buy / Sell Pressure"
+
+    )
+
+
+    pressure = calculate_buy_sell_pressure()
+
+
+    if pressure:
+
+        col1, col2 = st.columns(
+
+            2
+
+        )
+
+
+        with col1:
+
+            st.metric(
+
+                "Buy Pressure",
+
+                f'{pressure["buy"]:.2f}%'
+
+            )
+
+
+        with col2:
+
+            st.metric(
+
+                "Sell Pressure",
+
+                f'{pressure["sell"]:.2f}%'
+
+            )
+
+
+# ==========================================================
+# LIQUIDITY ANALYZER
+# ==========================================================
+
+def analyze_liquidity():
+
+    history = load_price_history(
+
+        MARKET_SYMBOLS["Gold"],
+
+        period="3mo"
+
+    )
+
+
+    if history.empty:
+
+        return None
+
+
+    volume = history["Volume"]
+
+
+    average = float(
+
+        volume.mean()
+
+    )
+
+
+    latest = float(
+
+        volume.iloc[-1]
+
+    )
+
+
+    ratio = latest / average
+
+
+    if ratio >= 1.5:
+
+        status = "High Liquidity"
+
+    elif ratio >= 1:
+
+        status = "Normal Liquidity"
+
+    else:
+
+        status = "Low Liquidity"
+
+
+    return {
+
+        "ratio":
+
+        ratio,
+
+        "status":
+
+        status
+
+    }
+
+
+# ==========================================================
+# LIQUIDITY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "💧 Liquidity Analysis"
+
+    )
+
+
+    liquidity = analyze_liquidity()
+
+
+    if liquidity:
+
+        st.metric(
+
+            "Liquidity",
+
+            liquidity["status"]
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 066
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 067
+# ==========================================================
+
+# ==========================================================
+# GOLD MARKET PRESSURE INDEX
+# ==========================================================
+
+def calculate_market_pressure_index():
+
+    score = 50
+
+    factors = []
+
+
+    pressure = calculate_buy_sell_pressure()
+
+
+    if pressure:
+
+        if pressure["buy"] > pressure["sell"]:
+
+            score += 15
+
+            factors.append(
+
+                "Buying pressure stronger"
+
+            )
+
+        else:
+
+            score -= 15
+
+            factors.append(
+
+                "Selling pressure stronger"
+
+            )
+
+
+    candle = detect_candle_pattern()
+
+
+    if candle:
+
+        if candle == "Bullish Engulfing":
+
+            score += 10
+
+            factors.append(
+
+                "Bullish candle pattern"
+
+            )
+
+        elif candle == "Bearish Engulfing":
+
+            score -= 10
+
+            factors.append(
+
+                "Bearish candle pattern"
+
+            )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    return {
+
+        "score":
+
+        score,
+
+        "factors":
+
+        factors
+
+    }
+
+
+# ==========================================================
+# PRESSURE INDEX DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔥 Market Pressure Index"
+
+    )
+
+
+    pressure_index = calculate_market_pressure_index()
+
+
+    st.progress(
+
+        pressure_index["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Pressure Score",
+
+        f'{pressure_index["score"]}/100'
+
+    )
+
+
+    for factor in pressure_index["factors"]:
+
+        st.write(
+
+            "•",
+
+            factor
+
+        )
+
+
+# ==========================================================
+# GOLD TREND ALIGNMENT
+# ==========================================================
+
+def calculate_trend_alignment():
+
+    alignment = 0
+
+    details = []
+
+
+    ema = calculate_ema_signal()
+
+
+    macd = calculate_macd()
+
+
+    rsi = calculate_rsi()
+
+
+    if ema:
+
+        if "Bullish" in ema["signal"]:
+
+            alignment += 1
+
+            details.append(
+
+                "EMA bullish alignment"
+
+            )
+
+        elif "Bearish" in ema["signal"]:
+
+            alignment -= 1
+
+            details.append(
+
+                "EMA bearish alignment"
+
+            )
+
+
+    if macd:
+
+        if macd["histogram"] > 0:
+
+            alignment += 1
+
+            details.append(
+
+                "MACD positive"
+
+            )
+
+        else:
+
+            alignment -= 1
+
+            details.append(
+
+                "MACD negative"
+
+            )
+
+
+    if rsi:
+
+        if 40 < rsi["rsi"] < 70:
+
+            alignment += 1
+
+            details.append(
+
+                "RSI healthy zone"
+
+            )
+
+
+    if alignment >= 2:
+
+        result = "Aligned Bullish"
+
+    elif alignment <= -2:
+
+        result = "Aligned Bearish"
+
+    else:
+
+        result = "Mixed"
+
+
+    return {
+
+        "result":
+
+        result,
+
+        "score":
+
+        alignment,
+
+        "details":
+
+        details
+
+    }
+
+
+# ==========================================================
+# ALIGNMENT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔗 Trend Alignment"
+
+    )
+
+
+    alignment = calculate_trend_alignment()
+
+
+    st.metric(
+
+        "Alignment",
+
+        alignment["result"]
+
+    )
+
+
+    for detail in alignment["details"]:
+
+        st.write(
+
+            "•",
+
+            detail
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 067
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 068
+# ==========================================================
+
+# ==========================================================
+# GOLD MARKET SCORECARD
+# ==========================================================
+
+def create_gold_scorecard():
+
+    score = 0
+
+    maximum = 10
+
+    items = []
+
+
+    trend = analyze_gold_trend()
+
+    if trend:
+
+        if "Uptrend" in trend["trend"]:
+
+            score += 1
+
+            items.append(
+
+                {
+
+                    "Factor":
+
+                    "Trend",
+
+                    "Status":
+
+                    "Bullish"
+
+                }
+
+            )
+
+        elif "Downtrend" in trend["trend"]:
+
+            score -= 1
+
+            items.append(
+
+                {
+
+                    "Factor":
+
+                    "Trend",
+
+                    "Status":
+
+                    "Bearish"
+
+                }
+
+            )
+
+
+    momentum = calculate_gold_momentum_score()
+
+
+    if momentum:
+
+        if momentum["score"] >= 60:
+
+            score += 1
+
+            items.append(
+
+                {
+
+                    "Factor":
+
+                    "Momentum",
+
+                    "Status":
+
+                    "Positive"
+
+                }
+
+            )
+
+        else:
+
+            score -= 1
+
+            items.append(
+
+                {
+
+                    "Factor":
+
+                    "Momentum",
+
+                    "Status":
+
+                    "Weak"
+
+                }
+
+            )
+
+
+    pressure = calculate_market_pressure_index()
+
+
+    if pressure:
+
+        if pressure["score"] >= 60:
+
+            score += 1
+
+            items.append(
+
+                {
+
+                    "Factor":
+
+                    "Pressure",
+
+                    "Status":
+
+                    "Buying"
+
+                }
+
+            )
+
+        else:
+
+            score -= 1
+
+            items.append(
+
+                {
+
+                    "Factor":
+
+                    "Pressure",
+
+                    "Status":
+
+                    "Selling"
+
+                }
+
+            )
+
+
+    confidence = gold_trade_confidence()
+
+
+    if confidence["confidence"] >= 70:
+
+        score += 1
+
+        items.append(
+
+            {
+
+                "Factor":
+
+                "Confidence",
+
+                "Status":
+
+                "High"
+
+            }
+
+        )
+
+
+    final_score = int(
+
+        (
+
+            (
+
+                score + maximum
+
+            )
+
+            /
+
+            (
+
+                maximum * 2
+
+            )
+
+        )
+
+        *
+
+        100
+
+    )
+
+
+    return {
+
+        "score":
+
+        final_score,
+
+        "items":
+
+        items
+
+    }
+
+
+# ==========================================================
+# SCORECARD DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🏆 Gold Scorecard"
+
+    )
+
+
+    scorecard = create_gold_scorecard()
+
+
+    st.progress(
+
+        scorecard["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Gold Score",
+
+        f'{scorecard["score"]}/100'
+
+    )
+
+
+    score_df = pd.DataFrame(
+
+        scorecard["items"]
+
+    )
+
+
+    if not score_df.empty:
+
+        st.dataframe(
+
+            score_df,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+
+# ==========================================================
+# MARKET RISK ALERT LEVEL
+# ==========================================================
+
+def market_risk_alert_level():
+
+    risk = calculate_market_risk()
+
+
+    score = risk["score"]
+
+
+    if score >= 80:
+
+        level = "DANGER"
+
+    elif score >= 60:
+
+        level = "WARNING"
+
+    else:
+
+        level = "SAFE"
+
+
+    return {
+
+        "level":
+
+        level,
+
+        "score":
+
+        score
+
+    }
+
+
+# ==========================================================
+# RISK ALERT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚨 Risk Alert"
+
+    )
+
+
+    risk_alert = market_risk_alert_level()
+
+
+    st.metric(
+
+        "Risk Level",
+
+        risk_alert["level"]
+
+    )
+
+
+    st.progress(
+
+        risk_alert["score"]
+
+        /
+
+        100
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 068
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 069
+# ==========================================================
+
+# ==========================================================
+# MARKET REGIME HISTORY
+# ==========================================================
+
+if "regime_history" not in st.session_state:
+
+    st.session_state.regime_history = []
+
+
+def save_regime_history():
+
+    regime = detect_market_regime()
+
+    record = {
+
+        "Time":
+
+        current_time(),
+
+        "Regime":
+
+        regime["regime"],
+
+        "Volatility":
+
+        regime["volatility"]
+
+    }
+
+    st.session_state.regime_history.append(
+
+        record
+
+    )
+
+
+    if len(
+
+        st.session_state.regime_history
+
+    ) > 200:
+
+        st.session_state.regime_history.pop(
+
+            0
+
+        )
+
+
+save_regime_history()
+
+
+# ==========================================================
+# REGIME HISTORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌐 Regime History"
+
+    )
+
+
+    regime_df = pd.DataFrame(
+
+        st.session_state.regime_history[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        regime_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# GOLD TRADE SETUP GENERATOR
+# ==========================================================
+
+def generate_gold_setup():
+
+    setup = {
+
+        "Direction":
+
+        "WAIT",
+
+        "Entry":
+
+        None,
+
+        "Stop Loss":
+
+        None,
+
+        "Take Profit":
+
+        None
+
+    }
+
+
+    sr = calculate_support_resistance()
+
+
+    decision = trade_decision_matrix()
+
+
+    if sr is None:
+
+        return setup
+
+
+    if "BUY" in decision["decision"]:
+
+        setup["Direction"] = "BUY"
+
+        setup["Entry"] = sr["support"]
+
+        setup["Stop Loss"] = (
+
+            sr["support"]
+
+            -
+
+            20
+
+        )
+
+        setup["Take Profit"] = (
+
+            sr["resistance"]
+
+        )
+
+
+    elif "SELL" in decision["decision"]:
+
+        setup["Direction"] = "SELL"
+
+        setup["Entry"] = sr["resistance"]
+
+        setup["Stop Loss"] = (
+
+            sr["resistance"]
+
+            +
+
+            20
+
+        )
+
+        setup["Take Profit"] = (
+
+            sr["support"]
+
+        )
+
+
+    return setup
+
+
+# ==========================================================
+# SETUP DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📌 Gold Setup Generator"
+
+    )
+
+
+    setup = generate_gold_setup()
+
+
+    setup_df = pd.DataFrame(
+
+        {
+
+            "Parameter":
+
+            setup.keys(),
+
+            "Value":
+
+            setup.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        setup_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# MARKET ALERT MESSAGE
+# ==========================================================
+
+def generate_market_message():
+
+    direction = market_direction()
+
+    risk = market_risk_alert_level()
+
+
+    if risk["level"] == "DANGER":
+
+        return (
+
+            "High risk market condition. "
+
+            "Avoid aggressive positions."
+
+        )
+
+
+    if direction == "UP":
+
+        return (
+
+            "Market momentum favors buyers."
+
+        )
+
+
+    if direction == "DOWN":
+
+        return (
+
+            "Market momentum favors sellers."
+
+        )
+
+
+    return (
+
+        "Market is waiting for confirmation."
+
+    )
+
+
+# ==========================================================
+# MESSAGE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "💬 WEOS Message"
+
+    )
+
+
+    st.info(
+
+        generate_market_message()
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 069
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 070
+# ==========================================================
+
+# ==========================================================
+# MARKET ACTION PLAN
+# ==========================================================
+
+def generate_action_plan():
+
+    plan = []
+
+    direction = market_direction()
+
+    risk = market_risk_alert_level()
+
+    confidence = gold_trade_confidence()
+
+
+    if risk["level"] == "DANGER":
+
+        plan.append(
+
+            "Reduce position size"
+
+        )
+
+        plan.append(
+
+            "Wait for market stability"
+
+        )
+
+
+    if direction == "UP":
+
+        plan.append(
+
+            "Monitor buying opportunities"
+
+        )
+
+
+    elif direction == "DOWN":
+
+        plan.append(
+
+            "Monitor selling opportunities"
+
+        )
+
+
+    else:
+
+        plan.append(
+
+            "Wait for confirmation"
+
+        )
+
+
+    if confidence["confidence"] >= 70:
+
+        plan.append(
+
+            "Setup quality is acceptable"
+
+        )
+
+
+    return plan
+
+
+# ==========================================================
+# ACTION PLAN DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📝 Action Plan"
+
+    )
+
+
+    action_plan = generate_action_plan()
+
+
+    for action in action_plan:
+
+        st.write(
+
+            "•",
+
+            action
+
+        )
+
+
+# ==========================================================
+# GOLD ENTRY CONFIRMATION SCORE
+# ==========================================================
+
+def calculate_confirmation_score():
+
+    score = 0
+
+    maximum = 5
+
+    confirmations = []
+
+
+    trend = analyze_gold_trend()
+
+    if trend:
+
+        if (
+
+            "Uptrend"
+
+            in
+
+            trend["trend"]
+
+        ):
+
+            score += 1
+
+            confirmations.append(
+
+                "Trend bullish"
+
+            )
+
+
+    macd = calculate_macd()
+
+    if macd:
+
+        if macd["histogram"] > 0:
+
+            score += 1
+
+            confirmations.append(
+
+                "MACD positive"
+
+            )
+
+
+    rsi = calculate_rsi()
+
+    if rsi:
+
+        if 30 < rsi["rsi"] < 70:
+
+            score += 1
+
+            confirmations.append(
+
+                "RSI normal zone"
+
+            )
+
+
+    pressure = calculate_market_pressure_index()
+
+    if pressure:
+
+        if pressure["score"] > 50:
+
+            score += 1
+
+            confirmations.append(
+
+                "Buying pressure"
+
+            )
+
+
+    volatility = calculate_volatility()
+
+    if volatility:
+
+        if volatility["latest"] <= volatility["average"]:
+
+            score += 1
+
+            confirmations.append(
+
+                "Stable volatility"
+
+            )
+
+
+    percentage = int(
+
+        (
+
+            score
+
+            /
+
+            maximum
+
+        )
+
+        *
+
+        100
+
+    )
+
+
+    return {
+
+        "score":
+
+        percentage,
+
+        "confirmations":
+
+        confirmations
+
+    }
+
+
+# ==========================================================
+# CONFIRMATION SCORE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Entry Confirmation Score"
+
+    )
+
+
+    confirmation_score = calculate_confirmation_score()
+
+
+    st.progress(
+
+        confirmation_score["score"]
+
+        /
+
+        100
+
+    )
+
+
+    st.metric(
+
+        "Confirmation",
+
+        f'{confirmation_score["score"]}%'
+
+    )
+
+
+    for item in confirmation_score["confirmations"]:
+
+        st.write(
+
+            "•",
+
+            item
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 070
+# ==========================================================
