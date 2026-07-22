@@ -10,6 +10,7 @@ from app.api.relationship_api import router as relationship_router
 from app.api.flow_api import router as flow_router
 from app.api.timeline_api import router as timeline_router
 
+from app.db.create_tables import create_tables
 
 app = FastAPI(
     title="WEOS",
