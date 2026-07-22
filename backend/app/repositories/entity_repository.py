@@ -1,36 +1,69 @@
 """
 WEOS Entity Repository
-Version: 0.4.0
+Version: 0.7.0
 """
 
-from typing import Dict, List
+from sqlalchemy.orm import Session
 
-from app.models.entity_model import EntityModel
+from app.core.postgres import SessionLocal
+from app.db.entity import Entity
 
 
 class EntityRepository:
 
-    def __init__(self):
-        self.entities: Dict[str, EntityModel] = {}
+    def get_db(self) -> Session:
+        return SessionLocal()
 
-    def save(self, entity: EntityModel):
-        self.entities[entity.id] = entity
+    def all(self):
+        db = self.get_db()
+        try:
+            return db.query(Entity).all()
+        finally:
+            db.close()
 
     def get(self, entity_id: str):
-        return self.entities.get(entity_id)
+        db = self.get_db()
+        try:
+            return (
+                db.query(Entity)
+                .filter(Entity.id == entity_id)
+                .first()
+            )
+        finally:
+            db.close()
 
-    def all(self) -> List[EntityModel]:
-        return list(self.entities.values())
+    def create(self, entity: Entity):
+        db = self.get_db()
+        try:
+            db.add(entity)
+            db.commit()
+            db.refresh(entity)
+            return entity
+        finally:
+            db.close()
+
+    def update(self, entity: Entity):
+        db = self.get_db()
+        try:
+            db.merge(entity)
+            db.commit()
+            return entity
+        finally:
+            db.close()
 
     def delete(self, entity_id: str):
-        if entity_id in self.entities:
-            del self.entities[entity_id]
+        db = self.get_db()
+        try:
+            entity = (
+                db.query(Entity)
+                .filter(Entity.id == entity_id)
+                .first()
+            )
 
-    def exists(self, entity_id: str):
-        return entity_id in self.entities
+            if entity:
+                db.delete(entity)
+                db.commit()
 
-    def count(self):
-        return len(self.entities)
-
-    def clear(self):
-        self.entities.clear()
+            return entity
+        finally:
+            db.close()
