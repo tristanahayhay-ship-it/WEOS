@@ -1,43 +1,40 @@
 """
 WEOS Entity API
-Version: 0.5.0
+Version: 0.9.0
 """
 
 from fastapi import APIRouter
-
-from app.repositories.entity_repository import EntityRepository
-from app.models.entity_model import EntityModel
+from app.db.entity import Entity
+from app.services.entity_service import EntityService
 
 router = APIRouter(
     prefix="/entities",
     tags=["Entities"]
 )
 
-repository = EntityRepository()
+service = EntityService()
 
 
 @router.get("/")
-def get_entities():
-    return repository.all()
+def get_all_entities():
+    return service.get_all()
 
 
 @router.get("/{entity_id}")
 def get_entity(entity_id: str):
-    return repository.get(entity_id)
+    return service.get(entity_id)
 
 
 @router.post("/")
-def create_entity(entity: EntityModel):
-    repository.save(entity)
-    return {
-        "message": "Entity created",
-        "entity": entity
-    }
+def create_entity(entity: Entity):
+    return service.create(entity)
+
+
+@router.put("/")
+def update_entity(entity: Entity):
+    return service.update(entity)
 
 
 @router.delete("/{entity_id}")
 def delete_entity(entity_id: str):
-    repository.delete(entity_id)
-    return {
-        "message": "Entity deleted"
-    }
+    return service.delete(entity_id)
