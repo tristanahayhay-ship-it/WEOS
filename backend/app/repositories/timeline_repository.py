@@ -1,36 +1,80 @@
 """
 WEOS Timeline Repository
-Version: 0.4.0
+Version: 0.7.0
 """
 
-from typing import List
+from sqlalchemy.orm import Session
 
-from app.models.timeline_model import TimelineEventModel
+from app.core.postgres import SessionLocal
+from app.db.timeline import TimelineEvent
 
 
 class TimelineRepository:
 
-    def __init__(self):
-        self.events: List[TimelineEventModel] = []
+    def get_db(self) -> Session:
+        return SessionLocal()
 
-    def save(self, event: TimelineEventModel):
-        self.events.append(event)
+    def all(self):
+        db = self.get_db()
+        try:
+            return db.query(TimelineEvent).all()
+        finally:
+            db.close()
 
-    def all(self) -> List[TimelineEventModel]:
-        return sorted(
-            self.events,
-            key=lambda e: e.timestamp
-        )
+    def get(self, event_id: int):
+        db = self.get_db()
+        try:
+            return (
+                db.query(TimelineEvent)
+                .filter(TimelineEvent.id == event_id)
+                .first()
+            )
+        finally:
+            db.close()
 
-    def by_type(self, event_type: str) -> List[TimelineEventModel]:
-        return [
-            e
-            for e in self.events
-            if e.event_type == event_type
-        ]
+    def by_type(self, event_type: str):
+        db = self.get_db()
+        try:
+            return (
+                db.query(TimelineEvent)
+                .filter(TimelineEvent.event_type == event_type)
+                .all()
+            )
+        finally:
+            db.close()
 
-    def count(self):
-        return len(self.events)
+    def create(self, event: TimelineEvent):
+        db = self.get_db()
+        try:
+            db.add(event)
+            db.commit()
+            db.refresh(event)
+            return event
+        finally:
+            db.close()
 
-    def clear(self):
-        self.events.clear()
+    def update(self, event: TimelineEvent):
+        db = self.get_db()
+        try:
+            db.merge(event)
+            db.commit()
+            return event
+        finally:
+            db.close()
+
+    def delete(self, event_id: int):
+        db = self.get_db()
+        try:
+            event = (
+                db.query(TimelineEvent)
+                .filter(TimelineEvent.id == event_id)
+                .first()
+            )
+
+            if event:
+                db.delete(event)
+                db.commit()
+
+            return event
+        finally:
+            db.close()
