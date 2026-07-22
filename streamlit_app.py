@@ -43133,3 +43133,14691 @@ if st.session_state.page == "Dashboard":
 # ==========================================================
 # KẾT THÚC ĐOẠN 140
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 141
+# ==========================================================
+
+# ==========================================================
+# WEOS MACRO FOUNDATION ENGINE V1
+# ==========================================================
+
+if "macro_memory" not in st.session_state:
+
+    st.session_state.macro_memory = []
+
+
+# ==========================================================
+# FED POLICY ENGINE
+# ==========================================================
+
+def fed_policy_engine():
+
+    fed = {
+
+        "Rate":
+
+        0,
+
+        "Policy":
+
+        "NEUTRAL",
+
+        "Impact":
+
+        "UNKNOWN",
+
+        "Score":
+
+        50
+
+    }
+
+
+    if "fed_rate" in st.session_state:
+
+        fed["Rate"] = st.session_state.fed_rate
+
+
+    rate = fed["Rate"]
+
+
+    if rate > 4:
+
+        fed["Policy"] = "RESTRICTIVE"
+
+        fed["Impact"] = "GOLD NEGATIVE"
+
+        fed["Score"] = 30
+
+
+    elif rate < 2:
+
+        fed["Policy"] = "EASY"
+
+        fed["Impact"] = "GOLD POSITIVE"
+
+        fed["Score"] = 80
+
+
+    else:
+
+        fed["Policy"] = "BALANCED"
+
+        fed["Impact"] = "NEUTRAL"
+
+        fed["Score"] = 50
+
+
+    return fed
+
+
+# ==========================================================
+# FED POLICY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🏦 FED Policy Engine"
+
+    )
+
+
+    fed = fed_policy_engine()
+
+
+    fed_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            fed.keys(),
+
+            "Value":
+
+            fed.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        fed_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# INFLATION PRESSURE ENGINE
+# ==========================================================
+
+def inflation_pressure_engine():
+
+    inflation = {
+
+        "CPI":
+
+        0,
+
+        "PCE":
+
+        0,
+
+        "Pressure":
+
+        "NORMAL",
+
+        "Gold Impact":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50
+
+    }
+
+
+    cpi = st.session_state.get(
+
+        "cpi",
+
+        0
+
+    )
+
+
+    pce = st.session_state.get(
+
+        "pce",
+
+        0
+
+    )
+
+
+    inflation["CPI"] = cpi
+
+    inflation["PCE"] = pce
+
+
+    average = (
+
+        cpi
+
+        +
+
+        pce
+
+    ) / 2
+
+
+    if average >= 4:
+
+        inflation["Pressure"] = "HIGH"
+
+        inflation["Gold Impact"] = "BULLISH"
+
+        inflation["Score"] = 80
+
+
+    elif average <= 2:
+
+        inflation["Pressure"] = "LOW"
+
+        inflation["Gold Impact"] = "BEARISH"
+
+        inflation["Score"] = 40
+
+
+    else:
+
+        inflation["Pressure"] = "MODERATE"
+
+        inflation["Gold Impact"] = "NEUTRAL"
+
+        inflation["Score"] = 50
+
+
+    return inflation
+
+
+# ==========================================================
+# INFLATION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔥 Inflation Pressure Engine"
+
+    )
+
+
+    inflation = inflation_pressure_engine()
+
+
+    inflation_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            inflation.keys(),
+
+            "Value":
+
+            inflation.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        inflation_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# US LABOR MARKET ENGINE
+# ==========================================================
+
+def labor_market_engine():
+
+    labor = {
+
+        "NFP":
+
+        0,
+
+        "Unemployment":
+
+        0,
+
+        "Condition":
+
+        "UNKNOWN",
+
+        "Gold Impact":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50
+
+    }
+
+
+    nfp = st.session_state.get(
+
+        "nfp",
+
+        0
+
+    )
+
+
+    unemployment = st.session_state.get(
+
+        "unemployment",
+
+        0
+
+    )
+
+
+    labor["NFP"] = nfp
+
+    labor["Unemployment"] = unemployment
+
+
+    if (
+
+        nfp > 200000
+
+        and
+
+        unemployment < 4
+
+    ):
+
+        labor["Condition"] = "STRONG"
+
+        labor["Gold Impact"] = "BEARISH"
+
+        labor["Score"] = 35
+
+
+    elif (
+
+        nfp < 100000
+
+        or
+
+        unemployment > 5
+
+    ):
+
+        labor["Condition"] = "WEAK"
+
+        labor["Gold Impact"] = "BULLISH"
+
+        labor["Score"] = 80
+
+
+    else:
+
+        labor["Condition"] = "NORMAL"
+
+        labor["Score"] = 50
+
+
+    return labor
+
+
+# ==========================================================
+# LABOR DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "👷 Labor Market Engine"
+
+    )
+
+
+    labor = labor_market_engine()
+
+
+    labor_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            labor.keys(),
+
+            "Value":
+
+            labor.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        labor_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# MACRO GOLD IMPACT FUSION
+# ==========================================================
+
+def macro_gold_impact():
+
+    fed = fed_policy_engine()
+
+    inflation = inflation_pressure_engine()
+
+    labor = labor_market_engine()
+
+
+    score = (
+
+        fed["Score"]
+
+        +
+
+        inflation["Score"]
+
+        +
+
+        labor["Score"]
+
+    ) / 3
+
+
+    if score >= 70:
+
+        impact = "GOLD BULLISH"
+
+
+    elif score <= 40:
+
+        impact = "GOLD BEARISH"
+
+
+    else:
+
+        impact = "NEUTRAL"
+
+
+    return {
+
+        "Impact":
+
+        impact,
+
+        "Score":
+
+        round(
+
+            score,
+
+            1
+
+        )
+
+    }
+
+
+# ==========================================================
+# MACRO IMPACT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🥇 Macro Gold Impact"
+
+    )
+
+
+    macro = macro_gold_impact()
+
+
+    st.metric(
+
+        "Impact",
+
+        macro["Impact"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{macro["Score"]}/100'
+
+    )
+
+
+# ==========================================================
+# MACRO MEMORY SAVE
+# ==========================================================
+
+def save_macro_memory():
+
+    macro = macro_gold_impact()
+
+
+    st.session_state.macro_memory.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Impact":
+
+            macro["Impact"],
+
+            "Score":
+
+            macro["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.macro_memory
+
+    ) > 500:
+
+        st.session_state.macro_memory.pop(
+
+            0
+
+        )
+
+
+save_macro_memory()
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 141
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 142
+# ==========================================================
+
+# ==========================================================
+# WEOS MACRO MEMORY DISPLAY V1
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌎 Macro Memory"
+
+    )
+
+
+    macro_memory_df = pd.DataFrame(
+
+        st.session_state.macro_memory[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        macro_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS DXY MACRO ENGINE V1
+# ==========================================================
+
+if "dxy_memory" not in st.session_state:
+
+    st.session_state.dxy_memory = []
+
+
+def dxy_macro_engine():
+
+    dxy = {
+
+        "Value":
+
+        0,
+
+        "Trend":
+
+        "UNKNOWN",
+
+        "Gold Impact":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50
+
+    }
+
+
+    value = st.session_state.get(
+
+        "dxy",
+
+        0
+
+    )
+
+
+    previous = st.session_state.get(
+
+        "previous_dxy",
+
+        value
+
+    )
+
+
+    dxy["Value"] = value
+
+
+    if value > previous:
+
+        dxy["Trend"] = "RISING"
+
+
+    elif value < previous:
+
+        dxy["Trend"] = "FALLING"
+
+
+    else:
+
+        dxy["Trend"] = "SIDEWAYS"
+
+
+
+    if dxy["Trend"] == "RISING":
+
+        dxy["Gold Impact"] = "BEARISH"
+
+        dxy["Score"] = 35
+
+
+    elif dxy["Trend"] == "FALLING":
+
+        dxy["Gold Impact"] = "BULLISH"
+
+        dxy["Score"] = 80
+
+
+    return dxy
+
+
+# ==========================================================
+# DXY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "💵 DXY Macro Engine"
+
+    )
+
+
+    dxy = dxy_macro_engine()
+
+
+    dxy_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            dxy.keys(),
+
+            "Value":
+
+            dxy.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        dxy_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# DXY MEMORY
+# ==========================================================
+
+def save_dxy_memory():
+
+    dxy = dxy_macro_engine()
+
+
+    st.session_state.dxy_memory.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Trend":
+
+            dxy["Trend"],
+
+            "Score":
+
+            dxy["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.dxy_memory
+
+    ) > 500:
+
+        st.session_state.dxy_memory.pop(
+
+            0
+
+        )
+
+
+save_dxy_memory()
+
+
+# ==========================================================
+# DXY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "💵 DXY Memory"
+
+    )
+
+
+    dxy_memory_df = pd.DataFrame(
+
+        st.session_state.dxy_memory[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        dxy_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS US BOND YIELD ENGINE V1
+# ==========================================================
+
+if "yield_memory" not in st.session_state:
+
+    st.session_state.yield_memory = []
+
+
+def bond_yield_engine():
+
+    bond = {
+
+        "Yield":
+
+        0,
+
+        "Trend":
+
+        "UNKNOWN",
+
+        "Gold Impact":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50
+
+    }
+
+
+    yield_value = st.session_state.get(
+
+        "us10y",
+
+        0
+
+    )
+
+
+    previous = st.session_state.get(
+
+        "previous_us10y",
+
+        yield_value
+
+    )
+
+
+    bond["Yield"] = yield_value
+
+
+    if yield_value > previous:
+
+        bond["Trend"] = "RISING"
+
+
+    elif yield_value < previous:
+
+        bond["Trend"] = "FALLING"
+
+
+
+    if bond["Trend"] == "RISING":
+
+        bond["Gold Impact"] = "BEARISH"
+
+        bond["Score"] = 35
+
+
+    elif bond["Trend"] == "FALLING":
+
+        bond["Gold Impact"] = "BULLISH"
+
+        bond["Score"] = 80
+
+
+    return bond
+
+
+# ==========================================================
+# BOND DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "📉 US Bond Yield Engine"
+
+    )
+
+
+    bond = bond_yield_engine()
+
+
+    bond_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            bond.keys(),
+
+            "Value":
+
+            bond.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        bond_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# BOND MEMORY
+# ==========================================================
+
+def save_yield_memory():
+
+    bond = bond_yield_engine()
+
+
+    st.session_state.yield_memory.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Trend":
+
+            bond["Trend"],
+
+            "Score":
+
+            bond["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.yield_memory
+
+    ) > 500:
+
+        st.session_state.yield_memory.pop(
+
+            0
+
+        )
+
+
+save_yield_memory()
+
+
+# ==========================================================
+# MACRO MARKET FUSION V2
+# ==========================================================
+
+def macro_market_fusion_v2():
+
+    fed = fed_policy_engine()
+
+    inflation = inflation_pressure_engine()
+
+    labor = labor_market_engine()
+
+    dxy = dxy_macro_engine()
+
+    bond = bond_yield_engine()
+
+
+    score = (
+
+        fed["Score"]
+
+        +
+
+        inflation["Score"]
+
+        +
+
+        labor["Score"]
+
+        +
+
+        dxy["Score"]
+
+        +
+
+        bond["Score"]
+
+    ) / 5
+
+
+    if score >= 70:
+
+        signal = "STRONG GOLD SUPPORT"
+
+
+    elif score <= 40:
+
+        signal = "GOLD PRESSURE"
+
+
+    else:
+
+        signal = "BALANCED"
+
+
+    return {
+
+        "Signal":
+
+        signal,
+
+        "Score":
+
+        round(
+
+            score,
+
+            1
+
+        )
+
+    }
+
+
+# ==========================================================
+# MACRO FUSION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌐 Macro Market Fusion V2"
+
+    )
+
+
+    macro_fusion = macro_market_fusion_v2()
+
+
+    st.metric(
+
+        "Signal",
+
+        macro_fusion["Signal"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{macro_fusion["Score"]}/100'
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 142
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 143
+# ==========================================================
+
+# ==========================================================
+# WEOS MACRO FUSION MEMORY V2
+# ==========================================================
+
+if "macro_fusion_memory" not in st.session_state:
+
+    st.session_state.macro_fusion_memory = []
+
+
+def save_macro_fusion_memory():
+
+    fusion = macro_market_fusion_v2()
+
+
+    st.session_state.macro_fusion_memory.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Signal":
+
+            fusion["Signal"],
+
+            "Score":
+
+            fusion["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.macro_fusion_memory
+
+    ) > 500:
+
+        st.session_state.macro_fusion_memory.pop(
+
+            0
+
+        )
+
+
+save_macro_fusion_memory()
+
+
+# ==========================================================
+# MACRO FUSION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌐 Macro Fusion Memory"
+
+    )
+
+
+    macro_fusion_memory_df = pd.DataFrame(
+
+        st.session_state.macro_fusion_memory[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        macro_fusion_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS ETF GOLD FLOW ENGINE V1
+# ==========================================================
+
+if "etf_flow_memory" not in st.session_state:
+
+    st.session_state.etf_flow_memory = []
+
+
+def gold_etf_flow_engine():
+
+    etf = {
+
+        "Flow":
+
+        0,
+
+        "Direction":
+
+        "UNKNOWN",
+
+        "Impact":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50
+
+    }
+
+
+    flow = st.session_state.get(
+
+        "gold_etf_flow",
+
+        0
+
+    )
+
+
+    etf["Flow"] = flow
+
+
+    if flow > 0:
+
+        etf["Direction"] = "INFLOW"
+
+        etf["Impact"] = "GOLD BULLISH"
+
+        etf["Score"] = 80
+
+
+    elif flow < 0:
+
+        etf["Direction"] = "OUTFLOW"
+
+        etf["Impact"] = "GOLD BEARISH"
+
+        etf["Score"] = 30
+
+
+    else:
+
+        etf["Direction"] = "NEUTRAL"
+
+        etf["Score"] = 50
+
+
+    return etf
+
+
+# ==========================================================
+# ETF DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🥇 Gold ETF Flow Engine"
+
+    )
+
+
+    etf = gold_etf_flow_engine()
+
+
+    etf_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            etf.keys(),
+
+            "Value":
+
+            etf.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        etf_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# ETF MEMORY
+# ==========================================================
+
+def save_etf_memory():
+
+    etf = gold_etf_flow_engine()
+
+
+    st.session_state.etf_flow_memory.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Direction":
+
+            etf["Direction"],
+
+            "Score":
+
+            etf["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.etf_flow_memory
+
+    ) > 500:
+
+        st.session_state.etf_flow_memory.pop(
+
+            0
+
+        )
+
+
+save_etf_memory()
+
+
+# ==========================================================
+# WEOS GOLD LIQUIDITY ENGINE V2
+# ==========================================================
+
+def gold_liquidity_macro_engine():
+
+    liquidity = {
+
+        "Status":
+
+        "NORMAL",
+
+        "Pressure":
+
+        50,
+
+        "Impact":
+
+        "NEUTRAL"
+
+    }
+
+
+    etf = gold_etf_flow_engine()
+
+    dxy = dxy_macro_engine()
+
+    bond = bond_yield_engine()
+
+
+    pressure = 50
+
+
+    if etf["Direction"] == "INFLOW":
+
+        pressure += 20
+
+
+    elif etf["Direction"] == "OUTFLOW":
+
+        pressure -= 20
+
+
+    if dxy["Trend"] == "FALLING":
+
+        pressure += 15
+
+
+    elif dxy["Trend"] == "RISING":
+
+        pressure -= 15
+
+
+    if bond["Trend"] == "FALLING":
+
+        pressure += 15
+
+
+    elif bond["Trend"] == "RISING":
+
+        pressure -= 15
+
+
+    liquidity["Pressure"] = max(
+
+        0,
+
+        min(
+
+            pressure,
+
+            100
+
+        )
+
+    )
+
+
+    if pressure >= 70:
+
+        liquidity["Status"] = "GOLD LIQUIDITY SUPPORT"
+
+        liquidity["Impact"] = "BULLISH"
+
+
+    elif pressure <= 30:
+
+        liquidity["Status"] = "LIQUIDITY PRESSURE"
+
+        liquidity["Impact"] = "BEARISH"
+
+
+    return liquidity
+
+
+# ==========================================================
+# GOLD LIQUIDITY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "💧 Gold Liquidity Engine"
+
+    )
+
+
+    liquidity_macro = gold_liquidity_macro_engine()
+
+
+    liquidity_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            liquidity_macro.keys(),
+
+            "Value":
+
+            liquidity_macro.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        liquidity_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS GLOBAL GOLD MACRO SCORE V3
+# ==========================================================
+
+def global_gold_macro_score_v3():
+
+    macro = macro_market_fusion_v2()
+
+    liquidity = gold_liquidity_macro_engine()
+
+    etf = gold_etf_flow_engine()
+
+
+    score = (
+
+        macro["Score"]
+
+        +
+
+        liquidity["Pressure"]
+
+        +
+
+        etf["Score"]
+
+    ) / 3
+
+
+    if score >= 75:
+
+        signal = "STRONG BUY BIAS"
+
+
+    elif score <= 35:
+
+        signal = "STRONG SELL BIAS"
+
+
+    else:
+
+        signal = "NEUTRAL"
+
+
+    return {
+
+        "Signal":
+
+        signal,
+
+        "Score":
+
+        round(
+
+            score,
+
+            1
+
+        )
+
+    }
+
+
+# ==========================================================
+# GLOBAL MACRO SCORE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌍 Global Gold Macro Score V3"
+
+    )
+
+
+    global_macro = global_gold_macro_score_v3()
+
+
+    st.metric(
+
+        "Signal",
+
+        global_macro["Signal"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{global_macro["Score"]}/100'
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 143
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 144
+# ==========================================================
+
+# ==========================================================
+# WEOS GLOBAL GOLD MACRO MEMORY V3
+# ==========================================================
+
+if "global_macro_memory" not in st.session_state:
+
+    st.session_state.global_macro_memory = []
+
+
+def save_global_macro_memory():
+
+    macro = global_gold_macro_score_v3()
+
+
+    st.session_state.global_macro_memory.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Signal":
+
+            macro["Signal"],
+
+            "Score":
+
+            macro["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.global_macro_memory
+
+    ) > 500:
+
+        st.session_state.global_macro_memory.pop(
+
+            0
+
+        )
+
+
+save_global_macro_memory()
+
+
+# ==========================================================
+# GLOBAL MACRO MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌍 Global Gold Macro Memory"
+
+    )
+
+
+    global_macro_memory_df = pd.DataFrame(
+
+        st.session_state.global_macro_memory[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        global_macro_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS ECONOMIC CALENDAR ENGINE V1
+# ==========================================================
+
+if "economic_calendar" not in st.session_state:
+
+    st.session_state.economic_calendar = []
+
+
+def economic_calendar_engine():
+
+    calendar = {
+
+        "Event":
+
+        "NONE",
+
+        "Impact":
+
+        "LOW",
+
+        "Direction":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50
+
+    }
+
+
+    event = st.session_state.get(
+
+        "next_event",
+
+        ""
+
+    )
+
+
+    impact = st.session_state.get(
+
+        "event_impact",
+
+        "LOW"
+
+    )
+
+
+    calendar["Event"] = event
+
+    calendar["Impact"] = impact
+
+
+    if impact == "HIGH":
+
+        calendar["Score"] = 80
+
+        calendar["Direction"] = "VOLATILITY"
+
+
+    elif impact == "MEDIUM":
+
+        calendar["Score"] = 60
+
+        calendar["Direction"] = "ATTENTION"
+
+
+    else:
+
+        calendar["Score"] = 50
+
+
+    return calendar
+
+
+# ==========================================================
+# ECONOMIC CALENDAR DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "📅 Economic Calendar Engine"
+
+    )
+
+
+    calendar = economic_calendar_engine()
+
+
+    calendar_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            calendar.keys(),
+
+            "Value":
+
+            calendar.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        calendar_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS NEWS SENTIMENT ENGINE V1
+# ==========================================================
+
+def macro_news_sentiment():
+
+    sentiment = {
+
+        "Sentiment":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50,
+
+        "Impact":
+
+        "NONE"
+
+    }
+
+
+    news_score = st.session_state.get(
+
+        "news_score",
+
+        50
+
+    )
+
+
+    sentiment["Score"] = news_score
+
+
+    if news_score >= 70:
+
+        sentiment["Sentiment"] = "POSITIVE"
+
+        sentiment["Impact"] = "GOLD SUPPORT"
+
+
+    elif news_score <= 30:
+
+        sentiment["Sentiment"] = "NEGATIVE"
+
+        sentiment["Impact"] = "GOLD PRESSURE"
+
+
+    return sentiment
+
+
+# ==========================================================
+# NEWS SENTIMENT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "📰 Macro News Sentiment"
+
+    )
+
+
+    news = macro_news_sentiment()
+
+
+    news_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            news.keys(),
+
+            "Value":
+
+            news.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        news_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS RISK SENTIMENT ENGINE V2
+# ==========================================================
+
+def global_risk_sentiment():
+
+    risk = {
+
+        "Mode":
+
+        "RISK NORMAL",
+
+        "Score":
+
+        50,
+
+        "Gold Impact":
+
+        "NEUTRAL"
+
+    }
+
+
+    news = macro_news_sentiment()
+
+    dxy = dxy_macro_engine()
+
+    bond = bond_yield_engine()
+
+
+    score = 50
+
+
+    if news["Impact"] == "GOLD SUPPORT":
+
+        score += 20
+
+
+    if dxy["Trend"] == "FALLING":
+
+        score += 15
+
+
+    if bond["Trend"] == "FALLING":
+
+        score += 15
+
+
+    if score >= 70:
+
+        risk["Mode"] = "RISK OFF"
+
+        risk["Gold Impact"] = "BULLISH"
+
+
+    elif score <= 35:
+
+        risk["Mode"] = "RISK ON"
+
+        risk["Gold Impact"] = "BEARISH"
+
+
+    risk["Score"] = score
+
+
+    return risk
+
+
+# ==========================================================
+# RISK SENTIMENT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌐 Global Risk Sentiment"
+
+    )
+
+
+    risk_sentiment = global_risk_sentiment()
+
+
+    risk_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            risk_sentiment.keys(),
+
+            "Value":
+
+            risk_sentiment.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        risk_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS MASTER MACRO DECISION V4
+# ==========================================================
+
+def master_macro_decision_v4():
+
+    macro = global_gold_macro_score_v3()
+
+    risk = global_risk_sentiment()
+
+    calendar = economic_calendar_engine()
+
+
+    score = (
+
+        macro["Score"]
+
+        +
+
+        risk["Score"]
+
+        +
+
+        calendar["Score"]
+
+    ) / 3
+
+
+    if score >= 75:
+
+        decision = "MACRO BUY BIAS"
+
+
+    elif score <= 35:
+
+        decision = "MACRO SELL BIAS"
+
+
+    else:
+
+        decision = "MACRO WAIT"
+
+
+    return {
+
+        "Decision":
+
+        decision,
+
+        "Score":
+
+        round(
+
+            score,
+
+            1
+
+        )
+
+    }
+
+
+# ==========================================================
+# MASTER MACRO DECISION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "👑 Master Macro Decision V4"
+
+    )
+
+
+    master_macro = master_macro_decision_v4()
+
+
+    st.metric(
+
+        "Decision",
+
+        master_macro["Decision"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{master_macro["Score"]}/100'
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 144
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 145
+# ==========================================================
+
+# ==========================================================
+# WEOS MASTER MACRO MEMORY V4
+# ==========================================================
+
+if "master_macro_memory" not in st.session_state:
+
+    st.session_state.master_macro_memory = []
+
+
+def save_master_macro_memory():
+
+    macro = master_macro_decision_v4()
+
+
+    st.session_state.master_macro_memory.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Decision":
+
+            macro["Decision"],
+
+            "Score":
+
+            macro["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.master_macro_memory
+
+    ) > 500:
+
+        st.session_state.master_macro_memory.pop(
+
+            0
+
+        )
+
+
+save_master_macro_memory()
+
+
+# ==========================================================
+# MASTER MACRO MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "👑 Master Macro Memory V4"
+
+    )
+
+
+    master_macro_memory_df = pd.DataFrame(
+
+        st.session_state.master_macro_memory[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        master_macro_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS GOLD MACRO CYCLE ENGINE V5
+# ==========================================================
+
+def gold_macro_cycle_engine_v5():
+
+    cycle = {
+
+        "Cycle":
+
+        "UNKNOWN",
+
+        "Confidence":
+
+        50,
+
+        "Factors":
+
+        []
+
+    }
+
+
+    macro = master_macro_decision_v4()
+
+    inflation = inflation_pressure_engine()
+
+    fed = fed_policy_engine()
+
+    liquidity = gold_liquidity_macro_engine()
+
+
+    score = 50
+
+
+    if macro["Score"] >= 70:
+
+        score += 15
+
+        cycle["Factors"].append(
+
+            "Macro support"
+
+        )
+
+
+    if inflation["Gold Impact"] == "BULLISH":
+
+        score += 15
+
+        cycle["Factors"].append(
+
+            "Inflation support"
+
+        )
+
+
+    if fed["Impact"] == "GOLD POSITIVE":
+
+        score += 10
+
+        cycle["Factors"].append(
+
+            "Fed support"
+
+        )
+
+
+    if liquidity["Impact"] == "BULLISH":
+
+        score += 10
+
+        cycle["Factors"].append(
+
+            "Liquidity support"
+
+        )
+
+
+    cycle["Confidence"] = min(
+
+        score,
+
+        100
+
+    )
+
+
+    if score >= 80:
+
+        cycle["Cycle"] = "GOLD BULL CYCLE"
+
+
+    elif score <= 35:
+
+        cycle["Cycle"] = "GOLD BEAR CYCLE"
+
+
+    else:
+
+        cycle["Cycle"] = "TRANSITION"
+
+
+    return cycle
+
+
+# ==========================================================
+# MACRO CYCLE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Gold Macro Cycle V5"
+
+    )
+
+
+    cycle_v5 = gold_macro_cycle_engine_v5()
+
+
+    st.metric(
+
+        "Cycle",
+
+        cycle_v5["Cycle"]
+
+    )
+
+
+    st.metric(
+
+        "Confidence",
+
+        f'{cycle_v5["Confidence"]}/100'
+
+    )
+
+
+    for factor in cycle_v5["Factors"]:
+
+        st.write(
+
+            "•",
+
+            factor
+
+        )
+
+
+# ==========================================================
+# WEOS GOLD MACRO CYCLE MEMORY V5
+# ==========================================================
+
+if "macro_cycle_memory" not in st.session_state:
+
+    st.session_state.macro_cycle_memory = []
+
+
+def save_macro_cycle_memory():
+
+    cycle = gold_macro_cycle_engine_v5()
+
+
+    st.session_state.macro_cycle_memory.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Cycle":
+
+            cycle["Cycle"],
+
+            "Confidence":
+
+            cycle["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.macro_cycle_memory
+
+    ) > 500:
+
+        st.session_state.macro_cycle_memory.pop(
+
+            0
+
+        )
+
+
+save_macro_cycle_memory()
+
+
+# ==========================================================
+# MACRO CYCLE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Macro Cycle Memory"
+
+    )
+
+
+    macro_cycle_df = pd.DataFrame(
+
+        st.session_state.macro_cycle_memory[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        macro_cycle_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS GOLD FUNDAMENTAL SCORE ENGINE V6
+# ==========================================================
+
+def gold_fundamental_score_v6():
+
+    scores = {
+
+        "Fed":
+
+        0,
+
+        "Inflation":
+
+        0,
+
+        "Labor":
+
+        0,
+
+        "Dollar":
+
+        0,
+
+        "Yield":
+
+        0,
+
+        "ETF":
+
+        0
+
+    }
+
+
+    fed = fed_policy_engine()
+
+    inflation = inflation_pressure_engine()
+
+    labor = labor_market_engine()
+
+    dxy = dxy_macro_engine()
+
+    bond = bond_yield_engine()
+
+    etf = gold_etf_flow_engine()
+
+
+    scores["Fed"] = fed["Score"]
+
+    scores["Inflation"] = inflation["Score"]
+
+    scores["Labor"] = labor["Score"]
+
+    scores["Dollar"] = dxy["Score"]
+
+    scores["Yield"] = bond["Score"]
+
+    scores["ETF"] = etf["Score"]
+
+
+    total = sum(
+
+        scores.values()
+
+    ) / len(scores)
+
+
+    return {
+
+        "Factors":
+
+        scores,
+
+        "Total":
+
+        round(
+
+            total,
+
+            1
+
+        )
+
+    }
+
+
+# ==========================================================
+# FUNDAMENTAL SCORE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "📚 Gold Fundamental Score V6"
+
+    )
+
+
+    fundamental = gold_fundamental_score_v6()
+
+
+    fundamental_df = pd.DataFrame(
+
+        {
+
+            "Factor":
+
+            fundamental["Factors"].keys(),
+
+            "Score":
+
+            fundamental["Factors"].values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        fundamental_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+    st.metric(
+
+        "Total",
+
+        f'{fundamental["Total"]}/100'
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 145
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 146
+# ==========================================================
+
+# ==========================================================
+# WEOS GOLD FUNDAMENTAL MEMORY V6
+# ==========================================================
+
+if "fundamental_memory_v6" not in st.session_state:
+
+    st.session_state.fundamental_memory_v6 = []
+
+
+def save_fundamental_memory_v6():
+
+    fundamental = gold_fundamental_score_v6()
+
+
+    st.session_state.fundamental_memory_v6.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Total Score":
+
+            fundamental["Total"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.fundamental_memory_v6
+
+    ) > 500:
+
+        st.session_state.fundamental_memory_v6.pop(
+
+            0
+
+        )
+
+
+save_fundamental_memory_v6()
+
+
+# ==========================================================
+# FUNDAMENTAL MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📚 Fundamental Memory V6"
+
+    )
+
+
+    fundamental_memory_df = pd.DataFrame(
+
+        st.session_state.fundamental_memory_v6[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        fundamental_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS GOLD MACRO AI FUSION V7
+# ==========================================================
+
+def gold_macro_ai_fusion_v7():
+
+    fusion = {
+
+        "Bias":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    fundamental = gold_fundamental_score_v6()
+
+    cycle = gold_macro_cycle_engine_v5()
+
+    macro = master_macro_decision_v4()
+
+
+    score = (
+
+        fundamental["Total"]
+
+        +
+
+        cycle["Confidence"]
+
+        +
+
+        macro["Score"]
+
+    ) / 3
+
+
+    if fundamental["Total"] >= 70:
+
+        fusion["Reason"].append(
+
+            "Strong fundamental support"
+
+        )
+
+
+    if cycle["Cycle"] == "GOLD BULL CYCLE":
+
+        fusion["Reason"].append(
+
+            "Bull cycle detected"
+
+        )
+
+
+    if score >= 75:
+
+        fusion["Bias"] = "BULLISH"
+
+
+    elif score <= 35:
+
+        fusion["Bias"] = "BEARISH"
+
+
+    fusion["Score"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    return fusion
+
+
+# ==========================================================
+# MACRO AI FUSION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Macro":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Gold Macro AI Fusion V7"
+
+    )
+
+
+    macro_ai = gold_macro_ai_fusion_v7()
+
+
+    st.metric(
+
+        "Bias",
+
+        macro_ai["Bias"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{macro_ai["Score"]}/100'
+
+    )
+
+
+    for reason in macro_ai["Reason"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# WEOS GOLD MACRO AI MEMORY V7
+# ==========================================================
+
+if "macro_ai_memory_v7" not in st.session_state:
+
+    st.session_state.macro_ai_memory_v7 = []
+
+
+def save_macro_ai_memory_v7():
+
+    ai = gold_macro_ai_fusion_v7()
+
+
+    st.session_state.macro_ai_memory_v7.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Bias":
+
+            ai["Bias"],
+
+            "Score":
+
+            ai["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.macro_ai_memory_v7
+
+    ) > 500:
+
+        st.session_state.macro_ai_memory_v7.pop(
+
+            0
+
+        )
+
+
+save_macro_ai_memory_v7()
+
+
+# ==========================================================
+# MACRO AI MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Macro AI Memory V7"
+
+    )
+
+
+    macro_ai_memory_df = pd.DataFrame(
+
+        st.session_state.macro_ai_memory_v7[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        macro_ai_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS GOLD MASTER BIAS ENGINE V8
+# ==========================================================
+
+def gold_master_bias_v8():
+
+    bias = {
+
+        "Final Bias":
+
+        "WAIT",
+
+        "Confidence":
+
+        0,
+
+        "Sources":
+
+        []
+
+    }
+
+
+    macro_ai = gold_macro_ai_fusion_v7()
+
+    technical = ai_market_bias_v12()
+
+    forecast = ai_market_forecast_v17()
+
+
+    score = (
+
+        macro_ai["Score"]
+
+        +
+
+        technical["Score"]
+
+        +
+
+        forecast["Probability"]
+
+    ) / 3
+
+
+    if macro_ai["Bias"] == "BULLISH":
+
+        bias["Sources"].append(
+
+            "Macro bullish"
+
+        )
+
+
+    if technical["Bias"] == "BULLISH":
+
+        bias["Sources"].append(
+
+            "Technical bullish"
+
+        )
+
+
+    if forecast["Direction"] == "UP":
+
+        bias["Sources"].append(
+
+            "Forecast upward"
+
+        )
+
+
+    if score >= 75:
+
+        bias["Final Bias"] = "BUY BIAS"
+
+
+    elif score <= 35:
+
+        bias["Final Bias"] = "SELL BIAS"
+
+
+    else:
+
+        bias["Final Bias"] = "WAIT"
+
+
+    bias["Confidence"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    return bias
+
+
+# ==========================================================
+# MASTER BIAS DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "👑 Gold Master Bias V8"
+
+    )
+
+
+    master_bias = gold_master_bias_v8()
+
+
+    st.metric(
+
+        "Bias",
+
+        master_bias["Final Bias"]
+
+    )
+
+
+    st.metric(
+
+        "Confidence",
+
+        f'{master_bias["Confidence"]}/100'
+
+    )
+
+
+    for source in master_bias["Sources"]:
+
+        st.write(
+
+            "•",
+
+            source
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 146
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 147
+# ==========================================================
+
+# ==========================================================
+# WEOS GOLD MASTER BIAS MEMORY V8
+# ==========================================================
+
+if "master_bias_memory_v8" not in st.session_state:
+
+    st.session_state.master_bias_memory_v8 = []
+
+
+def save_master_bias_memory_v8():
+
+    bias = gold_master_bias_v8()
+
+
+    st.session_state.master_bias_memory_v8.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Bias":
+
+            bias["Final Bias"],
+
+            "Confidence":
+
+            bias["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.master_bias_memory_v8
+
+    ) > 500:
+
+        st.session_state.master_bias_memory_v8.pop(
+
+            0
+
+        )
+
+
+save_master_bias_memory_v8()
+
+
+# ==========================================================
+# MASTER BIAS MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "👑 Master Bias Memory V8"
+
+    )
+
+
+    master_bias_memory_df = pd.DataFrame(
+
+        st.session_state.master_bias_memory_v8[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        master_bias_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS GOLD MACRO TECH FUSION V9
+# ==========================================================
+
+def gold_macro_technical_fusion_v9():
+
+    fusion = {
+
+        "Direction":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50,
+
+        "Components":
+
+        []
+
+    }
+
+
+    macro = gold_master_bias_v8()
+
+    technical = market_direction_fusion()
+
+    momentum = momentum_radar_v2()
+
+    structure = analyze_price_action()
+
+
+    score = 50
+
+
+    if macro["Final Bias"] == "BUY BIAS":
+
+        score += 20
+
+        fusion["Components"].append(
+
+            "Macro bullish"
+
+        )
+
+
+    elif macro["Final Bias"] == "SELL BIAS":
+
+        score -= 20
+
+        fusion["Components"].append(
+
+            "Macro bearish"
+
+        )
+
+
+    if technical["direction"] == "BULLISH":
+
+        score += 15
+
+        fusion["Components"].append(
+
+            "Technical bullish"
+
+        )
+
+
+    elif technical["direction"] == "BEARISH":
+
+        score -= 15
+
+        fusion["Components"].append(
+
+            "Technical bearish"
+
+        )
+
+
+    if momentum["Direction"] == "UP":
+
+        score += 10
+
+        fusion["Components"].append(
+
+            "Momentum up"
+
+        )
+
+
+    elif momentum["Direction"] == "DOWN":
+
+        score -= 10
+
+        fusion["Components"].append(
+
+            "Momentum down"
+
+        )
+
+
+    if structure["Structure"] != "Unknown":
+
+        score += 5
+
+        fusion["Components"].append(
+
+            "Price structure detected"
+
+        )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    fusion["Score"] = score
+
+
+    if score >= 70:
+
+        fusion["Direction"] = "BUY"
+
+
+    elif score <= 35:
+
+        fusion["Direction"] = "SELL"
+
+
+    else:
+
+        fusion["Direction"] = "WAIT"
+
+
+    return fusion
+
+
+# ==========================================================
+# MACRO TECH FUSION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚔ Macro Technical Fusion V9"
+
+    )
+
+
+    fusion_v9 = gold_macro_technical_fusion_v9()
+
+
+    st.metric(
+
+        "Direction",
+
+        fusion_v9["Direction"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{fusion_v9["Score"]}/100'
+
+    )
+
+
+    for component in fusion_v9["Components"]:
+
+        st.write(
+
+            "•",
+
+            component
+
+        )
+
+
+# ==========================================================
+# WEOS GOLD DECISION MATRIX V10
+# ==========================================================
+
+def gold_decision_matrix_v10():
+
+    matrix = {
+
+        "Macro":
+
+        0,
+
+        "Technical":
+
+        0,
+
+        "Momentum":
+
+        0,
+
+        "Risk":
+
+        0,
+
+        "Timing":
+
+        0
+
+    }
+
+
+    macro = gold_macro_ai_fusion_v7()
+
+    technical = gold_macro_technical_fusion_v9()
+
+    momentum = momentum_radar_v2()
+
+    risk = ai_risk_adjustment_v22()
+
+    timing = ai_entry_timing_master_v21()
+
+
+    matrix["Macro"] = macro["Score"]
+
+    matrix["Technical"] = technical["Score"]
+
+    matrix["Momentum"] = (
+
+        momentum["Power"]
+
+    )
+
+    matrix["Risk"] = (
+
+        100
+
+        -
+
+        risk["Multiplier"]
+
+        *
+
+        50
+
+    )
+
+
+    matrix["Timing"] = timing["Score"]
+
+
+    return matrix
+
+
+# ==========================================================
+# DECISION MATRIX DISPLAY V10
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧮 Gold Decision Matrix V10"
+
+    )
+
+
+    matrix_v10 = gold_decision_matrix_v10()
+
+
+    matrix_df = pd.DataFrame(
+
+        {
+
+            "Factor":
+
+            matrix_v10.keys(),
+
+            "Score":
+
+            matrix_v10.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        matrix_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS GOLD FINAL SIGNAL ENGINE V10
+# ==========================================================
+
+def gold_final_signal_v10():
+
+    matrix = gold_decision_matrix_v10()
+
+    score = sum(
+
+        matrix.values()
+
+    ) / len(matrix)
+
+
+    if score >= 75:
+
+        signal = "STRONG BUY"
+
+
+    elif score <= 35:
+
+        signal = "STRONG SELL"
+
+
+    elif score >= 60:
+
+        signal = "BUY WATCH"
+
+
+    elif score <= 45:
+
+        signal = "SELL WATCH"
+
+
+    else:
+
+        signal = "NO SIGNAL"
+
+
+    return {
+
+        "Signal":
+
+        signal,
+
+        "Score":
+
+        round(
+
+            score,
+
+            1
+
+        )
+
+    }
+
+
+# ==========================================================
+# FINAL SIGNAL DISPLAY V10
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Gold Final Signal V10"
+
+    )
+
+
+    final_signal = gold_final_signal_v10()
+
+
+    st.metric(
+
+        "Signal",
+
+        final_signal["Signal"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{final_signal["Score"]}/100'
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 147
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 148
+# ==========================================================
+
+# ==========================================================
+# WEOS GOLD FINAL SIGNAL MEMORY V10
+# ==========================================================
+
+if "final_signal_memory_v10" not in st.session_state:
+
+    st.session_state.final_signal_memory_v10 = []
+
+
+def save_final_signal_memory_v10():
+
+    signal = gold_final_signal_v10()
+
+
+    st.session_state.final_signal_memory_v10.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Signal":
+
+            signal["Signal"],
+
+            "Score":
+
+            signal["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.final_signal_memory_v10
+
+    ) > 500:
+
+        st.session_state.final_signal_memory_v10.pop(
+
+            0
+
+        )
+
+
+save_final_signal_memory_v10()
+
+
+# ==========================================================
+# FINAL SIGNAL MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Final Signal Memory V10"
+
+    )
+
+
+    final_signal_memory_df = pd.DataFrame(
+
+        st.session_state.final_signal_memory_v10[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        final_signal_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS GOLD ENTRY ZONE ENGINE V11
+# ==========================================================
+
+def gold_entry_zone_engine_v11():
+
+    zone = {
+
+        "Zone":
+
+        "UNKNOWN",
+
+        "Type":
+
+        "NONE",
+
+        "Confidence":
+
+        50,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    price = current_gold_price()
+
+    support = detect_support_zone()
+
+    resistance = detect_resistance_zone()
+
+    structure = analyze_price_action()
+
+
+    if price <= support["Level"]:
+
+        zone["Zone"] = "SUPPORT ENTRY"
+
+        zone["Type"] = "BUY AREA"
+
+        zone["Confidence"] = 75
+
+        zone["Reason"].append(
+
+            "Near support zone"
+
+        )
+
+
+    elif price >= resistance["Level"]:
+
+        zone["Zone"] = "RESISTANCE ENTRY"
+
+        zone["Type"] = "SELL AREA"
+
+        zone["Confidence"] = 75
+
+        zone["Reason"].append(
+
+            "Near resistance zone"
+
+        )
+
+
+    else:
+
+        zone["Zone"] = "MID RANGE"
+
+        zone["Type"] = "WAIT"
+
+        zone["Confidence"] = 40
+
+
+    if structure["Structure"] != "Unknown":
+
+        zone["Confidence"] += 10
+
+        zone["Reason"].append(
+
+            "Structure confirmed"
+
+        )
+
+
+    zone["Confidence"] = min(
+
+        zone["Confidence"],
+
+        100
+
+    )
+
+
+    return zone
+
+
+# ==========================================================
+# ENTRY ZONE DISPLAY V11
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Gold Entry Zone Engine V11"
+
+    )
+
+
+    entry_zone = gold_entry_zone_engine_v11()
+
+
+    entry_zone_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            entry_zone.keys(),
+
+            "Value":
+
+            entry_zone.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        entry_zone_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS ENTRY ZONE MEMORY V11
+# ==========================================================
+
+if "entry_zone_memory_v11" not in st.session_state:
+
+    st.session_state.entry_zone_memory_v11 = []
+
+
+def save_entry_zone_memory_v11():
+
+    zone = gold_entry_zone_engine_v11()
+
+
+    st.session_state.entry_zone_memory_v11.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Zone":
+
+            zone["Zone"],
+
+            "Type":
+
+            zone["Type"],
+
+            "Confidence":
+
+            zone["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.entry_zone_memory_v11
+
+    ) > 500:
+
+        st.session_state.entry_zone_memory_v11.pop(
+
+            0
+
+        )
+
+
+save_entry_zone_memory_v11()
+
+
+# ==========================================================
+# ENTRY ZONE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Entry Zone Memory V11"
+
+    )
+
+
+    entry_zone_memory_df = pd.DataFrame(
+
+        st.session_state.entry_zone_memory_v11[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        entry_zone_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS SMART ENTRY CONFIRMATION V12
+# ==========================================================
+
+def smart_entry_confirmation_v12():
+
+    confirmation = {
+
+        "Status":
+
+        "WAIT",
+
+        "Score":
+
+        0,
+
+        "Reasons":
+
+        []
+
+    }
+
+
+    signal = gold_final_signal_v10()
+
+    zone = gold_entry_zone_engine_v11()
+
+    timing = ai_entry_timing_master_v21()
+
+
+    score = (
+
+        signal["Score"]
+
+        +
+
+        zone["Confidence"]
+
+        +
+
+        timing["Score"]
+
+    ) / 3
+
+
+    if signal["Signal"] in [
+
+        "STRONG BUY",
+
+        "BUY WATCH"
+
+    ]:
+
+        confirmation["Reasons"].append(
+
+            "Signal supports BUY"
+
+        )
+
+
+    if signal["Signal"] in [
+
+        "STRONG SELL",
+
+        "SELL WATCH"
+
+    ]:
+
+        confirmation["Reasons"].append(
+
+            "Signal supports SELL"
+
+        )
+
+
+    if zone["Confidence"] >= 70:
+
+        confirmation["Reasons"].append(
+
+            "Entry zone quality"
+
+        )
+
+
+    confirmation["Score"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if score >= 80:
+
+        confirmation["Status"] = "CONFIRMED"
+
+
+    elif score >= 60:
+
+        confirmation["Status"] = "PREPARE"
+
+
+    else:
+
+        confirmation["Status"] = "WAIT"
+
+
+    return confirmation
+
+
+# ==========================================================
+# SMART ENTRY DISPLAY V12
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Smart Entry Confirmation V12"
+
+    )
+
+
+    confirmation = smart_entry_confirmation_v12()
+
+
+    st.metric(
+
+        "Status",
+
+        confirmation["Status"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{confirmation["Score"]}/100'
+
+    )
+
+
+    for reason in confirmation["Reasons"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 148
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 149
+# ==========================================================
+
+# ==========================================================
+# WEOS SMART ENTRY MEMORY V12
+# ==========================================================
+
+if "smart_entry_memory_v12" not in st.session_state:
+
+    st.session_state.smart_entry_memory_v12 = []
+
+
+def save_smart_entry_memory_v12():
+
+    confirmation = smart_entry_confirmation_v12()
+
+
+    st.session_state.smart_entry_memory_v12.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            confirmation["Status"],
+
+            "Score":
+
+            confirmation["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.smart_entry_memory_v12
+
+    ) > 500:
+
+        st.session_state.smart_entry_memory_v12.pop(
+
+            0
+
+        )
+
+
+save_smart_entry_memory_v12()
+
+
+# ==========================================================
+# SMART ENTRY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Smart Entry Memory V12"
+
+    )
+
+
+    smart_entry_memory_df = pd.DataFrame(
+
+        st.session_state.smart_entry_memory_v12[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        smart_entry_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS SMART MONEY FLOW ENGINE V13
+# ==========================================================
+
+def smart_money_flow_engine_v13():
+
+    flow = {
+
+        "Flow":
+
+        "UNKNOWN",
+
+        "Direction":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50,
+
+        "Evidence":
+
+        []
+
+    }
+
+
+    volume = analyze_volume_behavior()
+
+    structure = analyze_price_action()
+
+    liquidity = ai_liquidity_hunt_v14()
+
+
+    score = 50
+
+
+    if volume["Status"] == "BUY ACCUMULATION":
+
+        score += 20
+
+        flow["Evidence"].append(
+
+            "Buying volume accumulation"
+
+        )
+
+
+    elif volume["Status"] == "SELL DISTRIBUTION":
+
+        score -= 20
+
+        flow["Evidence"].append(
+
+            "Selling distribution"
+
+        )
+
+
+    if liquidity["Status"] == "LIQUIDITY TARGET":
+
+        score += 15
+
+        flow["Evidence"].append(
+
+            "Liquidity zone detected"
+
+        )
+
+
+    if structure["Structure"] != "Unknown":
+
+        score += 10
+
+        flow["Evidence"].append(
+
+            "Market structure available"
+
+        )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    flow["Score"] = score
+
+
+    if score >= 70:
+
+        flow["Flow"] = "ACCUMULATION"
+
+        flow["Direction"] = "BUY"
+
+
+    elif score <= 35:
+
+        flow["Flow"] = "DISTRIBUTION"
+
+        flow["Direction"] = "SELL"
+
+
+    else:
+
+        flow["Flow"] = "BALANCED"
+
+
+    return flow
+
+
+# ==========================================================
+# SMART MONEY DISPLAY V13
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🐋 Smart Money Flow V13"
+
+    )
+
+
+    smart_money = smart_money_flow_engine_v13()
+
+
+    smart_money_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            smart_money.keys(),
+
+            "Value":
+
+            smart_money.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        smart_money_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS SMART MONEY MEMORY V13
+# ==========================================================
+
+if "smart_money_memory_v13" not in st.session_state:
+
+    st.session_state.smart_money_memory_v13 = []
+
+
+def save_smart_money_memory_v13():
+
+    smart_money = smart_money_flow_engine_v13()
+
+
+    st.session_state.smart_money_memory_v13.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Flow":
+
+            smart_money["Flow"],
+
+            "Direction":
+
+            smart_money["Direction"],
+
+            "Score":
+
+            smart_money["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.smart_money_memory_v13
+
+    ) > 500:
+
+        st.session_state.smart_money_memory_v13.pop(
+
+            0
+
+        )
+
+
+save_smart_money_memory_v13()
+
+
+# ==========================================================
+# SMART MONEY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🐋 Smart Money Memory V13"
+
+    )
+
+
+    smart_money_memory_df = pd.DataFrame(
+
+        st.session_state.smart_money_memory_v13[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        smart_money_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS LIQUIDITY + SMART MONEY FUSION V14
+# ==========================================================
+
+def liquidity_smart_money_fusion_v14():
+
+    fusion = {
+
+        "Decision":
+
+        "WAIT",
+
+        "Score":
+
+        50,
+
+        "Factors":
+
+        []
+
+    }
+
+
+    liquidity = ai_liquidity_hunt_v14()
+
+    smart_money = smart_money_flow_engine_v13()
+
+    confirmation = smart_entry_confirmation_v12()
+
+
+    score = (
+
+        liquidity["Priority"]
+
+        +
+
+        smart_money["Score"]
+
+        +
+
+        confirmation["Score"]
+
+    ) / 3
+
+
+    if liquidity["Status"] == "LIQUIDITY TARGET":
+
+        fusion["Factors"].append(
+
+            "Liquidity opportunity"
+
+        )
+
+
+    if smart_money["Direction"] != "NEUTRAL":
+
+        fusion["Factors"].append(
+
+            "Smart money direction"
+
+        )
+
+
+    if confirmation["Status"] == "CONFIRMED":
+
+        fusion["Factors"].append(
+
+            "Entry confirmed"
+
+        )
+
+
+    fusion["Score"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if score >= 80:
+
+        fusion["Decision"] = "EXECUTE"
+
+
+    elif score >= 60:
+
+        fusion["Decision"] = "WATCH"
+
+
+    else:
+
+        fusion["Decision"] = "WAIT"
+
+
+    return fusion
+
+
+# ==========================================================
+# LIQUIDITY SMART MONEY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "💧🐋 Liquidity Smart Money Fusion V14"
+
+    )
+
+
+    liquidity_fusion = liquidity_smart_money_fusion_v14()
+
+
+    liquidity_fusion_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            liquidity_fusion.keys(),
+
+            "Value":
+
+            liquidity_fusion.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        liquidity_fusion_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 149
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 150
+# ==========================================================
+
+# ==========================================================
+# WEOS LIQUIDITY SMART MONEY MEMORY V14
+# ==========================================================
+
+if "liquidity_fusion_memory_v14" not in st.session_state:
+
+    st.session_state.liquidity_fusion_memory_v14 = []
+
+
+def save_liquidity_fusion_memory_v14():
+
+    fusion = liquidity_smart_money_fusion_v14()
+
+
+    st.session_state.liquidity_fusion_memory_v14.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Decision":
+
+            fusion["Decision"],
+
+            "Score":
+
+            fusion["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.liquidity_fusion_memory_v14
+
+    ) > 500:
+
+        st.session_state.liquidity_fusion_memory_v14.pop(
+
+            0
+
+        )
+
+
+save_liquidity_fusion_memory_v14()
+
+
+# ==========================================================
+# LIQUIDITY FUSION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "💧🐋 Liquidity Fusion Memory V14"
+
+    )
+
+
+    liquidity_memory_df = pd.DataFrame(
+
+        st.session_state.liquidity_fusion_memory_v14[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        liquidity_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS ORDER BLOCK DETECTION ENGINE V15
+# ==========================================================
+
+def order_block_engine_v15():
+
+    block = {
+
+        "Zone":
+
+        "NONE",
+
+        "Type":
+
+        "UNKNOWN",
+
+        "Strength":
+
+        0,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    candles = get_market_candles()
+
+    structure = analyze_price_action()
+
+    volume = analyze_volume_behavior()
+
+
+    if structure["Structure"] == "Bullish":
+
+        block["Zone"] = "DEMAND BLOCK"
+
+        block["Type"] = "BUY"
+
+        block["Strength"] = 70
+
+        block["Reason"].append(
+
+            "Bullish structure"
+
+        )
+
+
+    elif structure["Structure"] == "Bearish":
+
+        block["Zone"] = "SUPPLY BLOCK"
+
+        block["Type"] = "SELL"
+
+        block["Strength"] = 70
+
+        block["Reason"].append(
+
+            "Bearish structure"
+
+        )
+
+
+    if volume["Status"] != "UNKNOWN":
+
+        block["Strength"] += 15
+
+        block["Reason"].append(
+
+            "Volume confirmation"
+
+        )
+
+
+    block["Strength"] = min(
+
+        block["Strength"],
+
+        100
+
+    )
+
+
+    return block
+
+
+# ==========================================================
+# ORDER BLOCK DISPLAY V15
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📦 Order Block Engine V15"
+
+    )
+
+
+    order_block = order_block_engine_v15()
+
+
+    order_block_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            order_block.keys(),
+
+            "Value":
+
+            order_block.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        order_block_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS ORDER BLOCK MEMORY V15
+# ==========================================================
+
+if "order_block_memory_v15" not in st.session_state:
+
+    st.session_state.order_block_memory_v15 = []
+
+
+def save_order_block_memory_v15():
+
+    block = order_block_engine_v15()
+
+
+    st.session_state.order_block_memory_v15.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Zone":
+
+            block["Zone"],
+
+            "Type":
+
+            block["Type"],
+
+            "Strength":
+
+            block["Strength"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.order_block_memory_v15
+
+    ) > 500:
+
+        st.session_state.order_block_memory_v15.pop(
+
+            0
+
+        )
+
+
+save_order_block_memory_v15()
+
+
+# ==========================================================
+# ORDER BLOCK MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📦 Order Block Memory V15"
+
+    )
+
+
+    order_memory_df = pd.DataFrame(
+
+        st.session_state.order_block_memory_v15[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        order_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS MARKET STRUCTURE AI ENGINE V16
+# ==========================================================
+
+def market_structure_ai_v16():
+
+    structure = {
+
+        "State":
+
+        "UNKNOWN",
+
+        "Bias":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50
+
+    }
+
+
+    price_action = analyze_price_action()
+
+    order_block = order_block_engine_v15()
+
+    liquidity = ai_liquidity_hunt_v14()
+
+
+    score = 50
+
+
+    if price_action["Structure"] == "Bullish":
+
+        score += 20
+
+
+    elif price_action["Structure"] == "Bearish":
+
+        score -= 20
+
+
+    if order_block["Type"] == "BUY":
+
+        score += 15
+
+
+    elif order_block["Type"] == "SELL":
+
+        score -= 15
+
+
+    if liquidity["Status"] == "LIQUIDITY TARGET":
+
+        score += 10
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    structure["Score"] = score
+
+
+    if score >= 70:
+
+        structure["State"] = "TRENDING"
+
+        structure["Bias"] = "BULLISH"
+
+
+    elif score <= 35:
+
+        structure["State"] = "TRENDING"
+
+        structure["Bias"] = "BEARISH"
+
+
+    else:
+
+        structure["State"] = "RANGE"
+
+
+    return structure
+
+
+# ==========================================================
+# MARKET STRUCTURE DISPLAY V16
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🏗 Market Structure AI V16"
+
+    )
+
+
+    structure_ai = market_structure_ai_v16()
+
+
+    structure_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            structure_ai.keys(),
+
+            "Value":
+
+            structure_ai.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        structure_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 150
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 151
+# ==========================================================
+
+# ==========================================================
+# WEOS MARKET STRUCTURE MEMORY V16
+# ==========================================================
+
+if "structure_memory_v16" not in st.session_state:
+
+    st.session_state.structure_memory_v16 = []
+
+
+def save_structure_memory_v16():
+
+    structure = market_structure_ai_v16()
+
+
+    st.session_state.structure_memory_v16.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "State":
+
+            structure["State"],
+
+            "Bias":
+
+            structure["Bias"],
+
+            "Score":
+
+            structure["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.structure_memory_v16
+
+    ) > 500:
+
+        st.session_state.structure_memory_v16.pop(
+
+            0
+
+        )
+
+
+save_structure_memory_v16()
+
+
+# ==========================================================
+# STRUCTURE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🏗 Market Structure Memory V16"
+
+    )
+
+
+    structure_memory_df = pd.DataFrame(
+
+        st.session_state.structure_memory_v16[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        structure_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS SMART MONEY CONFLUENCE ENGINE V17
+# ==========================================================
+
+def smart_money_confluence_v17():
+
+    confluence = {
+
+        "Signal":
+
+        "WAIT",
+
+        "Score":
+
+        50,
+
+        "Factors":
+
+        []
+
+    }
+
+
+    smart_money = smart_money_flow_engine_v13()
+
+    order_block = order_block_engine_v15()
+
+    structure = market_structure_ai_v16()
+
+    liquidity = ai_liquidity_hunt_v14()
+
+
+    score = 50
+
+
+    if smart_money["Direction"] == "BUY":
+
+        score += 15
+
+        confluence["Factors"].append(
+
+            "Smart money buying"
+
+        )
+
+
+    elif smart_money["Direction"] == "SELL":
+
+        score -= 15
+
+        confluence["Factors"].append(
+
+            "Smart money selling"
+
+        )
+
+
+    if order_block["Type"] == "BUY":
+
+        score += 15
+
+        confluence["Factors"].append(
+
+            "Demand block"
+
+        )
+
+
+    elif order_block["Type"] == "SELL":
+
+        score -= 15
+
+        confluence["Factors"].append(
+
+            "Supply block"
+
+        )
+
+
+    if structure["Bias"] == "BULLISH":
+
+        score += 10
+
+        confluence["Factors"].append(
+
+            "Bullish structure"
+
+        )
+
+
+    elif structure["Bias"] == "BEARISH":
+
+        score -= 10
+
+        confluence["Factors"].append(
+
+            "Bearish structure"
+
+        )
+
+
+    if liquidity["Status"] == "LIQUIDITY TARGET":
+
+        score += 10
+
+        confluence["Factors"].append(
+
+            "Liquidity target"
+
+        )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    confluence["Score"] = score
+
+
+    if score >= 75:
+
+        confluence["Signal"] = "BUY"
+
+
+    elif score <= 35:
+
+        confluence["Signal"] = "SELL"
+
+
+    else:
+
+        confluence["Signal"] = "WAIT"
+
+
+    return confluence
+
+
+# ==========================================================
+# SMART MONEY CONFLUENCE DISPLAY V17
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🐋 Smart Money Confluence V17"
+
+    )
+
+
+    confluence = smart_money_confluence_v17()
+
+
+    st.metric(
+
+        "Signal",
+
+        confluence["Signal"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{confluence["Score"]}/100'
+
+    )
+
+
+    for factor in confluence["Factors"]:
+
+        st.write(
+
+            "•",
+
+            factor
+
+        )
+
+
+# ==========================================================
+# WEOS SMART MONEY CONFLUENCE MEMORY V17
+# ==========================================================
+
+if "confluence_memory_v17" not in st.session_state:
+
+    st.session_state.confluence_memory_v17 = []
+
+
+def save_confluence_memory_v17():
+
+    confluence = smart_money_confluence_v17()
+
+
+    st.session_state.confluence_memory_v17.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Signal":
+
+            confluence["Signal"],
+
+            "Score":
+
+            confluence["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.confluence_memory_v17
+
+    ) > 500:
+
+        st.session_state.confluence_memory_v17.pop(
+
+            0
+
+        )
+
+
+save_confluence_memory_v17()
+
+
+# ==========================================================
+# CONFLUENCE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🐋 Confluence Memory V17"
+
+    )
+
+
+    confluence_memory_df = pd.DataFrame(
+
+        st.session_state.confluence_memory_v17[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        confluence_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS PRECISION ENTRY ENGINE V18
+# ==========================================================
+
+def precision_entry_engine_v18():
+
+    entry = {
+
+        "Action":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Confidence":
+
+        0,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    confluence = smart_money_confluence_v17()
+
+    signal = gold_final_signal_v10()
+
+    zone = gold_entry_zone_engine_v11()
+
+
+    score = (
+
+        confluence["Score"]
+
+        +
+
+        signal["Score"]
+
+        +
+
+        zone["Confidence"]
+
+    ) / 3
+
+
+    if confluence["Signal"] != "WAIT":
+
+        entry["Direction"] = confluence["Signal"]
+
+        entry["Reason"].append(
+
+            "Smart money confirmation"
+
+        )
+
+
+    if zone["Type"] != "NONE":
+
+        entry["Reason"].append(
+
+            "Entry zone detected"
+
+        )
+
+
+    entry["Confidence"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if score >= 80:
+
+        entry["Action"] = "EXECUTE"
+
+
+    elif score >= 60:
+
+        entry["Action"] = "PREPARE"
+
+
+    else:
+
+        entry["Action"] = "WAIT"
+
+
+    return entry
+
+
+# ==========================================================
+# PRECISION ENTRY DISPLAY V18
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Precision Entry Engine V18"
+
+    )
+
+
+    precision = precision_entry_engine_v18()
+
+
+    precision_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            precision.keys(),
+
+            "Value":
+
+            precision.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        precision_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 151
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 152
+# ==========================================================
+
+# ==========================================================
+# WEOS PRECISION ENTRY MEMORY V18
+# ==========================================================
+
+if "precision_entry_memory_v18" not in st.session_state:
+
+    st.session_state.precision_entry_memory_v18 = []
+
+
+def save_precision_entry_memory_v18():
+
+    precision = precision_entry_engine_v18()
+
+
+    st.session_state.precision_entry_memory_v18.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Action":
+
+            precision["Action"],
+
+            "Direction":
+
+            precision["Direction"],
+
+            "Confidence":
+
+            precision["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.precision_entry_memory_v18
+
+    ) > 500:
+
+        st.session_state.precision_entry_memory_v18.pop(
+
+            0
+
+        )
+
+
+save_precision_entry_memory_v18()
+
+
+# ==========================================================
+# PRECISION ENTRY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Precision Entry Memory V18"
+
+    )
+
+
+    precision_memory_df = pd.DataFrame(
+
+        st.session_state.precision_entry_memory_v18[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        precision_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI SNIPER ENTRY ENGINE V19
+# ==========================================================
+
+def ai_sniper_entry_v19():
+
+    sniper = {
+
+        "Status":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry Zone":
+
+        None,
+
+        "Confidence":
+
+        0,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    precision = precision_entry_engine_v18()
+
+    zone = gold_entry_zone_engine_v11()
+
+    structure = market_structure_ai_v16()
+
+    timing = ai_entry_timing_master_v21()
+
+
+    score = (
+
+        precision["Confidence"]
+
+        +
+
+        zone["Confidence"]
+
+        +
+
+        timing["Score"]
+
+    ) / 3
+
+
+    if precision["Direction"] != "NONE":
+
+        sniper["Direction"] = precision["Direction"]
+
+        sniper["Reason"].append(
+
+            "Direction confirmed"
+
+        )
+
+
+    if zone["Zone"] != "MID RANGE":
+
+        sniper["Entry Zone"] = zone["Zone"]
+
+        sniper["Reason"].append(
+
+            "Premium entry zone"
+
+        )
+
+
+    if structure["State"] == "TRENDING":
+
+        sniper["Reason"].append(
+
+            "Trend structure active"
+
+        )
+
+
+    sniper["Confidence"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if score >= 85:
+
+        sniper["Status"] = "SNIPER READY"
+
+
+    elif score >= 65:
+
+        sniper["Status"] = "WAIT CONFIRM"
+
+
+    else:
+
+        sniper["Status"] = "NO TRADE"
+
+
+    return sniper
+
+
+# ==========================================================
+# SNIPER ENTRY DISPLAY V19
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 AI Sniper Entry V19"
+
+    )
+
+
+    sniper = ai_sniper_entry_v19()
+
+
+    sniper_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            sniper.keys(),
+
+            "Value":
+
+            sniper.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        sniper_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS SNIPER MEMORY V19
+# ==========================================================
+
+if "sniper_memory_v19" not in st.session_state:
+
+    st.session_state.sniper_memory_v19 = []
+
+
+def save_sniper_memory_v19():
+
+    sniper = ai_sniper_entry_v19()
+
+
+    st.session_state.sniper_memory_v19.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            sniper["Status"],
+
+            "Direction":
+
+            sniper["Direction"],
+
+            "Confidence":
+
+            sniper["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.sniper_memory_v19
+
+    ) > 500:
+
+        st.session_state.sniper_memory_v19.pop(
+
+            0
+
+        )
+
+
+save_sniper_memory_v19()
+
+
+# ==========================================================
+# SNIPER MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Sniper Memory V19"
+
+    )
+
+
+    sniper_memory_df = pd.DataFrame(
+
+        st.session_state.sniper_memory_v19[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        sniper_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI ENTRY EXECUTION GATE V20
+# ==========================================================
+
+def ai_entry_execution_gate_v20():
+
+    gate = {
+
+        "Permission":
+
+        "DENIED",
+
+        "Direction":
+
+        "NONE",
+
+        "Score":
+
+        0,
+
+        "Checks":
+
+        []
+
+    }
+
+
+    sniper = ai_sniper_entry_v19()
+
+    protection = ai_trade_protection_v10()
+
+    confidence = ai_market_confidence_v18()
+
+
+    score = (
+
+        sniper["Confidence"]
+
+        +
+
+        confidence["Score"]
+
+    ) / 2
+
+
+    if protection["Action"] == "STOP ALL":
+
+        gate["Checks"].append(
+
+            "Risk protection blocked"
+
+        )
+
+        gate["Permission"] = "DENIED"
+
+        return gate
+
+
+    if sniper["Status"] == "SNIPER READY":
+
+        gate["Checks"].append(
+
+            "Sniper condition met"
+
+        )
+
+
+    if confidence["Level"] in [
+
+        "HIGH",
+
+        "VERY HIGH"
+
+    ]:
+
+        gate["Checks"].append(
+
+            "Confidence accepted"
+
+        )
+
+
+    gate["Score"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    gate["Direction"] = sniper["Direction"]
+
+
+    if score >= 85:
+
+        gate["Permission"] = "AUTHORIZED"
+
+
+    elif score >= 65:
+
+        gate["Permission"] = "PENDING"
+
+
+    return gate
+
+
+# ==========================================================
+# EXECUTION GATE DISPLAY V20
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚪 AI Entry Execution Gate V20"
+
+    )
+
+
+    gate = ai_entry_execution_gate_v20()
+
+
+    gate_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            gate.keys(),
+
+            "Value":
+
+            gate.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        gate_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 152
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 153
+# ==========================================================
+
+# ==========================================================
+# WEOS ENTRY EXECUTION GATE MEMORY V20
+# ==========================================================
+
+if "execution_gate_memory_v20" not in st.session_state:
+
+    st.session_state.execution_gate_memory_v20 = []
+
+
+def save_execution_gate_memory_v20():
+
+    gate = ai_entry_execution_gate_v20()
+
+
+    st.session_state.execution_gate_memory_v20.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Permission":
+
+            gate["Permission"],
+
+            "Direction":
+
+            gate["Direction"],
+
+            "Score":
+
+            gate["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.execution_gate_memory_v20
+
+    ) > 500:
+
+        st.session_state.execution_gate_memory_v20.pop(
+
+            0
+
+        )
+
+
+save_execution_gate_memory_v20()
+
+
+# ==========================================================
+# EXECUTION GATE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚪 Execution Gate Memory V20"
+
+    )
+
+
+    gate_memory_df = pd.DataFrame(
+
+        st.session_state.execution_gate_memory_v20[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        gate_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE SIGNAL GENERATOR V21
+# ==========================================================
+
+def ai_trade_signal_generator_v21():
+
+    signal = {
+
+        "Signal":
+
+        "NO SIGNAL",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry":
+
+        None,
+
+        "SL":
+
+        None,
+
+        "TP":
+
+        None,
+
+        "Confidence":
+
+        0
+
+    }
+
+
+    gate = ai_entry_execution_gate_v20()
+
+    sniper = ai_sniper_entry_v19()
+
+    blueprint = generate_entry_blueprint()
+
+
+    signal["Direction"] = sniper["Direction"]
+
+    signal["Entry"] = blueprint["Entry"]
+
+    signal["SL"] = blueprint["Stop Loss"]
+
+    signal["TP"] = blueprint["Take Profit"]
+
+
+    signal["Confidence"] = gate["Score"]
+
+
+    if gate["Permission"] == "AUTHORIZED":
+
+        signal["Signal"] = "EXECUTE"
+
+
+    elif gate["Permission"] == "PENDING":
+
+        signal["Signal"] = "WAIT CONFIRM"
+
+
+    else:
+
+        signal["Signal"] = "BLOCK"
+
+
+    return signal
+
+
+# ==========================================================
+# TRADE SIGNAL DISPLAY V21
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📡 AI Trade Signal Generator V21"
+
+    )
+
+
+    trade_signal = ai_trade_signal_generator_v21()
+
+
+    trade_signal_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            trade_signal.keys(),
+
+            "Value":
+
+            trade_signal.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        trade_signal_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS TRADE SIGNAL MEMORY V21
+# ==========================================================
+
+if "trade_signal_memory_v21" not in st.session_state:
+
+    st.session_state.trade_signal_memory_v21 = []
+
+
+def save_trade_signal_memory_v21():
+
+    signal = ai_trade_signal_generator_v21()
+
+
+    st.session_state.trade_signal_memory_v21.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Signal":
+
+            signal["Signal"],
+
+            "Direction":
+
+            signal["Direction"],
+
+            "Confidence":
+
+            signal["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.trade_signal_memory_v21
+
+    ) > 500:
+
+        st.session_state.trade_signal_memory_v21.pop(
+
+            0
+
+        )
+
+
+save_trade_signal_memory_v21()
+
+
+# ==========================================================
+# TRADE SIGNAL MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📡 Trade Signal Memory V21"
+
+    )
+
+
+    trade_signal_memory_df = pd.DataFrame(
+
+        st.session_state.trade_signal_memory_v21[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        trade_signal_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE ENTRY TICKET V22
+# ==========================================================
+
+def ai_trade_entry_ticket_v22():
+
+    ticket = {
+
+        "Status":
+
+        "CANCELLED",
+
+        "Side":
+
+        "NONE",
+
+        "Entry":
+
+        None,
+
+        "Stop Loss":
+
+        None,
+
+        "Take Profit":
+
+        None,
+
+        "Risk":
+
+        "UNKNOWN"
+
+    }
+
+
+    signal = ai_trade_signal_generator_v21()
+
+    risk = ai_risk_adjustment_v22()
+
+
+    if signal["Signal"] == "EXECUTE":
+
+        ticket["Status"] = "READY"
+
+        ticket["Side"] = signal["Direction"]
+
+        ticket["Entry"] = signal["Entry"]
+
+        ticket["Stop Loss"] = signal["SL"]
+
+        ticket["Take Profit"] = signal["TP"]
+
+
+    ticket["Risk"] = risk["Risk"]
+
+
+    return ticket
+
+
+# ==========================================================
+# ENTRY TICKET DISPLAY V22
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎫 AI Trade Entry Ticket V22"
+
+    )
+
+
+    ticket = ai_trade_entry_ticket_v22()
+
+
+    ticket_df = pd.DataFrame(
+
+        {
+
+            "Parameter":
+
+            ticket.keys(),
+
+            "Value":
+
+            ticket.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        ticket_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI POSITION JOURNAL V22
+# ==========================================================
+
+if "position_journal_v22" not in st.session_state:
+
+    st.session_state.position_journal_v22 = []
+
+
+def save_position_journal_v22():
+
+    ticket = ai_trade_entry_ticket_v22()
+
+
+    st.session_state.position_journal_v22.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            ticket["Status"],
+
+            "Side":
+
+            ticket["Side"],
+
+            "Risk":
+
+            ticket["Risk"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.position_journal_v22
+
+    ) > 500:
+
+        st.session_state.position_journal_v22.pop(
+
+            0
+
+        )
+
+
+save_position_journal_v22()
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 153
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 154
+# ==========================================================
+
+# ==========================================================
+# WEOS AI POSITION JOURNAL DISPLAY V22
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📒 Position Journal V22"
+
+    )
+
+
+    position_journal_df = pd.DataFrame(
+
+        st.session_state.position_journal_v22[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        position_journal_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE LIFECYCLE ENGINE V23
+# ==========================================================
+
+def ai_trade_lifecycle_v23():
+
+    lifecycle = {
+
+        "Stage":
+
+        "NO TRADE",
+
+        "Action":
+
+        "WAIT",
+
+        "Status":
+
+        "IDLE",
+
+        "Confidence":
+
+        0
+
+    }
+
+
+    ticket = ai_trade_entry_ticket_v22()
+
+    management = ai_trade_management_v23()
+
+    confidence = ai_market_confidence_v18()
+
+
+    lifecycle["Confidence"] = confidence["Score"]
+
+
+    if ticket["Status"] == "READY":
+
+        lifecycle["Stage"] = "ENTRY"
+
+        lifecycle["Action"] = "OPEN POSITION"
+
+        lifecycle["Status"] = "READY"
+
+
+    elif management["Action"] == "MANAGE POSITION":
+
+        lifecycle["Stage"] = "MANAGEMENT"
+
+        lifecycle["Action"] = management["Action"]
+
+        lifecycle["Status"] = "ACTIVE"
+
+
+    elif confidence["Score"] < 40:
+
+        lifecycle["Stage"] = "PROTECTION"
+
+        lifecycle["Action"] = "STOP"
+
+        lifecycle["Status"] = "DEFENSIVE"
+
+
+    return lifecycle
+
+
+# ==========================================================
+# TRADE LIFECYCLE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Trade Lifecycle Engine V23"
+
+    )
+
+
+    lifecycle = ai_trade_lifecycle_v23()
+
+
+    lifecycle_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            lifecycle.keys(),
+
+            "Value":
+
+            lifecycle.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        lifecycle_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS TRADE LIFECYCLE MEMORY V23
+# ==========================================================
+
+if "trade_lifecycle_memory_v23" not in st.session_state:
+
+    st.session_state.trade_lifecycle_memory_v23 = []
+
+
+def save_trade_lifecycle_memory_v23():
+
+    lifecycle = ai_trade_lifecycle_v23()
+
+
+    st.session_state.trade_lifecycle_memory_v23.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Stage":
+
+            lifecycle["Stage"],
+
+            "Action":
+
+            lifecycle["Action"],
+
+            "Confidence":
+
+            lifecycle["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.trade_lifecycle_memory_v23
+
+    ) > 500:
+
+        st.session_state.trade_lifecycle_memory_v23.pop(
+
+            0
+
+        )
+
+
+save_trade_lifecycle_memory_v23()
+
+
+# ==========================================================
+# LIFECYCLE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Lifecycle Memory V23"
+
+    )
+
+
+    lifecycle_memory_df = pd.DataFrame(
+
+        st.session_state.trade_lifecycle_memory_v23[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        lifecycle_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI POSITION PROTECTION ENGINE V24
+# ==========================================================
+
+def ai_position_protection_v24():
+
+    protection = {
+
+        "Action":
+
+        "NORMAL",
+
+        "Level":
+
+        50,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    risk = ai_risk_adjustment_v22()
+
+    lifecycle = ai_trade_lifecycle_v23()
+
+    health = ai_system_health_v26()
+
+
+    level = 50
+
+
+    if risk["Risk"] == "LOW":
+
+        level -= 20
+
+        protection["Reason"].append(
+
+            "Reduced risk mode"
+
+        )
+
+
+    if health["Score"] < 50:
+
+        level += 30
+
+        protection["Reason"].append(
+
+            "System health warning"
+
+        )
+
+
+    if lifecycle["Status"] == "DEFENSIVE":
+
+        level += 30
+
+        protection["Reason"].append(
+
+            "Defensive mode"
+
+        )
+
+
+    protection["Level"] = max(
+
+        0,
+
+        min(
+
+            level,
+
+            100
+
+        )
+
+    )
+
+
+    if protection["Level"] >= 80:
+
+        protection["Action"] = "HIGH PROTECTION"
+
+
+    elif protection["Level"] >= 60:
+
+        protection["Action"] = "CAUTION"
+
+
+    else:
+
+        protection["Action"] = "NORMAL"
+
+
+    return protection
+
+
+# ==========================================================
+# POSITION PROTECTION DISPLAY V24
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🛡 Position Protection Engine V24"
+
+    )
+
+
+    position_protection = ai_position_protection_v24()
+
+
+    protection_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            position_protection.keys(),
+
+            "Value":
+
+            position_protection.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        protection_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE REVIEW ENGINE V24
+# ==========================================================
+
+def ai_trade_review_v24():
+
+    review = {
+
+        "Rating":
+
+        "UNRATED",
+
+        "Score":
+
+        0,
+
+        "Feedback":
+
+        []
+
+    }
+
+
+    quality = ai_trade_quality_supervisor_v18()
+
+    protection = ai_position_protection_v24()
+
+    lifecycle = ai_trade_lifecycle_v23()
+
+
+    score = (
+
+        quality["Score"]
+
+        +
+
+        (
+
+            100
+
+            -
+
+            protection["Level"]
+
+        )
+
+        +
+
+        lifecycle["Confidence"]
+
+    ) / 3
+
+
+    review["Score"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if score >= 80:
+
+        review["Rating"] = "EXCELLENT"
+
+        review["Feedback"].append(
+
+            "Optimal setup"
+
+        )
+
+
+    elif score >= 60:
+
+        review["Rating"] = "GOOD"
+
+        review["Feedback"].append(
+
+            "Acceptable setup"
+
+        )
+
+
+    else:
+
+        review["Rating"] = "WEAK"
+
+        review["Feedback"].append(
+
+            "Need improvement"
+
+        )
+
+
+    return review
+
+
+# ==========================================================
+# TRADE REVIEW DISPLAY V24
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📝 AI Trade Review V24"
+
+    )
+
+
+    review = ai_trade_review_v24()
+
+
+    review_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            review.keys(),
+
+            "Value":
+
+            review.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        review_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 154
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 155
+# ==========================================================
+
+# ==========================================================
+# WEOS AI TRADE REVIEW MEMORY V24
+# ==========================================================
+
+if "trade_review_memory_v24" not in st.session_state:
+
+    st.session_state.trade_review_memory_v24 = []
+
+
+def save_trade_review_memory_v24():
+
+    review = ai_trade_review_v24()
+
+
+    st.session_state.trade_review_memory_v24.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Rating":
+
+            review["Rating"],
+
+            "Score":
+
+            review["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.trade_review_memory_v24
+
+    ) > 500:
+
+        st.session_state.trade_review_memory_v24.pop(
+
+            0
+
+        )
+
+
+save_trade_review_memory_v24()
+
+
+# ==========================================================
+# TRADE REVIEW MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📝 Trade Review Memory V24"
+
+    )
+
+
+    trade_review_memory_df = pd.DataFrame(
+
+        st.session_state.trade_review_memory_v24[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        trade_review_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI PERFORMANCE TRACKER ENGINE V25
+# ==========================================================
+
+if "performance_history" not in st.session_state:
+
+    st.session_state.performance_history = []
+
+
+def ai_performance_tracker_v25():
+
+    performance = {
+
+        "Trades":
+
+        0,
+
+        "Wins":
+
+        0,
+
+        "Losses":
+
+        0,
+
+        "Win Rate":
+
+        0,
+
+        "Score":
+
+        50
+
+    }
+
+
+    history = st.session_state.performance_history
+
+
+    total = len(history)
+
+
+    wins = 0
+
+    losses = 0
+
+
+    for trade in history:
+
+        if trade.get("Result") == "WIN":
+
+            wins += 1
+
+
+        elif trade.get("Result") == "LOSS":
+
+            losses += 1
+
+
+    performance["Trades"] = total
+
+    performance["Wins"] = wins
+
+    performance["Losses"] = losses
+
+
+    if total > 0:
+
+        performance["Win Rate"] = round(
+
+            wins / total * 100,
+
+            1
+
+        )
+
+
+    score = 50
+
+
+    if performance["Win Rate"] >= 60:
+
+        score += 25
+
+
+    elif performance["Win Rate"] < 40:
+
+        score -= 20
+
+
+    if total >= 50:
+
+        score += 15
+
+
+    performance["Score"] = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    return performance
+
+
+# ==========================================================
+# PERFORMANCE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📈 AI Performance Tracker V25"
+
+    )
+
+
+    performance = ai_performance_tracker_v25()
+
+
+    performance_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            performance.keys(),
+
+            "Value":
+
+            performance.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        performance_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI PERFORMANCE MEMORY V25
+# ==========================================================
+
+if "performance_memory_v25" not in st.session_state:
+
+    st.session_state.performance_memory_v25 = []
+
+
+def save_performance_memory_v25():
+
+    performance = ai_performance_tracker_v25()
+
+
+    st.session_state.performance_memory_v25.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Trades":
+
+            performance["Trades"],
+
+            "Win Rate":
+
+            performance["Win Rate"],
+
+            "Score":
+
+            performance["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.performance_memory_v25
+
+    ) > 500:
+
+        st.session_state.performance_memory_v25.pop(
+
+            0
+
+        )
+
+
+save_performance_memory_v25()
+
+
+# ==========================================================
+# PERFORMANCE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📈 Performance Memory V25"
+
+    )
+
+
+    performance_memory_df = pd.DataFrame(
+
+        st.session_state.performance_memory_v25[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        performance_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE STATISTICS ENGINE V26
+# ==========================================================
+
+def ai_trade_statistics_v26():
+
+    stats = {
+
+        "Average Confidence":
+
+        0,
+
+        "Best Setup":
+
+        "NONE",
+
+        "Weak Point":
+
+        "NONE"
+
+    }
+
+
+    reviews = st.session_state.trade_review_memory_v24
+
+
+    if len(reviews) > 0:
+
+        avg = sum(
+
+            x["Score"]
+
+            for x in reviews
+
+        ) / len(reviews)
+
+
+        stats["Average Confidence"] = round(
+
+            avg,
+
+            1
+
+        )
+
+
+    if stats["Average Confidence"] >= 80:
+
+        stats["Best Setup"] = "HIGH QUALITY"
+
+
+    elif stats["Average Confidence"] < 50:
+
+        stats["Weak Point"] = "LOW CONFIDENCE"
+
+
+    return stats
+
+
+# ==========================================================
+# STATISTICS DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 AI Trade Statistics V26"
+
+    )
+
+
+    statistics = ai_trade_statistics_v26()
+
+
+    statistics_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            statistics.keys(),
+
+            "Value":
+
+            statistics.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        statistics_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 155
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 156
+# ==========================================================
+
+# ==========================================================
+# WEOS AI TRADE STATISTICS MEMORY V26
+# ==========================================================
+
+if "trade_statistics_memory_v26" not in st.session_state:
+
+    st.session_state.trade_statistics_memory_v26 = []
+
+
+def save_trade_statistics_memory_v26():
+
+    statistics = ai_trade_statistics_v26()
+
+
+    st.session_state.trade_statistics_memory_v26.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Average Confidence":
+
+            statistics["Average Confidence"],
+
+            "Best Setup":
+
+            statistics["Best Setup"],
+
+            "Weak Point":
+
+            statistics["Weak Point"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.trade_statistics_memory_v26
+
+    ) > 500:
+
+        st.session_state.trade_statistics_memory_v26.pop(
+
+            0
+
+        )
+
+
+save_trade_statistics_memory_v26()
+
+
+# ==========================================================
+# TRADE STATISTICS MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 Trade Statistics Memory V26"
+
+    )
+
+
+    statistics_memory_df = pd.DataFrame(
+
+        st.session_state.trade_statistics_memory_v26[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        statistics_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI LEARNING FROM TRADE RESULT V27
+# ==========================================================
+
+def ai_trade_learning_v27():
+
+    learning = {
+
+        "Learning Mode":
+
+        "NORMAL",
+
+        "Pattern":
+
+        "UNKNOWN",
+
+        "Improvement":
+
+        []
+
+    }
+
+
+    statistics = ai_trade_statistics_v26()
+
+    performance = ai_performance_tracker_v25()
+
+
+    if performance["Trades"] >= 50:
+
+        learning["Learning Mode"] = "ADVANCED"
+
+        learning["Improvement"].append(
+
+            "Enough trading samples"
+
+        )
+
+
+    elif performance["Trades"] < 10:
+
+        learning["Learning Mode"] = "INITIAL"
+
+        learning["Improvement"].append(
+
+            "Need more data"
+
+        )
+
+
+    if statistics["Average Confidence"] >= 80:
+
+        learning["Pattern"] = "HIGH QUALITY TRADING"
+
+        learning["Improvement"].append(
+
+            "Maintain current strategy"
+
+        )
+
+
+    elif statistics["Average Confidence"] < 50:
+
+        learning["Pattern"] = "LOW QUALITY"
+
+        learning["Improvement"].append(
+
+            "Improve entry filtering"
+
+        )
+
+
+    return learning
+
+
+# ==========================================================
+# LEARNING DISPLAY V27
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧬 AI Trade Learning V27"
+
+    )
+
+
+    learning = ai_trade_learning_v27()
+
+
+    learning_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            learning.keys(),
+
+            "Value":
+
+            learning.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        learning_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI LEARNING MEMORY V27
+# ==========================================================
+
+if "learning_memory_v27" not in st.session_state:
+
+    st.session_state.learning_memory_v27 = []
+
+
+def save_learning_memory_v27():
+
+    learning = ai_trade_learning_v27()
+
+
+    st.session_state.learning_memory_v27.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Mode":
+
+            learning["Learning Mode"],
+
+            "Pattern":
+
+            learning["Pattern"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.learning_memory_v27
+
+    ) > 500:
+
+        st.session_state.learning_memory_v27.pop(
+
+            0
+
+        )
+
+
+save_learning_memory_v27()
+
+
+# ==========================================================
+# LEARNING MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧬 Learning Memory V27"
+
+    )
+
+
+    learning_memory_df = pd.DataFrame(
+
+        st.session_state.learning_memory_v27[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        learning_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI STRATEGY OPTIMIZER V28
+# ==========================================================
+
+def ai_strategy_optimizer_v28():
+
+    optimizer = {
+
+        "Strategy":
+
+        "BALANCED",
+
+        "Adjustment":
+
+        []
+
+    }
+
+
+    learning = ai_trade_learning_v27()
+
+    performance = ai_performance_tracker_v25()
+
+    quality = ai_trade_quality_supervisor_v18()
+
+
+    if performance["Win Rate"] >= 65:
+
+        optimizer["Strategy"] = "KEEP CURRENT"
+
+        optimizer["Adjustment"].append(
+
+            "Strategy performing well"
+
+        )
+
+
+    elif performance["Win Rate"] < 40:
+
+        optimizer["Strategy"] = "FILTER HARDER"
+
+        optimizer["Adjustment"].append(
+
+            "Reduce low quality entries"
+
+        )
+
+
+    if quality["Quality"] == "WEAK":
+
+        optimizer["Adjustment"].append(
+
+            "Increase confirmation"
+
+        )
+
+
+    if learning["Learning Mode"] == "ADVANCED":
+
+        optimizer["Adjustment"].append(
+
+            "Use historical patterns"
+
+        )
+
+
+    return optimizer
+
+
+# ==========================================================
+# STRATEGY OPTIMIZER DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚙ Strategy Optimizer V28"
+
+    )
+
+
+    optimizer = ai_strategy_optimizer_v28()
+
+
+    optimizer_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            optimizer.keys(),
+
+            "Value":
+
+            optimizer.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        optimizer_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI ADAPTIVE STRATEGY MEMORY V28
+# ==========================================================
+
+if "strategy_optimizer_memory_v28" not in st.session_state:
+
+    st.session_state.strategy_optimizer_memory_v28 = []
+
+
+def save_strategy_optimizer_memory_v28():
+
+    optimizer = ai_strategy_optimizer_v28()
+
+
+    st.session_state.strategy_optimizer_memory_v28.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Strategy":
+
+            optimizer["Strategy"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.strategy_optimizer_memory_v28
+
+    ) > 500:
+
+        st.session_state.strategy_optimizer_memory_v28.pop(
+
+            0
+
+        )
+
+
+save_strategy_optimizer_memory_v28()
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 156
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 157
+# ==========================================================
+
+# ==========================================================
+# WEOS AI STRATEGY OPTIMIZER MEMORY DISPLAY V28
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚙ Strategy Optimizer Memory V28"
+
+    )
+
+
+    strategy_memory_df = pd.DataFrame(
+
+        st.session_state.strategy_optimizer_memory_v28[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        strategy_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI BACKTEST ENGINE V29
+# ==========================================================
+
+if "backtest_memory_v29" not in st.session_state:
+
+    st.session_state.backtest_memory_v29 = []
+
+
+def ai_backtest_engine_v29():
+
+    result = {
+
+        "Trades":
+
+        0,
+
+        "Wins":
+
+        0,
+
+        "Losses":
+
+        0,
+
+        "Win Rate":
+
+        0,
+
+        "Profit Factor":
+
+        0,
+
+        "Score":
+
+        50
+
+    }
+
+
+    history = st.session_state.performance_history
+
+
+    wins = 0
+
+    losses = 0
+
+
+    for trade in history:
+
+        if trade.get("Result") == "WIN":
+
+            wins += 1
+
+
+        elif trade.get("Result") == "LOSS":
+
+            losses += 1
+
+
+    total = wins + losses
+
+
+    result["Trades"] = total
+
+    result["Wins"] = wins
+
+    result["Losses"] = losses
+
+
+    if total > 0:
+
+        result["Win Rate"] = round(
+
+            wins / total * 100,
+
+            1
+
+        )
+
+
+    if losses > 0:
+
+        result["Profit Factor"] = round(
+
+            wins / losses,
+
+            2
+
+        )
+
+
+    score = 50
+
+
+    if result["Win Rate"] >= 60:
+
+        score += 25
+
+
+    if result["Profit Factor"] >= 1.5:
+
+        score += 25
+
+
+    result["Score"] = min(
+
+        score,
+
+        100
+
+    )
+
+
+    return result
+
+
+# ==========================================================
+# BACKTEST DISPLAY V29
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📉 AI Backtest Engine V29"
+
+    )
+
+
+    backtest = ai_backtest_engine_v29()
+
+
+    backtest_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            backtest.keys(),
+
+            "Value":
+
+            backtest.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        backtest_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# BACKTEST MEMORY V29
+# ==========================================================
+
+def save_backtest_memory_v29():
+
+    backtest = ai_backtest_engine_v29()
+
+
+    st.session_state.backtest_memory_v29.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Trades":
+
+            backtest["Trades"],
+
+            "Win Rate":
+
+            backtest["Win Rate"],
+
+            "Score":
+
+            backtest["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.backtest_memory_v29
+
+    ) > 500:
+
+        st.session_state.backtest_memory_v29.pop(
+
+            0
+
+        )
+
+
+save_backtest_memory_v29()
+
+
+# ==========================================================
+# BACKTEST MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📉 Backtest Memory V29"
+
+    )
+
+
+    backtest_memory_df = pd.DataFrame(
+
+        st.session_state.backtest_memory_v29[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        backtest_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI PARAMETER OPTIMIZATION ENGINE V30
+# ==========================================================
+
+def ai_parameter_optimizer_v30():
+
+    optimizer = {
+
+        "Risk":
+
+        "NORMAL",
+
+        "Entry Filter":
+
+        "STANDARD",
+
+        "Confidence":
+
+        60,
+
+        "Adjustments":
+
+        []
+
+    }
+
+
+    backtest = ai_backtest_engine_v29()
+
+    learning = ai_trade_learning_v27()
+
+
+    if backtest["Win Rate"] < 50:
+
+        optimizer["Entry Filter"] = "STRICT"
+
+        optimizer["Adjustments"].append(
+
+            "Increase entry requirements"
+
+        )
+
+
+    if backtest["Profit Factor"] < 1:
+
+        optimizer["Risk"] = "LOW"
+
+        optimizer["Adjustments"].append(
+
+            "Reduce exposure"
+
+        )
+
+
+    if learning["Learning Mode"] == "ADVANCED":
+
+        optimizer["Confidence"] += 20
+
+        optimizer["Adjustments"].append(
+
+            "Use learned patterns"
+
+        )
+
+
+    optimizer["Confidence"] = min(
+
+        optimizer["Confidence"],
+
+        100
+
+    )
+
+
+    return optimizer
+
+
+# ==========================================================
+# PARAMETER OPTIMIZER DISPLAY V30
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔧 AI Parameter Optimizer V30"
+
+    )
+
+
+    parameter_optimizer = ai_parameter_optimizer_v30()
+
+
+    parameter_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            parameter_optimizer.keys(),
+
+            "Value":
+
+            parameter_optimizer.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        parameter_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI SELF IMPROVEMENT ENGINE V30
+# ==========================================================
+
+def ai_self_improvement_v30():
+
+    improvement = {
+
+        "Status":
+
+        "STABLE",
+
+        "Level":
+
+        1,
+
+        "Actions":
+
+        []
+
+    }
+
+
+    optimizer = ai_parameter_optimizer_v30()
+
+    health = ai_system_health_v26()
+
+    learning = ai_trade_learning_v27()
+
+
+    level = 1
+
+
+    if optimizer["Confidence"] >= 80:
+
+        level += 1
+
+        improvement["Actions"].append(
+
+            "Parameters optimized"
+
+        )
+
+
+    if learning["Learning Mode"] == "ADVANCED":
+
+        level += 1
+
+        improvement["Actions"].append(
+
+            "Historical learning active"
+
+        )
+
+
+    if health["Score"] < 50:
+
+        level = 1
+
+        improvement["Actions"].append(
+
+            "System reset required"
+
+        )
+
+
+    improvement["Level"] = level
+
+
+    if level >= 3:
+
+        improvement["Status"] = "EVOLVED"
+
+
+    return improvement
+
+
+# ==========================================================
+# SELF IMPROVEMENT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚀 AI Self Improvement V30"
+
+    )
+
+
+    improvement = ai_self_improvement_v30()
+
+
+    st.metric(
+
+        "Status",
+
+        improvement["Status"]
+
+    )
+
+
+    st.metric(
+
+        "Level",
+
+        improvement["Level"]
+
+    )
+
+
+    for action in improvement["Actions"]:
+
+        st.write(
+
+            "•",
+
+            action
+
+        )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 157
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 158
+# ==========================================================
+
+# ==========================================================
+# WEOS AI SELF IMPROVEMENT MEMORY V30
+# ==========================================================
+
+if "self_improvement_memory_v30" not in st.session_state:
+
+    st.session_state.self_improvement_memory_v30 = []
+
+
+def save_self_improvement_memory_v30():
+
+    improvement = ai_self_improvement_v30()
+
+
+    st.session_state.self_improvement_memory_v30.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            improvement["Status"],
+
+            "Level":
+
+            improvement["Level"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.self_improvement_memory_v30
+
+    ) > 500:
+
+        st.session_state.self_improvement_memory_v30.pop(
+
+            0
+
+        )
+
+
+save_self_improvement_memory_v30()
+
+
+# ==========================================================
+# SELF IMPROVEMENT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚀 Self Improvement Memory V30"
+
+    )
+
+
+    improvement_memory_df = pd.DataFrame(
+
+        st.session_state.self_improvement_memory_v30[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        improvement_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI MARKET REGIME DETECTOR V31
+# ==========================================================
+
+def ai_market_regime_detector_v31():
+
+    regime = {
+
+        "Market":
+
+        "UNKNOWN",
+
+        "Trend":
+
+        "NONE",
+
+        "Confidence":
+
+        50,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    structure = market_structure_ai_v16()
+
+    volatility = volatility_engine_v5()
+
+    momentum = momentum_radar_v2()
+
+    macro = gold_macro_ai_fusion_v7()
+
+
+    score = 50
+
+
+    if structure["State"] == "TRENDING":
+
+        score += 20
+
+        regime["Reason"].append(
+
+            "Clear market structure"
+
+        )
+
+
+    elif structure["State"] == "RANGE":
+
+        score -= 10
+
+        regime["Reason"].append(
+
+            "Range market"
+
+        )
+
+
+    if volatility["Level"] == "HIGH":
+
+        score += 10
+
+        regime["Reason"].append(
+
+            "High volatility"
+
+        )
+
+
+    if macro["Score"] >= 70:
+
+        score += 10
+
+        regime["Reason"].append(
+
+            "Macro alignment"
+
+        )
+
+
+    regime["Confidence"] = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    if score >= 75:
+
+        regime["Market"] = "TREND MARKET"
+
+
+    elif score <= 40:
+
+        regime["Market"] = "UNCERTAIN MARKET"
+
+
+    else:
+
+        regime["Market"] = "BALANCED MARKET"
+
+
+    if structure["Bias"] == "BULLISH":
+
+        regime["Trend"] = "UP"
+
+
+    elif structure["Bias"] == "BEARISH":
+
+        regime["Trend"] = "DOWN"
+
+
+    return regime
+
+
+# ==========================================================
+# MARKET REGIME DISPLAY V31
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌐 AI Market Regime Detector V31"
+
+    )
+
+
+    regime = ai_market_regime_detector_v31()
+
+
+    regime_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            regime.keys(),
+
+            "Value":
+
+            regime.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        regime_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS MARKET REGIME MEMORY V31
+# ==========================================================
+
+if "market_regime_memory_v31" not in st.session_state:
+
+    st.session_state.market_regime_memory_v31 = []
+
+
+def save_market_regime_memory_v31():
+
+    regime = ai_market_regime_detector_v31()
+
+
+    st.session_state.market_regime_memory_v31.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Market":
+
+            regime["Market"],
+
+            "Trend":
+
+            regime["Trend"],
+
+            "Confidence":
+
+            regime["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.market_regime_memory_v31
+
+    ) > 500:
+
+        st.session_state.market_regime_memory_v31.pop(
+
+            0
+
+        )
+
+
+save_market_regime_memory_v31()
+
+
+# ==========================================================
+# MARKET REGIME MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌐 Market Regime Memory V31"
+
+    )
+
+
+    regime_memory_df = pd.DataFrame(
+
+        st.session_state.market_regime_memory_v31[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        regime_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI VOLATILITY ADAPTATION ENGINE V32
+# ==========================================================
+
+def ai_volatility_adaptation_v32():
+
+    adaptation = {
+
+        "Mode":
+
+        "NORMAL",
+
+        "Risk":
+
+        "STANDARD",
+
+        "Adjustment":
+
+        []
+
+    }
+
+
+    volatility = volatility_engine_v5()
+
+    regime = ai_market_regime_detector_v31()
+
+
+    if volatility["Level"] == "HIGH":
+
+        adaptation["Mode"] = "FAST MARKET"
+
+        adaptation["Risk"] = "REDUCED"
+
+        adaptation["Adjustment"].append(
+
+            "Reduce position size"
+
+        )
+
+
+    elif volatility["Level"] == "LOW":
+
+        adaptation["Mode"] = "SLOW MARKET"
+
+        adaptation["Risk"] = "NORMAL"
+
+        adaptation["Adjustment"].append(
+
+            "Wait for confirmation"
+
+        )
+
+
+    if regime["Market"] == "UNCERTAIN MARKET":
+
+        adaptation["Risk"] = "LOW"
+
+        adaptation["Adjustment"].append(
+
+            "Avoid aggressive entries"
+
+        )
+
+
+    return adaptation
+
+
+# ==========================================================
+# VOLATILITY ADAPTATION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚡ Volatility Adaptation V32"
+
+    )
+
+
+    adaptation = ai_volatility_adaptation_v32()
+
+
+    adaptation_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            adaptation.keys(),
+
+            "Value":
+
+            adaptation.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        adaptation_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 158
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 159
+# ==========================================================
+
+# ==========================================================
+# WEOS AI VOLATILITY MEMORY V32
+# ==========================================================
+
+if "volatility_memory_v32" not in st.session_state:
+
+    st.session_state.volatility_memory_v32 = []
+
+
+def save_volatility_memory_v32():
+
+    adaptation = ai_volatility_adaptation_v32()
+
+
+    st.session_state.volatility_memory_v32.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Mode":
+
+            adaptation["Mode"],
+
+            "Risk":
+
+            adaptation["Risk"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.volatility_memory_v32
+
+    ) > 500:
+
+        st.session_state.volatility_memory_v32.pop(
+
+            0
+
+        )
+
+
+save_volatility_memory_v32()
+
+
+# ==========================================================
+# VOLATILITY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚡ Volatility Memory V32"
+
+    )
+
+
+    volatility_memory_df = pd.DataFrame(
+
+        st.session_state.volatility_memory_v32[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        volatility_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI MARKET CONDITION ENGINE V33
+# ==========================================================
+
+def ai_market_condition_v33():
+
+    condition = {
+
+        "Condition":
+
+        "NORMAL",
+
+        "Trading Mode":
+
+        "STANDARD",
+
+        "Confidence":
+
+        50,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    regime = ai_market_regime_detector_v31()
+
+    volatility = ai_volatility_adaptation_v32()
+
+    liquidity = gold_liquidity_macro_engine()
+
+    macro = gold_macro_ai_fusion_v7()
+
+
+    score = 50
+
+
+    if regime["Market"] == "TREND MARKET":
+
+        score += 15
+
+        condition["Reason"].append(
+
+            "Trend environment"
+
+        )
+
+
+    if regime["Market"] == "UNCERTAIN MARKET":
+
+        score -= 15
+
+        condition["Reason"].append(
+
+            "Uncertain environment"
+
+        )
+
+
+    if volatility["Risk"] == "REDUCED":
+
+        score -= 10
+
+        condition["Reason"].append(
+
+            "High volatility risk"
+
+        )
+
+
+    if liquidity["Impact"] == "BULLISH":
+
+        score += 10
+
+        condition["Reason"].append(
+
+            "Liquidity support"
+
+        )
+
+
+    if macro["Score"] >= 70:
+
+        score += 10
+
+        condition["Reason"].append(
+
+            "Macro alignment"
+
+        )
+
+
+    condition["Confidence"] = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    if score >= 75:
+
+        condition["Condition"] = "FAVORABLE"
+
+        condition["Trading Mode"] = "ACTIVE"
+
+
+    elif score <= 40:
+
+        condition["Condition"] = "DANGEROUS"
+
+        condition["Trading Mode"] = "DEFENSIVE"
+
+
+    else:
+
+        condition["Condition"] = "NORMAL"
+
+
+    return condition
+
+
+# ==========================================================
+# MARKET CONDITION DISPLAY V33
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌎 AI Market Condition V33"
+
+    )
+
+
+    condition = ai_market_condition_v33()
+
+
+    condition_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            condition.keys(),
+
+            "Value":
+
+            condition.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        condition_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS MARKET CONDITION MEMORY V33
+# ==========================================================
+
+if "market_condition_memory_v33" not in st.session_state:
+
+    st.session_state.market_condition_memory_v33 = []
+
+
+def save_market_condition_memory_v33():
+
+    condition = ai_market_condition_v33()
+
+
+    st.session_state.market_condition_memory_v33.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Condition":
+
+            condition["Condition"],
+
+            "Mode":
+
+            condition["Trading Mode"],
+
+            "Confidence":
+
+            condition["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.market_condition_memory_v33
+
+    ) > 500:
+
+        st.session_state.market_condition_memory_v33.pop(
+
+            0
+
+        )
+
+
+save_market_condition_memory_v33()
+
+
+# ==========================================================
+# MARKET CONDITION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌎 Market Condition Memory V33"
+
+    )
+
+
+    condition_memory_df = pd.DataFrame(
+
+        st.session_state.market_condition_memory_v33[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        condition_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI MULTI TIMEFRAME FUSION V34
+# ==========================================================
+
+def ai_multi_timeframe_fusion_v34():
+
+    mtf = {
+
+        "Direction":
+
+        "WAIT",
+
+        "Score":
+
+        50,
+
+        "Frames":
+
+        {}
+
+    }
+
+
+    d1 = analyze_timeframe("D1")
+
+    h4 = analyze_timeframe("H4")
+
+    h1 = analyze_timeframe("H1")
+
+    m15 = analyze_timeframe("M15")
+
+
+    mtf["Frames"]["D1"] = d1
+
+    mtf["Frames"]["H4"] = h4
+
+    mtf["Frames"]["H1"] = h1
+
+    mtf["Frames"]["M15"] = m15
+
+
+    bullish = 0
+
+    bearish = 0
+
+
+    for frame in mtf["Frames"].values():
+
+        if frame == "BULLISH":
+
+            bullish += 1
+
+
+        elif frame == "BEARISH":
+
+            bearish += 1
+
+
+    score = 50 + (
+
+        bullish * 12
+
+    ) - (
+
+        bearish * 12
+
+    )
+
+
+    score = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    mtf["Score"] = score
+
+
+    if score >= 70:
+
+        mtf["Direction"] = "BUY"
+
+
+    elif score <= 35:
+
+        mtf["Direction"] = "SELL"
+
+
+    return mtf
+
+
+# ==========================================================
+# MULTI TIMEFRAME DISPLAY V34
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🕒 Multi Timeframe Fusion V34"
+
+    )
+
+
+    mtf = ai_multi_timeframe_fusion_v34()
+
+
+    mtf_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            mtf.keys(),
+
+            "Value":
+
+            mtf.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        mtf_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 159
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 160
+# ==========================================================
+
+# ==========================================================
+# WEOS MULTI TIMEFRAME MEMORY V34
+# ==========================================================
+
+if "mtf_memory_v34" not in st.session_state:
+
+    st.session_state.mtf_memory_v34 = []
+
+
+def save_mtf_memory_v34():
+
+    mtf = ai_multi_timeframe_fusion_v34()
+
+
+    st.session_state.mtf_memory_v34.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Direction":
+
+            mtf["Direction"],
+
+            "Score":
+
+            mtf["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.mtf_memory_v34
+
+    ) > 500:
+
+        st.session_state.mtf_memory_v34.pop(
+
+            0
+
+        )
+
+
+save_mtf_memory_v34()
+
+
+# ==========================================================
+# MTF MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🕒 Multi Timeframe Memory V34"
+
+    )
+
+
+    mtf_memory_df = pd.DataFrame(
+
+        st.session_state.mtf_memory_v34[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        mtf_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI ENTRY ALIGNMENT ENGINE V35
+# ==========================================================
+
+def ai_entry_alignment_v35():
+
+    alignment = {
+
+        "Alignment":
+
+        "WEAK",
+
+        "Score":
+
+        50,
+
+        "Factors":
+
+        []
+
+    }
+
+
+    mtf = ai_multi_timeframe_fusion_v34()
+
+    precision = precision_entry_engine_v18()
+
+    market = ai_market_condition_v33()
+
+    gate = ai_entry_execution_gate_v20()
+
+
+    score = (
+
+        mtf["Score"]
+
+        +
+
+        precision["Confidence"]
+
+        +
+
+        market["Confidence"]
+
+        +
+
+        gate["Score"]
+
+    ) / 4
+
+
+    if mtf["Direction"] != "WAIT":
+
+        alignment["Factors"].append(
+
+            "Multi timeframe aligned"
+
+        )
+
+
+    if precision["Action"] == "EXECUTE":
+
+        alignment["Factors"].append(
+
+            "Precision entry ready"
+
+        )
+
+
+    if gate["Permission"] == "AUTHORIZED":
+
+        alignment["Factors"].append(
+
+            "Execution authorized"
+
+        )
+
+
+    alignment["Score"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if score >= 80:
+
+        alignment["Alignment"] = "STRONG"
+
+
+    elif score >= 60:
+
+        alignment["Alignment"] = "MODERATE"
+
+
+    else:
+
+        alignment["Alignment"] = "WEAK"
+
+
+    return alignment
+
+
+# ==========================================================
+# ENTRY ALIGNMENT DISPLAY V35
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Entry Alignment Engine V35"
+
+    )
+
+
+    alignment = ai_entry_alignment_v35()
+
+
+    alignment_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            alignment.keys(),
+
+            "Value":
+
+            alignment.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        alignment_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS ENTRY ALIGNMENT MEMORY V35
+# ==========================================================
+
+if "entry_alignment_memory_v35" not in st.session_state:
+
+    st.session_state.entry_alignment_memory_v35 = []
+
+
+def save_entry_alignment_memory_v35():
+
+    alignment = ai_entry_alignment_v35()
+
+
+    st.session_state.entry_alignment_memory_v35.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Alignment":
+
+            alignment["Alignment"],
+
+            "Score":
+
+            alignment["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.entry_alignment_memory_v35
+
+    ) > 500:
+
+        st.session_state.entry_alignment_memory_v35.pop(
+
+            0
+
+        )
+
+
+save_entry_alignment_memory_v35()
+
+
+# ==========================================================
+# ENTRY ALIGNMENT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Entry Alignment Memory V35"
+
+    )
+
+
+    alignment_memory_df = pd.DataFrame(
+
+        st.session_state.entry_alignment_memory_v35[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        alignment_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE QUALITY SCORE V36
+# ==========================================================
+
+def ai_trade_quality_score_v36():
+
+    quality = {
+
+        "Grade":
+
+        "C",
+
+        "Score":
+
+        50,
+
+        "Components":
+
+        {}
+
+    }
+
+
+    alignment = ai_entry_alignment_v35()
+
+    risk = ai_position_protection_v24()
+
+    macro = gold_macro_ai_fusion_v7()
+
+    performance = ai_performance_tracker_v25()
+
+
+    quality["Components"]["Alignment"] = alignment["Score"]
+
+    quality["Components"]["Risk"] = (
+
+        100
+
+        -
+
+        risk["Level"]
+
+    )
+
+    quality["Components"]["Macro"] = macro["Score"]
+
+    quality["Components"]["Performance"] = performance["Score"]
+
+
+    score = sum(
+
+        quality["Components"].values()
+
+    ) / len(
+
+        quality["Components"]
+
+    )
+
+
+    quality["Score"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if score >= 85:
+
+        quality["Grade"] = "A+"
+
+
+    elif score >= 70:
+
+        quality["Grade"] = "A"
+
+
+    elif score >= 55:
+
+        quality["Grade"] = "B"
+
+
+    else:
+
+        quality["Grade"] = "C"
+
+
+    return quality
+
+
+# ==========================================================
+# TRADE QUALITY DISPLAY V36
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⭐ AI Trade Quality Score V36"
+
+    )
+
+
+    quality_v36 = ai_trade_quality_score_v36()
+
+
+    st.metric(
+
+        "Grade",
+
+        quality_v36["Grade"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{quality_v36["Score"]}/100'
+
+    )
+
+
+    quality_df = pd.DataFrame(
+
+        {
+
+            "Component":
+
+            quality_v36["Components"].keys(),
+
+            "Score":
+
+            quality_v36["Components"].values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        quality_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 160
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 161
+# ==========================================================
+
+# ==========================================================
+# WEOS AI TRADE QUALITY MEMORY V36
+# ==========================================================
+
+if "trade_quality_memory_v36" not in st.session_state:
+
+    st.session_state.trade_quality_memory_v36 = []
+
+
+def save_trade_quality_memory_v36():
+
+    quality = ai_trade_quality_score_v36()
+
+
+    st.session_state.trade_quality_memory_v36.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Grade":
+
+            quality["Grade"],
+
+            "Score":
+
+            quality["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.trade_quality_memory_v36
+
+    ) > 500:
+
+        st.session_state.trade_quality_memory_v36.pop(
+
+            0
+
+        )
+
+
+save_trade_quality_memory_v36()
+
+
+# ==========================================================
+# TRADE QUALITY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⭐ Trade Quality Memory V36"
+
+    )
+
+
+    quality_memory_df = pd.DataFrame(
+
+        st.session_state.trade_quality_memory_v36[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        quality_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI GOLD ENTRY RANKING ENGINE V37
+# ==========================================================
+
+def ai_entry_ranking_v37():
+
+    ranking = {
+
+        "Rank":
+
+        "LOW",
+
+        "Score":
+
+        0,
+
+        "Setup":
+
+        "NONE",
+
+        "Reason":
+
+        []
+
+    }
+
+
+    quality = ai_trade_quality_score_v36()
+
+    sniper = ai_sniper_entry_v19()
+
+    zone = gold_entry_zone_engine_v11()
+
+    structure = market_structure_ai_v16()
+
+
+    score = (
+
+        quality["Score"]
+
+        +
+
+        sniper["Confidence"]
+
+        +
+
+        zone["Confidence"]
+
+    ) / 3
+
+
+    if structure["State"] == "TRENDING":
+
+        score += 5
+
+        ranking["Reason"].append(
+
+            "Trend advantage"
+
+        )
+
+
+    if sniper["Status"] == "SNIPER READY":
+
+        ranking["Reason"].append(
+
+            "Sniper setup"
+
+        )
+
+
+    ranking["Score"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if score >= 85:
+
+        ranking["Rank"] = "A+"
+
+        ranking["Setup"] = "PREMIUM ENTRY"
+
+
+    elif score >= 70:
+
+        ranking["Rank"] = "A"
+
+        ranking["Setup"] = "HIGH QUALITY"
+
+
+    elif score >= 55:
+
+        ranking["Rank"] = "B"
+
+        ranking["Setup"] = "NORMAL"
+
+
+    else:
+
+        ranking["Rank"] = "C"
+
+        ranking["Setup"] = "AVOID"
+
+
+    return ranking
+
+
+# ==========================================================
+# ENTRY RANKING DISPLAY V37
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🏆 AI Entry Ranking V37"
+
+    )
+
+
+    ranking = ai_entry_ranking_v37()
+
+
+    st.metric(
+
+        "Rank",
+
+        ranking["Rank"]
+
+    )
+
+
+    st.metric(
+
+        "Score",
+
+        f'{ranking["Score"]}/100'
+
+    )
+
+
+    st.write(
+
+        "Setup:",
+
+        ranking["Setup"]
+
+    )
+
+
+    for reason in ranking["Reason"]:
+
+        st.write(
+
+            "•",
+
+            reason
+
+        )
+
+
+# ==========================================================
+# WEOS ENTRY RANKING MEMORY V37
+# ==========================================================
+
+if "entry_ranking_memory_v37" not in st.session_state:
+
+    st.session_state.entry_ranking_memory_v37 = []
+
+
+def save_entry_ranking_memory_v37():
+
+    ranking = ai_entry_ranking_v37()
+
+
+    st.session_state.entry_ranking_memory_v37.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Rank":
+
+            ranking["Rank"],
+
+            "Score":
+
+            ranking["Score"],
+
+            "Setup":
+
+            ranking["Setup"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.entry_ranking_memory_v37
+
+    ) > 500:
+
+        st.session_state.entry_ranking_memory_v37.pop(
+
+            0
+
+        )
+
+
+save_entry_ranking_memory_v37()
+
+
+# ==========================================================
+# ENTRY RANKING MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🏆 Entry Ranking Memory V37"
+
+    )
+
+
+    ranking_memory_df = pd.DataFrame(
+
+        st.session_state.entry_ranking_memory_v37[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        ranking_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE DECISION ENGINE V38
+# ==========================================================
+
+def ai_trade_decision_engine_v38():
+
+    decision = {
+
+        "Decision":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Confidence":
+
+        0,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    ranking = ai_entry_ranking_v37()
+
+    alignment = ai_entry_alignment_v35()
+
+    market = ai_market_condition_v33()
+
+
+    score = (
+
+        ranking["Score"]
+
+        +
+
+        alignment["Score"]
+
+        +
+
+        market["Confidence"]
+
+    ) / 3
+
+
+    decision["Confidence"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if ranking["Rank"] in [
+
+        "A+",
+
+        "A"
+
+    ]:
+
+        decision["Reason"].append(
+
+            "High ranking setup"
+
+        )
+
+
+    if alignment["Alignment"] == "STRONG":
+
+        decision["Reason"].append(
+
+            "Strong alignment"
+
+        )
+
+
+    if market["Trading Mode"] == "ACTIVE":
+
+        decision["Reason"].append(
+
+            "Market favorable"
+
+        )
+
+
+    if score >= 85:
+
+        decision["Decision"] = "EXECUTE"
+
+
+    elif score >= 65:
+
+        decision["Decision"] = "PREPARE"
+
+
+    else:
+
+        decision["Decision"] = "WAIT"
+
+
+    return decision
+
+
+# ==========================================================
+# TRADE DECISION DISPLAY V38
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 AI Trade Decision Engine V38"
+
+    )
+
+
+    decision_v38 = ai_trade_decision_engine_v38()
+
+
+    decision_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            decision_v38.keys(),
+
+            "Value":
+
+            decision_v38.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        decision_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 161
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 162
+# ==========================================================
+
+# ==========================================================
+# WEOS AI TRADE DECISION MEMORY V38
+# ==========================================================
+
+if "trade_decision_memory_v38" not in st.session_state:
+
+    st.session_state.trade_decision_memory_v38 = []
+
+
+def save_trade_decision_memory_v38():
+
+    decision = ai_trade_decision_engine_v38()
+
+
+    st.session_state.trade_decision_memory_v38.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Decision":
+
+            decision["Decision"],
+
+            "Confidence":
+
+            decision["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.trade_decision_memory_v38
+
+    ) > 500:
+
+        st.session_state.trade_decision_memory_v38.pop(
+
+            0
+
+        )
+
+
+save_trade_decision_memory_v38()
+
+
+# ==========================================================
+# TRADE DECISION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Trade Decision Memory V38"
+
+    )
+
+
+    decision_memory_df = pd.DataFrame(
+
+        st.session_state.trade_decision_memory_v38[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        decision_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI EXECUTION CONFIRMATION ENGINE V39
+# ==========================================================
+
+def ai_execution_confirmation_v39():
+
+    confirmation = {
+
+        "Status":
+
+        "BLOCK",
+
+        "Direction":
+
+        "NONE",
+
+        "Confidence":
+
+        0,
+
+        "Checks":
+
+        []
+
+    }
+
+
+    decision = ai_trade_decision_engine_v38()
+
+    ticket = ai_trade_entry_ticket_v22()
+
+    protection = ai_position_protection_v24()
+
+    quality = ai_trade_quality_score_v36()
+
+
+    score = (
+
+        decision["Confidence"]
+
+        +
+
+        quality["Score"]
+
+        +
+
+        (
+
+            100
+
+            -
+
+            protection["Level"]
+
+        )
+
+    ) / 3
+
+
+    confirmation["Confidence"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    confirmation["Direction"] = ticket["Side"]
+
+
+    if decision["Decision"] == "EXECUTE":
+
+        confirmation["Checks"].append(
+
+            "Decision approved"
+
+        )
+
+
+    if quality["Grade"] in [
+
+        "A",
+
+        "A+"
+
+    ]:
+
+        confirmation["Checks"].append(
+
+            "Quality approved"
+
+        )
+
+
+    if protection["Action"] == "NORMAL":
+
+        confirmation["Checks"].append(
+
+            "Risk acceptable"
+
+        )
+
+
+    if score >= 85:
+
+        confirmation["Status"] = "CONFIRMED"
+
+
+    elif score >= 65:
+
+        confirmation["Status"] = "PENDING"
+
+
+    return confirmation
+
+
+# ==========================================================
+# EXECUTION CONFIRMATION DISPLAY V39
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Execution Confirmation V39"
+
+    )
+
+
+    execution_confirmation = ai_execution_confirmation_v39()
+
+
+    execution_confirmation_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            execution_confirmation.keys(),
+
+            "Value":
+
+            execution_confirmation.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        execution_confirmation_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS EXECUTION CONFIRMATION MEMORY V39
+# ==========================================================
+
+if "execution_confirmation_memory_v39" not in st.session_state:
+
+    st.session_state.execution_confirmation_memory_v39 = []
+
+
+def save_execution_confirmation_memory_v39():
+
+    confirmation = ai_execution_confirmation_v39()
+
+
+    st.session_state.execution_confirmation_memory_v39.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            confirmation["Status"],
+
+            "Confidence":
+
+            confirmation["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.execution_confirmation_memory_v39
+
+    ) > 500:
+
+        st.session_state.execution_confirmation_memory_v39.pop(
+
+            0
+
+        )
+
+
+save_execution_confirmation_memory_v39()
+
+
+# ==========================================================
+# EXECUTION CONFIRMATION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Execution Confirmation Memory V39"
+
+    )
+
+
+    execution_confirmation_memory_df = pd.DataFrame(
+
+        st.session_state.execution_confirmation_memory_v39[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        execution_confirmation_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI POSITION SIZING ENGINE V40
+# ==========================================================
+
+def ai_position_sizing_v40():
+
+    sizing = {
+
+        "Lot":
+
+        0.01,
+
+        "Risk":
+
+        "LOW",
+
+        "Reason":
+
+        []
+
+    }
+
+
+    capital = st.session_state.get(
+
+        "capital",
+
+        100
+
+    )
+
+
+    quality = ai_trade_quality_score_v36()
+
+    protection = ai_position_protection_v24()
+
+
+    if capital < 100:
+
+        sizing["Lot"] = 0.01
+
+        sizing["Reason"].append(
+
+            "Small capital protection"
+
+        )
+
+
+    elif quality["Grade"] in [
+
+        "A+",
+
+        "A"
+
+    ] and protection["Level"] < 40:
+
+        sizing["Lot"] = 0.05
+
+        sizing["Risk"] = "NORMAL"
+
+        sizing["Reason"].append(
+
+            "High quality setup"
+
+        )
+
+
+    else:
+
+        sizing["Lot"] = 0.01
+
+        sizing["Reason"].append(
+
+            "Default safety mode"
+
+        )
+
+
+    return sizing
+
+
+# ==========================================================
+# POSITION SIZE DISPLAY V40
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📐 AI Position Sizing V40"
+
+    )
+
+
+    sizing = ai_position_sizing_v40()
+
+
+    sizing_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            sizing.keys(),
+
+            "Value":
+
+            sizing.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        sizing_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 162
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 163
+# ==========================================================
+
+# ==========================================================
+# WEOS AI POSITION SIZING MEMORY V40
+# ==========================================================
+
+if "position_sizing_memory_v40" not in st.session_state:
+
+    st.session_state.position_sizing_memory_v40 = []
+
+
+def save_position_sizing_memory_v40():
+
+    sizing = ai_position_sizing_v40()
+
+
+    st.session_state.position_sizing_memory_v40.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Lot":
+
+            sizing["Lot"],
+
+            "Risk":
+
+            sizing["Risk"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.position_sizing_memory_v40
+
+    ) > 500:
+
+        st.session_state.position_sizing_memory_v40.pop(
+
+            0
+
+        )
+
+
+save_position_sizing_memory_v40()
+
+
+# ==========================================================
+# POSITION SIZING MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📐 Position Sizing Memory V40"
+
+    )
+
+
+    sizing_memory_df = pd.DataFrame(
+
+        st.session_state.position_sizing_memory_v40[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        sizing_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI STOP LOSS OPTIMIZER V41
+# ==========================================================
+
+def ai_stop_loss_optimizer_v41():
+
+    sl = {
+
+        "Method":
+
+        "STANDARD",
+
+        "Distance":
+
+        0,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    structure = market_structure_ai_v16()
+
+    volatility = volatility_engine_v5()
+
+    zone = gold_entry_zone_engine_v11()
+
+
+    if volatility["Level"] == "HIGH":
+
+        sl["Method"] = "WIDE STOP"
+
+        sl["Reason"].append(
+
+            "High volatility"
+
+        )
+
+    else:
+
+        sl["Method"] = "NORMAL STOP"
+
+
+    if structure["State"] == "TRENDING":
+
+        sl["Distance"] = 15
+
+        sl["Reason"].append(
+
+            "Trend protection"
+
+        )
+
+
+    elif zone["Zone"] != "MID RANGE":
+
+        sl["Distance"] = 10
+
+        sl["Reason"].append(
+
+            "Entry zone based"
+
+        )
+
+
+    else:
+
+        sl["Distance"] = 20
+
+        sl["Reason"].append(
+
+            "Safety distance"
+
+        )
+
+
+    return sl
+
+
+# ==========================================================
+# STOP LOSS DISPLAY V41
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🛡 AI Stop Loss Optimizer V41"
+
+    )
+
+
+    sl_optimizer = ai_stop_loss_optimizer_v41()
+
+
+    sl_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            sl_optimizer.keys(),
+
+            "Value":
+
+            sl_optimizer.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        sl_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TAKE PROFIT OPTIMIZER V42
+# ==========================================================
+
+def ai_take_profit_optimizer_v42():
+
+    tp = {
+
+        "Target":
+
+        0,
+
+        "Method":
+
+        "STANDARD",
+
+        "Reason":
+
+        []
+
+    }
+
+
+    structure = market_structure_ai_v16()
+
+    macro = gold_macro_ai_fusion_v7()
+
+    quality = ai_trade_quality_score_v36()
+
+
+    if quality["Grade"] == "A+":
+
+        tp["Method"] = "EXTENDED"
+
+        tp["Target"] = 100
+
+        tp["Reason"].append(
+
+            "Premium setup"
+
+        )
+
+
+    elif macro["Score"] >= 75:
+
+        tp["Method"] = "TREND FOLLOW"
+
+        tp["Target"] = 80
+
+        tp["Reason"].append(
+
+            "Strong macro"
+
+        )
+
+
+    else:
+
+        tp["Method"] = "SAFE"
+
+        tp["Target"] = 50
+
+        tp["Reason"].append(
+
+            "Conservative target"
+
+        )
+
+
+    if structure["Bias"] == "BULLISH":
+
+        tp["Reason"].append(
+
+            "Bullish structure"
+
+        )
+
+
+    elif structure["Bias"] == "BEARISH":
+
+        tp["Reason"].append(
+
+            "Bearish structure"
+
+        )
+
+
+    return tp
+
+
+# ==========================================================
+# TAKE PROFIT DISPLAY V42
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 AI Take Profit Optimizer V42"
+
+    )
+
+
+    tp_optimizer = ai_take_profit_optimizer_v42()
+
+
+    tp_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            tp_optimizer.keys(),
+
+            "Value":
+
+            tp_optimizer.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        tp_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI RISK REWARD ENGINE V43
+# ==========================================================
+
+def ai_risk_reward_engine_v43():
+
+    rr = {
+
+        "Risk Reward":
+
+        0,
+
+        "Quality":
+
+        "LOW",
+
+        "Decision":
+
+        "REJECT"
+
+    }
+
+
+    sl = ai_stop_loss_optimizer_v41()
+
+    tp = ai_take_profit_optimizer_v42()
+
+
+    if sl["Distance"] > 0:
+
+        ratio = (
+
+            tp["Target"]
+
+            /
+
+            sl["Distance"]
+
+        )
+
+
+        rr["Risk Reward"] = round(
+
+            ratio,
+
+            2
+
+        )
+
+
+    if rr["Risk Reward"] >= 3:
+
+        rr["Quality"] = "EXCELLENT"
+
+        rr["Decision"] = "ACCEPT"
+
+
+    elif rr["Risk Reward"] >= 2:
+
+        rr["Quality"] = "GOOD"
+
+        rr["Decision"] = "ACCEPT"
+
+
+    else:
+
+        rr["Quality"] = "WEAK"
+
+        rr["Decision"] = "REJECT"
+
+
+    return rr
+
+
+# ==========================================================
+# RISK REWARD DISPLAY V43
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚖ AI Risk Reward Engine V43"
+
+    )
+
+
+    rr = ai_risk_reward_engine_v43()
+
+
+    rr_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            rr.keys(),
+
+            "Value":
+
+            rr.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        rr_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 163
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 164
+# ==========================================================
+
+# ==========================================================
+# WEOS AI RISK REWARD MEMORY V43
+# ==========================================================
+
+if "risk_reward_memory_v43" not in st.session_state:
+
+    st.session_state.risk_reward_memory_v43 = []
+
+
+def save_risk_reward_memory_v43():
+
+    rr = ai_risk_reward_engine_v43()
+
+
+    st.session_state.risk_reward_memory_v43.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "RR":
+
+            rr["Risk Reward"],
+
+            "Quality":
+
+            rr["Quality"],
+
+            "Decision":
+
+            rr["Decision"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.risk_reward_memory_v43
+
+    ) > 500:
+
+        st.session_state.risk_reward_memory_v43.pop(
+
+            0
+
+        )
+
+
+save_risk_reward_memory_v43()
+
+
+# ==========================================================
+# RISK REWARD MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚖ Risk Reward Memory V43"
+
+    )
+
+
+    rr_memory_df = pd.DataFrame(
+
+        st.session_state.risk_reward_memory_v43[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        rr_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE FILTER ENGINE V44
+# ==========================================================
+
+def ai_trade_filter_v44():
+
+    filter_result = {
+
+        "Status":
+
+        "BLOCK",
+
+        "Score":
+
+        0,
+
+        "Reasons":
+
+        []
+
+    }
+
+
+    quality = ai_trade_quality_score_v36()
+
+    rr = ai_risk_reward_engine_v43()
+
+    protection = ai_position_protection_v24()
+
+    market = ai_market_condition_v33()
+
+
+    score = (
+
+        quality["Score"]
+
+        +
+
+        (
+
+            rr["Risk Reward"]
+
+            *
+
+            20
+
+        )
+
+        +
+
+        (
+
+            100
+
+            -
+
+            protection["Level"]
+
+        )
+
+        +
+
+        market["Confidence"]
+
+    ) / 4
+
+
+    if quality["Grade"] in [
+
+        "A",
+
+        "A+"
+
+    ]:
+
+        filter_result["Reasons"].append(
+
+            "High quality setup"
+
+        )
+
+
+    if rr["Decision"] == "ACCEPT":
+
+        filter_result["Reasons"].append(
+
+            "Risk reward accepted"
+
+        )
+
+
+    if market["Trading Mode"] == "ACTIVE":
+
+        filter_result["Reasons"].append(
+
+            "Market condition favorable"
+
+        )
+
+
+    filter_result["Score"] = round(
+
+        score,
+
+        1
+
+    )
+
+
+    if score >= 80:
+
+        filter_result["Status"] = "APPROVED"
+
+
+    elif score >= 60:
+
+        filter_result["Status"] = "WATCH"
+
+
+    return filter_result
+
+
+# ==========================================================
+# TRADE FILTER DISPLAY V44
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔍 AI Trade Filter V44"
+
+    )
+
+
+    trade_filter = ai_trade_filter_v44()
+
+
+    trade_filter_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            trade_filter.keys(),
+
+            "Value":
+
+            trade_filter.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        trade_filter_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE FILTER MEMORY V44
+# ==========================================================
+
+if "trade_filter_memory_v44" not in st.session_state:
+
+    st.session_state.trade_filter_memory_v44 = []
+
+
+def save_trade_filter_memory_v44():
+
+    result = ai_trade_filter_v44()
+
+
+    st.session_state.trade_filter_memory_v44.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            result["Status"],
+
+            "Score":
+
+            result["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.trade_filter_memory_v44
+
+    ) > 500:
+
+        st.session_state.trade_filter_memory_v44.pop(
+
+            0
+
+        )
+
+
+save_trade_filter_memory_v44()
+
+
+# ==========================================================
+# TRADE FILTER MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔍 Trade Filter Memory V44"
+
+    )
+
+
+    trade_filter_memory_df = pd.DataFrame(
+
+        st.session_state.trade_filter_memory_v44[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        trade_filter_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI MASTER ENTRY DECISION V45
+# ==========================================================
+
+def ai_master_entry_decision_v45():
+
+    decision = {
+
+        "Action":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry":
+
+        None,
+
+        "SL":
+
+        None,
+
+        "TP":
+
+        None,
+
+        "Confidence":
+
+        0
+
+    }
+
+
+    trade_filter = ai_trade_filter_v44()
+
+    signal = ai_trade_signal_generator_v21()
+
+    ticket = ai_trade_entry_ticket_v22()
+
+    sizing = ai_position_sizing_v40()
+
+
+    decision["Direction"] = signal["Direction"]
+
+    decision["Entry"] = ticket["Entry"]
+
+    decision["SL"] = ticket["Stop Loss"]
+
+    decision["TP"] = ticket["Take Profit"]
+
+    decision["Confidence"] = trade_filter["Score"]
+
+
+    if trade_filter["Status"] == "APPROVED":
+
+        decision["Action"] = "EXECUTE"
+
+
+    elif trade_filter["Status"] == "WATCH":
+
+        decision["Action"] = "PREPARE"
+
+
+    else:
+
+        decision["Action"] = "WAIT"
+
+
+    return decision
+
+
+# ==========================================================
+# MASTER ENTRY DISPLAY V45
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "👑 Master Entry Decision V45"
+
+    )
+
+
+    master_entry = ai_master_entry_decision_v45()
+
+
+    master_entry_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            master_entry.keys(),
+
+            "Value":
+
+            master_entry.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        master_entry_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 164
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 165
+# ==========================================================
+
+# ==========================================================
+# WEOS AI MASTER ENTRY MEMORY V45
+# ==========================================================
+
+if "master_entry_memory_v45" not in st.session_state:
+
+    st.session_state.master_entry_memory_v45 = []
+
+
+def save_master_entry_memory_v45():
+
+    entry = ai_master_entry_decision_v45()
+
+
+    st.session_state.master_entry_memory_v45.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Action":
+
+            entry["Action"],
+
+            "Direction":
+
+            entry["Direction"],
+
+            "Confidence":
+
+            entry["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.master_entry_memory_v45
+
+    ) > 500:
+
+        st.session_state.master_entry_memory_v45.pop(
+
+            0
+
+        )
+
+
+save_master_entry_memory_v45()
+
+
+# ==========================================================
+# MASTER ENTRY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "👑 Master Entry Memory V45"
+
+    )
+
+
+    master_entry_memory_df = pd.DataFrame(
+
+        st.session_state.master_entry_memory_v45[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        master_entry_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE EXECUTION MANAGER V46
+# ==========================================================
+
+def ai_trade_execution_manager_v46():
+
+    manager = {
+
+        "Status":
+
+        "WAIT",
+
+        "Action":
+
+        "NONE",
+
+        "Position":
+
+        None,
+
+        "Risk":
+
+        "NORMAL"
+
+    }
+
+
+    entry = ai_master_entry_decision_v45()
+
+    sizing = ai_position_sizing_v40()
+
+    protection = ai_position_protection_v24()
+
+
+    manager["Risk"] = sizing["Risk"]
+
+
+    if entry["Action"] == "EXECUTE":
+
+        manager["Status"] = "READY"
+
+        manager["Action"] = "OPEN TRADE"
+
+        manager["Position"] = entry["Direction"]
+
+
+    elif entry["Action"] == "PREPARE":
+
+        manager["Status"] = "WATCH"
+
+        manager["Action"] = "WAIT CONFIRM"
+
+
+    else:
+
+        manager["Status"] = "IDLE"
+
+        manager["Action"] = "NO TRADE"
+
+
+    if protection["Action"] == "HIGH PROTECTION":
+
+        manager["Status"] = "BLOCKED"
+
+        manager["Action"] = "RISK CONTROL"
+
+
+    return manager
+
+
+# ==========================================================
+# TRADE EXECUTION MANAGER DISPLAY V46
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚡ Trade Execution Manager V46"
+
+    )
+
+
+    execution_manager = ai_trade_execution_manager_v46()
+
+
+    execution_manager_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            execution_manager.keys(),
+
+            "Value":
+
+            execution_manager.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        execution_manager_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI EXECUTION MANAGER MEMORY V46
+# ==========================================================
+
+if "execution_manager_memory_v46" not in st.session_state:
+
+    st.session_state.execution_manager_memory_v46 = []
+
+
+def save_execution_manager_memory_v46():
+
+    manager = ai_trade_execution_manager_v46()
+
+
+    st.session_state.execution_manager_memory_v46.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            manager["Status"],
+
+            "Action":
+
+            manager["Action"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.execution_manager_memory_v46
+
+    ) > 500:
+
+        st.session_state.execution_manager_memory_v46.pop(
+
+            0
+
+        )
+
+
+save_execution_manager_memory_v46()
+
+
+# ==========================================================
+# EXECUTION MANAGER MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚡ Execution Manager Memory V46"
+
+    )
+
+
+    execution_manager_memory_df = pd.DataFrame(
+
+        st.session_state.execution_manager_memory_v46[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        execution_manager_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI LIVE POSITION TRACKER V47
+# ==========================================================
+
+def ai_live_position_tracker_v47():
+
+    tracker = {
+
+        "Position":
+
+        "NONE",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry":
+
+        0,
+
+        "Current":
+
+        0,
+
+        "Profit":
+
+        0,
+
+        "Status":
+
+        "NO POSITION"
+
+    }
+
+
+    manager = ai_trade_execution_manager_v46()
+
+
+    price = current_gold_price()
+
+
+    if manager["Status"] == "READY":
+
+        tracker["Position"] = "ACTIVE"
+
+        tracker["Direction"] = manager["Position"]
+
+        tracker["Current"] = price
+
+        tracker["Status"] = "MONITORING"
+
+
+    return tracker
+
+
+# ==========================================================
+# LIVE POSITION DISPLAY V47
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📡 Live Position Tracker V47"
+
+    )
+
+
+    tracker = ai_live_position_tracker_v47()
+
+
+    tracker_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            tracker.keys(),
+
+            "Value":
+
+            tracker.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        tracker_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI POSITION TRACKING MEMORY V47
+# ==========================================================
+
+if "position_tracking_memory_v47" not in st.session_state:
+
+    st.session_state.position_tracking_memory_v47 = []
+
+
+def save_position_tracking_memory_v47():
+
+    tracker = ai_live_position_tracker_v47()
+
+
+    st.session_state.position_tracking_memory_v47.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            tracker["Status"],
+
+            "Direction":
+
+            tracker["Direction"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.position_tracking_memory_v47
+
+    ) > 500:
+
+        st.session_state.position_tracking_memory_v47.pop(
+
+            0
+
+        )
+
+
+save_position_tracking_memory_v47()
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 165
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 166
+# ==========================================================
+
+# ==========================================================
+# WEOS AI POSITION TRACKING MEMORY DISPLAY V47
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📡 Position Tracking Memory V47"
+
+    )
+
+
+    tracking_memory_df = pd.DataFrame(
+
+        st.session_state.position_tracking_memory_v47[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        tracking_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI ACTIVE TRADE MONITOR V48
+# ==========================================================
+
+def ai_active_trade_monitor_v48():
+
+    monitor = {
+
+        "Status":
+
+        "NO ACTIVE TRADE",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry":
+
+        None,
+
+        "Current":
+
+        None,
+
+        "Floating":
+
+        0,
+
+        "Action":
+
+        "WAIT"
+
+    }
+
+
+    tracker = ai_live_position_tracker_v47()
+
+    ticket = ai_trade_entry_ticket_v22()
+
+
+    if tracker["Status"] == "MONITORING":
+
+        monitor["Status"] = "ACTIVE"
+
+        monitor["Direction"] = tracker["Direction"]
+
+        monitor["Entry"] = ticket["Entry"]
+
+        monitor["Current"] = tracker["Current"]
+
+
+        if monitor["Direction"] == "BUY":
+
+            monitor["Floating"] = (
+
+                monitor["Current"]
+
+                -
+
+                monitor["Entry"]
+
+            )
+
+
+        elif monitor["Direction"] == "SELL":
+
+            monitor["Floating"] = (
+
+                monitor["Entry"]
+
+                -
+
+                monitor["Current"]
+
+            )
+
+
+        if monitor["Floating"] > 0:
+
+            monitor["Action"] = "HOLD PROFIT"
+
+
+        elif monitor["Floating"] < 0:
+
+            monitor["Action"] = "CONTROL LOSS"
+
+
+    return monitor
+
+
+# ==========================================================
+# ACTIVE TRADE MONITOR DISPLAY V48
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 Active Trade Monitor V48"
+
+    )
+
+
+    active_monitor = ai_active_trade_monitor_v48()
+
+
+    active_monitor_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            active_monitor.keys(),
+
+            "Value":
+
+            active_monitor.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        active_monitor_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI ACTIVE TRADE MEMORY V48
+# ==========================================================
+
+if "active_trade_memory_v48" not in st.session_state:
+
+    st.session_state.active_trade_memory_v48 = []
+
+
+def save_active_trade_memory_v48():
+
+    monitor = ai_active_trade_monitor_v48()
+
+
+    st.session_state.active_trade_memory_v48.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            monitor["Status"],
+
+            "Action":
+
+            monitor["Action"],
+
+            "Floating":
+
+            monitor["Floating"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.active_trade_memory_v48
+
+    ) > 500:
+
+        st.session_state.active_trade_memory_v48.pop(
+
+            0
+
+        )
+
+
+save_active_trade_memory_v48()
+
+
+# ==========================================================
+# ACTIVE TRADE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 Active Trade Memory V48"
+
+    )
+
+
+    active_memory_df = pd.DataFrame(
+
+        st.session_state.active_trade_memory_v48[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        active_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI PROFIT PROTECTION ENGINE V49
+# ==========================================================
+
+def ai_profit_protection_v49():
+
+    protection = {
+
+        "Action":
+
+        "HOLD",
+
+        "Stop":
+
+        "UNCHANGED",
+
+        "Reason":
+
+        []
+
+    }
+
+
+    monitor = ai_active_trade_monitor_v48()
+
+    quality = ai_trade_quality_score_v36()
+
+
+    if monitor["Floating"] > 0:
+
+        protection["Reason"].append(
+
+            "Trade currently profitable"
+
+        )
+
+
+    if (
+
+        monitor["Floating"] > 50
+
+        and
+
+        quality["Grade"] in [
+
+            "A",
+
+            "A+"
+
+        ]
+
+    ):
+
+        protection["Action"] = "LOCK PROFIT"
+
+        protection["Stop"] = "MOVE TO BREAKEVEN"
+
+        protection["Reason"].append(
+
+            "Protect accumulated profit"
+
+        )
+
+
+    elif monitor["Floating"] < 0:
+
+        protection["Action"] = "WATCH LOSS"
+
+        protection["Reason"].append(
+
+            "Floating loss detected"
+
+        )
+
+
+    return protection
+
+
+# ==========================================================
+# PROFIT PROTECTION DISPLAY V49
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "💰 Profit Protection Engine V49"
+
+    )
+
+
+    profit_protection = ai_profit_protection_v49()
+
+
+    profit_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            profit_protection.keys(),
+
+            "Value":
+
+            profit_protection.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        profit_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE EXIT ENGINE V50
+# ==========================================================
+
+def ai_trade_exit_engine_v50():
+
+    exit_plan = {
+
+        "Decision":
+
+        "HOLD",
+
+        "Reason":
+
+        []
+
+    }
+
+
+    monitor = ai_active_trade_monitor_v48()
+
+    protection = ai_profit_protection_v49()
+
+    risk = ai_position_protection_v24()
+
+
+    if risk["Action"] == "HIGH PROTECTION":
+
+        exit_plan["Decision"] = "EXIT"
+
+        exit_plan["Reason"].append(
+
+            "Risk protection triggered"
+
+        )
+
+
+    elif protection["Action"] == "LOCK PROFIT":
+
+        exit_plan["Decision"] = "PARTIAL EXIT"
+
+        exit_plan["Reason"].append(
+
+            "Secure profit"
+
+        )
+
+
+    elif monitor["Floating"] < -100:
+
+        exit_plan["Decision"] = "EXIT"
+
+        exit_plan["Reason"].append(
+
+            "Loss limit reached"
+
+        )
+
+
+    return exit_plan
+
+
+# ==========================================================
+# EXIT ENGINE DISPLAY V50
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚪 AI Trade Exit Engine V50"
+
+    )
+
+
+    exit_engine = ai_trade_exit_engine_v50()
+
+
+    exit_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            exit_engine.keys(),
+
+            "Value":
+
+            exit_engine.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        exit_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 166
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 167
+# ==========================================================
+
+# ==========================================================
+# WEOS AI EXIT ENGINE MEMORY V50
+# ==========================================================
+
+if "exit_engine_memory_v50" not in st.session_state:
+
+    st.session_state.exit_engine_memory_v50 = []
+
+
+def save_exit_engine_memory_v50():
+
+    exit_plan = ai_trade_exit_engine_v50()
+
+
+    st.session_state.exit_engine_memory_v50.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Decision":
+
+            exit_plan["Decision"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.exit_engine_memory_v50
+
+    ) > 500:
+
+        st.session_state.exit_engine_memory_v50.pop(
+
+            0
+
+        )
+
+
+save_exit_engine_memory_v50()
+
+
+# ==========================================================
+# EXIT ENGINE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚪 Exit Engine Memory V50"
+
+    )
+
+
+    exit_memory_df = pd.DataFrame(
+
+        st.session_state.exit_engine_memory_v50[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        exit_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRAILING STOP ENGINE V51
+# ==========================================================
+
+def ai_trailing_stop_v51():
+
+    trailing = {
+
+        "Status":
+
+        "INACTIVE",
+
+        "Stop":
+
+        None,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    monitor = ai_active_trade_monitor_v48()
+
+    protection = ai_profit_protection_v49()
+
+
+    if monitor["Status"] == "ACTIVE":
+
+        trailing["Status"] = "ACTIVE"
+
+
+        if protection["Action"] == "LOCK PROFIT":
+
+            trailing["Stop"] = "BREAKEVEN"
+
+            trailing["Reason"].append(
+
+                "Profit protection active"
+
+            )
+
+
+        elif monitor["Floating"] > 0:
+
+            trailing["Stop"] = "FOLLOW PRICE"
+
+            trailing["Reason"].append(
+
+                "Positive movement"
+
+            )
+
+
+    return trailing
+
+
+# ==========================================================
+# TRAILING STOP DISPLAY V51
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📌 AI Trailing Stop V51"
+
+    )
+
+
+    trailing = ai_trailing_stop_v51()
+
+
+    trailing_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            trailing.keys(),
+
+            "Value":
+
+            trailing.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        trailing_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRAILING STOP MEMORY V51
+# ==========================================================
+
+if "trailing_memory_v51" not in st.session_state:
+
+    st.session_state.trailing_memory_v51 = []
+
+
+def save_trailing_memory_v51():
+
+    trailing = ai_trailing_stop_v51()
+
+
+    st.session_state.trailing_memory_v51.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            trailing["Status"],
+
+            "Stop":
+
+            trailing["Stop"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.trailing_memory_v51
+
+    ) > 500:
+
+        st.session_state.trailing_memory_v51.pop(
+
+            0
+
+        )
+
+
+save_trailing_memory_v51()
+
+
+# ==========================================================
+# TRAILING MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📌 Trailing Stop Memory V51"
+
+    )
+
+
+    trailing_memory_df = pd.DataFrame(
+
+        st.session_state.trailing_memory_v51[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        trailing_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI TRADE MANAGEMENT OPTIMIZER V52
+# ==========================================================
+
+def ai_trade_management_optimizer_v52():
+
+    management = {
+
+        "Mode":
+
+        "STANDARD",
+
+        "Action":
+
+        "HOLD",
+
+        "Reason":
+
+        []
+
+    }
+
+
+    monitor = ai_active_trade_monitor_v48()
+
+    trailing = ai_trailing_stop_v51()
+
+    exit_plan = ai_trade_exit_engine_v50()
+
+
+    if exit_plan["Decision"] == "EXIT":
+
+        management["Mode"] = "EMERGENCY"
+
+        management["Action"] = "CLOSE"
+
+        management["Reason"].append(
+
+            "Exit condition"
+
+        )
+
+
+    elif trailing["Status"] == "ACTIVE":
+
+        management["Mode"] = "PROTECTIVE"
+
+        management["Action"] = "TRAIL"
+
+        management["Reason"].append(
+
+            "Trailing protection"
+
+        )
+
+
+    elif monitor["Status"] == "ACTIVE":
+
+        management["Mode"] = "MONITOR"
+
+        management["Action"] = "HOLD"
+
+        management["Reason"].append(
+
+            "Position healthy"
+
+        )
+
+
+    return management
+
+
+# ==========================================================
+# TRADE MANAGEMENT OPTIMIZER DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎛 Trade Management Optimizer V52"
+
+    )
+
+
+    management_optimizer = ai_trade_management_optimizer_v52()
+
+
+    management_optimizer_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            management_optimizer.keys(),
+
+            "Value":
+
+            management_optimizer.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        management_optimizer_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI POSITION STATE ENGINE V53
+# ==========================================================
+
+def ai_position_state_v53():
+
+    state = {
+
+        "State":
+
+        "FLAT",
+
+        "Risk":
+
+        "NORMAL",
+
+        "Action":
+
+        "WAIT"
+
+    }
+
+
+    monitor = ai_active_trade_monitor_v48()
+
+    management = ai_trade_management_optimizer_v52()
+
+
+    if monitor["Status"] == "ACTIVE":
+
+        state["State"] = "OPEN"
+
+
+    if management["Mode"] == "EMERGENCY":
+
+        state["Risk"] = "HIGH"
+
+        state["Action"] = "EXIT"
+
+
+    elif management["Mode"] == "PROTECTIVE":
+
+        state["Action"] = "PROTECT"
+
+
+    elif state["State"] == "OPEN":
+
+        state["Action"] = "HOLD"
+
+
+    return state
+
+
+# ==========================================================
+# POSITION STATE DISPLAY V53
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Position State Engine V53"
+
+    )
+
+
+    position_state = ai_position_state_v53()
+
+
+    position_state_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            position_state.keys(),
+
+            "Value":
+
+            position_state.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        position_state_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 167
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 168
+# ==========================================================
+
+# ==========================================================
+# WEOS AI POSITION STATE MEMORY V53
+# ==========================================================
+
+if "position_state_memory_v53" not in st.session_state:
+
+    st.session_state.position_state_memory_v53 = []
+
+
+def save_position_state_memory_v53():
+
+    state = ai_position_state_v53()
+
+
+    st.session_state.position_state_memory_v53.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "State":
+
+            state["State"],
+
+            "Risk":
+
+            state["Risk"],
+
+            "Action":
+
+            state["Action"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.position_state_memory_v53
+
+    ) > 500:
+
+        st.session_state.position_state_memory_v53.pop(
+
+            0
+
+        )
+
+
+save_position_state_memory_v53()
+
+
+# ==========================================================
+# POSITION STATE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Position State Memory V53"
+
+    )
+
+
+    position_state_memory_df = pd.DataFrame(
+
+        st.session_state.position_state_memory_v53[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        position_state_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI MARKET SENTIMENT ENGINE V54
+# ==========================================================
+
+def ai_market_sentiment_v54():
+
+    sentiment = {
+
+        "Sentiment":
+
+        "NEUTRAL",
+
+        "Score":
+
+        50,
+
+        "Factors":
+
+        []
+
+    }
+
+
+    macro = gold_macro_ai_fusion_v7()
+
+    smart_money = smart_money_flow_engine_v13()
+
+    mtf = ai_multi_timeframe_fusion_v34()
+
+    volume = analyze_volume_behavior()
+
+
+    score = 50
+
+
+    if macro["Score"] >= 70:
+
+        score += 15
+
+        sentiment["Factors"].append(
+
+            "Macro bullish"
+
+        )
+
+
+    elif macro["Score"] <= 35:
+
+        score -= 15
+
+        sentiment["Factors"].append(
+
+            "Macro bearish"
+
+        )
+
+
+    if smart_money["Direction"] == "BUY":
+
+        score += 15
+
+        sentiment["Factors"].append(
+
+            "Smart money buying"
+
+        )
+
+
+    elif smart_money["Direction"] == "SELL":
+
+        score -= 15
+
+        sentiment["Factors"].append(
+
+            "Smart money selling"
+
+        )
+
+
+    if mtf["Direction"] == "BUY":
+
+        score += 10
+
+        sentiment["Factors"].append(
+
+            "Multi timeframe support"
+
+        )
+
+
+    elif mtf["Direction"] == "SELL":
+
+        score -= 10
+
+        sentiment["Factors"].append(
+
+            "Multi timeframe pressure"
+
+        )
+
+
+    if volume["Status"] == "BUY ACCUMULATION":
+
+        score += 10
+
+
+    elif volume["Status"] == "SELL DISTRIBUTION":
+
+        score -= 10
+
+
+    sentiment["Score"] = max(
+
+        0,
+
+        min(
+
+            score,
+
+            100
+
+        )
+
+    )
+
+
+    if score >= 70:
+
+        sentiment["Sentiment"] = "BULLISH"
+
+
+    elif score <= 35:
+
+        sentiment["Sentiment"] = "BEARISH"
+
+
+    return sentiment
+
+
+# ==========================================================
+# MARKET SENTIMENT DISPLAY V54
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌡 AI Market Sentiment V54"
+
+    )
+
+
+    sentiment = ai_market_sentiment_v54()
+
+
+    sentiment_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            sentiment.keys(),
+
+            "Value":
+
+            sentiment.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        sentiment_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI MARKET SENTIMENT MEMORY V54
+# ==========================================================
+
+if "market_sentiment_memory_v54" not in st.session_state:
+
+    st.session_state.market_sentiment_memory_v54 = []
+
+
+def save_market_sentiment_memory_v54():
+
+    sentiment = ai_market_sentiment_v54()
+
+
+    st.session_state.market_sentiment_memory_v54.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Sentiment":
+
+            sentiment["Sentiment"],
+
+            "Score":
+
+            sentiment["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.market_sentiment_memory_v54
+
+    ) > 500:
+
+        st.session_state.market_sentiment_memory_v54.pop(
+
+            0
+
+        )
+
+
+save_market_sentiment_memory_v54()
+
+
+# ==========================================================
+# MARKET SENTIMENT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌡 Market Sentiment Memory V54"
+
+    )
+
+
+    sentiment_memory_df = pd.DataFrame(
+
+        st.session_state.market_sentiment_memory_v54[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        sentiment_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI GOLD PSYCHOLOGY ENGINE V55
+# ==========================================================
+
+def ai_gold_psychology_v55():
+
+    psychology = {
+
+        "State":
+
+        "BALANCED",
+
+        "Pressure":
+
+        50,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    sentiment = ai_market_sentiment_v54()
+
+    volatility = volatility_engine_v5()
+
+    liquidity = ai_liquidity_hunt_v14()
+
+
+    pressure = 50
+
+
+    if sentiment["Sentiment"] == "BULLISH":
+
+        pressure += 15
+
+        psychology["Reason"].append(
+
+            "Buyer dominance"
+
+        )
+
+
+    elif sentiment["Sentiment"] == "BEARISH":
+
+        pressure -= 15
+
+        psychology["Reason"].append(
+
+            "Seller dominance"
+
+        )
+
+
+    if volatility["Level"] == "HIGH":
+
+        psychology["Reason"].append(
+
+            "Market emotion increased"
+
+        )
+
+        pressure += 10
+
+
+    if liquidity["Status"] == "LIQUIDITY TARGET":
+
+        psychology["Reason"].append(
+
+            "Liquidity attraction"
+
+        )
+
+
+    psychology["Pressure"] = max(
+
+        0,
+
+        min(
+
+            pressure,
+
+            100
+
+        )
+
+    )
+
+
+    if pressure >= 70:
+
+        psychology["State"] = "BUYING PRESSURE"
+
+
+    elif pressure <= 35:
+
+        psychology["State"] = "SELLING PRESSURE"
+
+
+    return psychology
+
+
+# ==========================================================
+# GOLD PSYCHOLOGY DISPLAY V55
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Gold Psychology Engine V55"
+
+    )
+
+
+    psychology = ai_gold_psychology_v55()
+
+
+    psychology_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            psychology.keys(),
+
+            "Value":
+
+            psychology.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        psychology_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 168
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 169
+# ==========================================================
+
+# ==========================================================
+# WEOS AI GOLD PSYCHOLOGY MEMORY V55
+# ==========================================================
+
+if "gold_psychology_memory_v55" not in st.session_state:
+
+    st.session_state.gold_psychology_memory_v55 = []
+
+
+def save_gold_psychology_memory_v55():
+
+    psychology = ai_gold_psychology_v55()
+
+
+    st.session_state.gold_psychology_memory_v55.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "State":
+
+            psychology["State"],
+
+            "Pressure":
+
+            psychology["Pressure"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.gold_psychology_memory_v55
+
+    ) > 500:
+
+        st.session_state.gold_psychology_memory_v55.pop(
+
+            0
+
+        )
+
+
+save_gold_psychology_memory_v55()
+
+
+# ==========================================================
+# GOLD PSYCHOLOGY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Gold Psychology Memory V55"
+
+    )
+
+
+    psychology_memory_df = pd.DataFrame(
+
+        st.session_state.gold_psychology_memory_v55[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        psychology_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI GOLD MOMENTUM FUSION V56
+# ==========================================================
+
+def ai_gold_momentum_fusion_v56():
+
+    momentum = {
+
+        "Direction":
+
+        "NEUTRAL",
+
+        "Strength":
+
+        50,
+
+        "Factors":
+
+        []
+
+    }
+
+
+    technical = momentum_radar_v2()
+
+    sentiment = ai_market_sentiment_v54()
+
+    psychology = ai_gold_psychology_v55()
+
+    mtf = ai_multi_timeframe_fusion_v34()
+
+
+    strength = 50
+
+
+    if technical["Direction"] == "UP":
+
+        strength += 15
+
+        momentum["Factors"].append(
+
+            "Technical momentum up"
+
+        )
+
+
+    elif technical["Direction"] == "DOWN":
+
+        strength -= 15
+
+        momentum["Factors"].append(
+
+            "Technical momentum down"
+
+        )
+
+
+    if sentiment["Sentiment"] == "BULLISH":
+
+        strength += 15
+
+        momentum["Factors"].append(
+
+            "Bullish sentiment"
+
+        )
+
+
+    elif sentiment["Sentiment"] == "BEARISH":
+
+        strength -= 15
+
+        momentum["Factors"].append(
+
+            "Bearish sentiment"
+
+        )
+
+
+    if psychology["State"] == "BUYING PRESSURE":
+
+        strength += 10
+
+        momentum["Factors"].append(
+
+            "Buying pressure"
+
+        )
+
+
+    elif psychology["State"] == "SELLING PRESSURE":
+
+        strength -= 10
+
+        momentum["Factors"].append(
+
+            "Selling pressure"
+
+        )
+
+
+    if mtf["Direction"] == "BUY":
+
+        strength += 10
+
+
+    elif mtf["Direction"] == "SELL":
+
+        strength -= 10
+
+
+    momentum["Strength"] = max(
+
+        0,
+
+        min(
+
+            strength,
+
+            100
+
+        )
+
+    )
+
+
+    if strength >= 70:
+
+        momentum["Direction"] = "BUY"
+
+
+    elif strength <= 35:
+
+        momentum["Direction"] = "SELL"
+
+
+    return momentum
+
+
+# ==========================================================
+# MOMENTUM FUSION DISPLAY V56
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚡ Gold Momentum Fusion V56"
+
+    )
+
+
+    momentum_fusion = ai_gold_momentum_fusion_v56()
+
+
+    momentum_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            momentum_fusion.keys(),
+
+            "Value":
+
+            momentum_fusion.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        momentum_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI MOMENTUM MEMORY V56
+# ==========================================================
+
+if "momentum_memory_v56" not in st.session_state:
+
+    st.session_state.momentum_memory_v56 = []
+
+
+def save_momentum_memory_v56():
+
+    momentum = ai_gold_momentum_fusion_v56()
+
+
+    st.session_state.momentum_memory_v56.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Direction":
+
+            momentum["Direction"],
+
+            "Strength":
+
+            momentum["Strength"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.momentum_memory_v56
+
+    ) > 500:
+
+        st.session_state.momentum_memory_v56.pop(
+
+            0
+
+        )
+
+
+save_momentum_memory_v56()
+
+
+# ==========================================================
+# MOMENTUM MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚡ Momentum Memory V56"
+
+    )
+
+
+    momentum_memory_df = pd.DataFrame(
+
+        st.session_state.momentum_memory_v56[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        momentum_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI GOLD REVERSAL DETECTOR V57
+# ==========================================================
+
+def ai_gold_reversal_detector_v57():
+
+    reversal = {
+
+        "Signal":
+
+        "NONE",
+
+        "Probability":
+
+        0,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    momentum = ai_gold_momentum_fusion_v56()
+
+    psychology = ai_gold_psychology_v55()
+
+    liquidity = ai_liquidity_hunt_v14()
+
+    structure = market_structure_ai_v16()
+
+
+    probability = 20
+
+
+    if liquidity["Status"] == "LIQUIDITY TARGET":
+
+        probability += 25
+
+        reversal["Reason"].append(
+
+            "Liquidity sweep possible"
+
+        )
+
+
+    if psychology["Pressure"] >= 80:
+
+        probability += 20
+
+        reversal["Reason"].append(
+
+            "Extreme buying pressure"
+
+        )
+
+
+    elif psychology["Pressure"] <= 20:
+
+        probability += 20
+
+        reversal["Reason"].append(
+
+            "Extreme selling pressure"
+
+        )
+
+
+    if structure["State"] == "TRENDING":
+
+        probability -= 10
+
+
+    reversal["Probability"] = max(
+
+        0,
+
+        min(
+
+            probability,
+
+            100
+
+        )
+
+    )
+
+
+    if probability >= 70:
+
+        reversal["Signal"] = "HIGH REVERSAL RISK"
+
+
+    elif probability >= 50:
+
+        reversal["Signal"] = "WATCH REVERSAL"
+
+
+    return reversal
+
+
+# ==========================================================
+# REVERSAL DETECTOR DISPLAY V57
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Gold Reversal Detector V57"
+
+    )
+
+
+    reversal = ai_gold_reversal_detector_v57()
+
+
+    reversal_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            reversal.keys(),
+
+            "Value":
+
+            reversal.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        reversal_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 169
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 170
+# ==========================================================
+
+# ==========================================================
+# WEOS AI REVERSAL MEMORY V57
+# ==========================================================
+
+if "reversal_memory_v57" not in st.session_state:
+
+    st.session_state.reversal_memory_v57 = []
+
+
+def save_reversal_memory_v57():
+
+    reversal = ai_gold_reversal_detector_v57()
+
+
+    st.session_state.reversal_memory_v57.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Signal":
+
+            reversal["Signal"],
+
+            "Probability":
+
+            reversal["Probability"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.reversal_memory_v57
+
+    ) > 500:
+
+        st.session_state.reversal_memory_v57.pop(
+
+            0
+
+        )
+
+
+save_reversal_memory_v57()
+
+
+# ==========================================================
+# REVERSAL MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Reversal Memory V57"
+
+    )
+
+
+    reversal_memory_df = pd.DataFrame(
+
+        st.session_state.reversal_memory_v57[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        reversal_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI GOLD BREAKOUT DETECTOR V58
+# ==========================================================
+
+def ai_gold_breakout_detector_v58():
+
+    breakout = {
+
+        "Signal":
+
+        "NO BREAKOUT",
+
+        "Direction":
+
+        "NONE",
+
+        "Strength":
+
+        0,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    structure = market_structure_ai_v16()
+
+    momentum = ai_gold_momentum_fusion_v56()
+
+    volatility = volatility_engine_v5()
+
+    volume = analyze_volume_behavior()
+
+
+    strength = 20
+
+
+    if structure["State"] == "TRENDING":
+
+        strength += 25
+
+        breakout["Reason"].append(
+
+            "Trend structure"
+
+        )
+
+
+    if momentum["Strength"] >= 70:
+
+        strength += 25
+
+        breakout["Reason"].append(
+
+            "Strong momentum"
+
+        )
+
+
+    if volatility["Level"] == "HIGH":
+
+        strength += 15
+
+        breakout["Reason"].append(
+
+            "Volatility expansion"
+
+        )
+
+
+    if volume["Status"] != "UNKNOWN":
+
+        strength += 10
+
+        breakout["Reason"].append(
+
+            "Volume confirmation"
+
+        )
+
+
+    breakout["Strength"] = min(
+
+        strength,
+
+        100
+
+    )
+
+
+    if strength >= 75:
+
+        breakout["Signal"] = "BREAKOUT"
+
+        breakout["Direction"] = momentum["Direction"]
+
+
+    elif strength >= 50:
+
+        breakout["Signal"] = "POSSIBLE BREAKOUT"
+
+
+    return breakout
+
+
+# ==========================================================
+# BREAKOUT DISPLAY V58
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚀 Gold Breakout Detector V58"
+
+    )
+
+
+    breakout = ai_gold_breakout_detector_v58()
+
+
+    breakout_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            breakout.keys(),
+
+            "Value":
+
+            breakout.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        breakout_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS BREAKOUT MEMORY V58
+# ==========================================================
+
+if "breakout_memory_v58" not in st.session_state:
+
+    st.session_state.breakout_memory_v58 = []
+
+
+def save_breakout_memory_v58():
+
+    breakout = ai_gold_breakout_detector_v58()
+
+
+    st.session_state.breakout_memory_v58.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Signal":
+
+            breakout["Signal"],
+
+            "Direction":
+
+            breakout["Direction"],
+
+            "Strength":
+
+            breakout["Strength"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.breakout_memory_v58
+
+    ) > 500:
+
+        st.session_state.breakout_memory_v58.pop(
+
+            0
+
+        )
+
+
+save_breakout_memory_v58()
+
+
+# ==========================================================
+# BREAKOUT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚀 Breakout Memory V58"
+
+    )
+
+
+    breakout_memory_df = pd.DataFrame(
+
+        st.session_state.breakout_memory_v58[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        breakout_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# WEOS AI GOLD MARKET MAP V59
+# ==========================================================
+
+def ai_gold_market_map_v59():
+
+    market_map = {
+
+        "Trend":
+
+        "UNKNOWN",
+
+        "Momentum":
+
+        "UNKNOWN",
+
+        "Liquidity":
+
+        "UNKNOWN",
+
+        "Overall":
+
+        "WAIT"
+
+    }
+
+
+    structure = market_structure_ai_v16()
+
+    momentum = ai_gold_momentum_fusion_v56()
+
+    liquidity = ai_liquidity_hunt_v14()
+
+
+    market_map["Trend"] = structure["Bias"]
+
+    market_map["Momentum"] = momentum["Direction"]
+
+    market_map["Liquidity"] = liquidity["Status"]
+
+
+    if (
+
+        structure["Bias"] == "BULLISH"
+
+        and
+
+        momentum["Direction"] == "BUY"
+
+    ):
+
+        market_map["Overall"] = "BUY"
+
+
+    elif (
+
+        structure["Bias"] == "BEARISH"
+
+        and
+
+        momentum["Direction"] == "SELL"
+
+    ):
+
+        market_map["Overall"] = "SELL"
+
+
+    else:
+
+        market_map["Overall"] = "WAIT"
+
+
+    return market_map
+
+
+# ==========================================================
+# MARKET MAP DISPLAY V59
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🗺 Gold Market Map V59"
+
+    )
+
+
+    market_map = ai_gold_market_map_v59()
+
+
+    market_map_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            market_map.keys(),
+
+            "Value":
+
+            market_map.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        market_map_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 170
+# ==========================================================
