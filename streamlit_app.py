@@ -24061,3 +24061,653 @@ RISK_MANAGEMENT_AI_ENGINE = (
 # ==========================================================
 # KẾT THÚC ĐOẠN 246
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 247
+# ==========================================================
+
+class AITradingJournalRecord(BaseModel):
+    id: str
+    account_id: str = ""
+    symbol: str = ""
+    trade_type: str = ""
+    entry_price: float = 0.0
+    exit_price: float = 0.0
+    position_size: float = 0.0
+    profit_loss_usd: float = 0.0
+    holding_time_minutes: int = 0
+    market_condition: str = ""
+    strategy_name: str = ""
+    emotional_score: float = 0.0
+    execution_quality_score: float = 0.0
+    trade_quality_score: float = 0.0
+    ai_feedback: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_TRADING_JOURNAL_DATABASE: Dict[
+    str,
+    AITradingJournalRecord,
+] = {}
+
+
+class AITradingJournalEngine:
+
+    def register(
+        self,
+        record: AITradingJournalRecord,
+    ) -> None:
+
+        AI_TRADING_JOURNAL_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AITradingJournalRecord]:
+
+        return AI_TRADING_JOURNAL_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        AI_TRADING_JOURNAL_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        profit_score = (
+            100
+            if record.profit_loss_usd > 0
+            else
+            30
+        )
+
+
+        record.trade_quality_score = (
+            profit_score * 0.30
+            +
+            record.execution_quality_score * 0.30
+            +
+            record.emotional_score * 0.20
+            +
+            min(
+                record.holding_time_minutes
+                /
+                240
+                *
+                100,
+                100
+            )
+            *
+            0.20
+        )
+
+
+        if record.trade_quality_score >= 75:
+
+            record.ai_feedback = (
+                "HIGH_QUALITY_TRADE"
+            )
+
+        elif record.trade_quality_score >= 50:
+
+            record.ai_feedback = (
+                "ACCEPTABLE_TRADE"
+            )
+
+        else:
+
+            record.ai_feedback = (
+                "NEEDS_IMPROVEMENT"
+            )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[AITradingJournalRecord]:
+
+        return sorted(
+            AI_TRADING_JOURNAL_DATABASE.values(),
+            key=lambda item:
+            item.trade_quality_score,
+            reverse=True,
+        )
+
+
+AI_TRADING_JOURNAL_ENGINE = (
+    AITradingJournalEngine()
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 247
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 248
+# ==========================================================
+
+class AITradingPerformanceRecord(BaseModel):
+    id: str
+    account_id: str = ""
+    total_trades: int = 0
+    winning_trades: int = 0
+    losing_trades: int = 0
+    total_profit_usd: float = 0.0
+    total_loss_usd: float = 0.0
+    average_profit_trade: float = 0.0
+    average_loss_trade: float = 0.0
+    win_rate: float = 0.0
+    profit_factor: float = 0.0
+    risk_management_score: float = 0.0
+    strategy_consistency_score: float = 0.0
+    psychology_score: float = 0.0
+    overall_performance_score: float = 0.0
+    performance_level: str = ""
+    ai_analysis: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_TRADING_PERFORMANCE_DATABASE: Dict[
+    str,
+    AITradingPerformanceRecord,
+] = {}
+
+
+class AITradingPerformanceEngine:
+
+    def register(
+        self,
+        record: AITradingPerformanceRecord,
+    ) -> None:
+
+        AI_TRADING_PERFORMANCE_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AITradingPerformanceRecord]:
+
+        return AI_TRADING_PERFORMANCE_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        AI_TRADING_PERFORMANCE_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        if record.total_trades > 0:
+
+            record.win_rate = (
+                record.winning_trades
+                /
+                record.total_trades
+            ) * 100
+
+
+        if record.total_loss_usd != 0:
+
+            record.profit_factor = (
+                record.total_profit_usd
+                /
+                abs(
+                    record.total_loss_usd
+                )
+            )
+
+
+        if record.winning_trades > 0:
+
+            record.average_profit_trade = (
+                record.total_profit_usd
+                /
+                record.winning_trades
+            )
+
+
+        if record.losing_trades > 0:
+
+            record.average_loss_trade = (
+                record.total_loss_usd
+                /
+                record.losing_trades
+            )
+
+
+        record.overall_performance_score = (
+            record.win_rate * 0.25
+            +
+            min(
+                record.profit_factor
+                *
+                20,
+                100
+            )
+            *
+            0.25
+            +
+            record.risk_management_score * 0.20
+            +
+            record.strategy_consistency_score * 0.15
+            +
+            record.psychology_score * 0.15
+        )
+
+
+        if record.overall_performance_score >= 80:
+
+            record.performance_level = (
+                "ELITE_TRADER"
+            )
+
+        elif record.overall_performance_score >= 60:
+
+            record.performance_level = (
+                "PROFESSIONAL_LEVEL"
+            )
+
+        elif record.overall_performance_score >= 40:
+
+            record.performance_level = (
+                "DEVELOPING_TRADER"
+            )
+
+        else:
+
+            record.performance_level = (
+                "NEEDS_TRAINING"
+            )
+
+
+        record.ai_analysis = (
+            f"Trading performance: "
+            f"{record.performance_level}"
+        )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[AITradingPerformanceRecord]:
+
+        return sorted(
+            AI_TRADING_PERFORMANCE_DATABASE.values(),
+            key=lambda item:
+            item.overall_performance_score,
+            reverse=True,
+        )
+
+
+AI_TRADING_PERFORMANCE_ENGINE = (
+    AITradingPerformanceEngine()
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 248
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 249
+# ==========================================================
+
+class AITradingStrategyOptimizationRecord(BaseModel):
+    id: str
+    strategy_name: str
+    market_symbol: str = ""
+    timeframe: str = ""
+    historical_return_score: float = 0.0
+    win_rate_score: float = 0.0
+    risk_adjustment_score: float = 0.0
+    drawdown_score: float = 0.0
+    market_condition_score: float = 0.0
+    adaptability_score: float = 0.0
+    optimization_score: float = 0.0
+    recommended_action: str = ""
+    ai_suggestion: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_STRATEGY_OPTIMIZATION_DATABASE: Dict[
+    str,
+    AITradingStrategyOptimizationRecord,
+] = {}
+
+
+class AITradingStrategyOptimizationEngine:
+
+    def register(
+        self,
+        record: AITradingStrategyOptimizationRecord,
+    ) -> None:
+
+        AI_STRATEGY_OPTIMIZATION_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AITradingStrategyOptimizationRecord]:
+
+        return AI_STRATEGY_OPTIMIZATION_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        AI_STRATEGY_OPTIMIZATION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        record.optimization_score = (
+            record.historical_return_score * 0.20
+            +
+            record.win_rate_score * 0.20
+            +
+            record.risk_adjustment_score * 0.20
+            +
+            record.drawdown_score * 0.15
+            +
+            record.market_condition_score * 0.15
+            +
+            record.adaptability_score * 0.10
+        )
+
+
+        if record.optimization_score >= 80:
+
+            record.recommended_action = (
+                "KEEP_STRATEGY"
+            )
+
+            record.ai_suggestion = (
+                "Strategy is optimized "
+                "for current market conditions"
+            )
+
+
+        elif record.optimization_score >= 60:
+
+            record.recommended_action = (
+                "MINOR_ADJUSTMENT"
+            )
+
+            record.ai_suggestion = (
+                "Adjust risk parameters "
+                "and entry conditions"
+            )
+
+
+        else:
+
+            record.recommended_action = (
+                "REBUILD_STRATEGY"
+            )
+
+            record.ai_suggestion = (
+                "Strategy performance "
+                "requires improvement"
+            )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[AITradingStrategyOptimizationRecord]:
+
+        return sorted(
+            AI_STRATEGY_OPTIMIZATION_DATABASE.values(),
+            key=lambda item:
+            item.optimization_score,
+            reverse=True,
+        )
+
+
+
+AI_STRATEGY_OPTIMIZATION_ENGINE = (
+    AITradingStrategyOptimizationEngine()
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 249
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 250
+# ==========================================================
+
+class AIPortfolioOptimizationRecord(BaseModel):
+    id: str
+    portfolio_name: str
+    investor_profile: str = ""
+    total_capital_usd: float = 0.0
+    stock_allocation: float = 0.0
+    bond_allocation: float = 0.0
+    gold_allocation: float = 0.0
+    crypto_allocation: float = 0.0
+    cash_allocation: float = 0.0
+    real_estate_allocation: float = 0.0
+    expected_return_score: float = 0.0
+    risk_score: float = 0.0
+    diversification_score: float = 0.0
+    macro_alignment_score: float = 0.0
+    optimization_score: float = 0.0
+    recommended_allocation: str = ""
+    ai_advice: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_PORTFOLIO_OPTIMIZATION_DATABASE: Dict[
+    str,
+    AIPortfolioOptimizationRecord,
+] = {}
+
+
+class AIPortfolioOptimizationEngine:
+
+    def register(
+        self,
+        record: AIPortfolioOptimizationRecord,
+    ) -> None:
+
+        AI_PORTFOLIO_OPTIMIZATION_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AIPortfolioOptimizationRecord]:
+
+        return AI_PORTFOLIO_OPTIMIZATION_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        AI_PORTFOLIO_OPTIMIZATION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        record.optimization_score = (
+            record.expected_return_score * 0.25
+            +
+            record.diversification_score * 0.20
+            +
+            record.macro_alignment_score * 0.25
+            -
+            record.risk_score * 0.30
+        )
+
+
+        if record.optimization_score >= 75:
+
+            record.recommended_allocation = (
+                "GROWTH_OPTIMIZED"
+            )
+
+            record.ai_advice = (
+                "Portfolio aligned with "
+                "current macro environment"
+            )
+
+
+        elif record.optimization_score >= 50:
+
+            record.recommended_allocation = (
+                "BALANCED_OPTIMIZED"
+            )
+
+            record.ai_advice = (
+                "Maintain balance between "
+                "growth and protection"
+            )
+
+
+        else:
+
+            record.recommended_allocation = (
+                "DEFENSIVE_OPTIMIZED"
+            )
+
+            record.ai_advice = (
+                "Increase defensive assets "
+                "and reduce risk exposure"
+            )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[AIPortfolioOptimizationRecord]:
+
+        return sorted(
+            AI_PORTFOLIO_OPTIMIZATION_DATABASE.values(),
+            key=lambda item:
+            item.optimization_score,
+            reverse=True,
+        )
+
+
+
+AI_PORTFOLIO_OPTIMIZATION_ENGINE = (
+    AIPortfolioOptimizationEngine()
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 250
+# ==========================================================
