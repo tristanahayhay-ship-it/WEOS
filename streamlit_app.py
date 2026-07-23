@@ -29906,3 +29906,2649 @@ GLOBE_VALIDATION_ENGINE = (
 # ==========================================================
 # KẾT THÚC ĐOẠN 283
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 284
+# ==========================================================
+
+class GlobePersistenceEngine:
+
+    def save(
+        self,
+        filepath: str,
+    ) -> None:
+
+        snapshot = (
+            GLOBE_DATA_EXPORT_ENGINE
+            .export_snapshot()
+        )
+
+        with open(
+            filepath,
+            "wb",
+        ) as file:
+
+            file.write(
+
+                orjson.dumps(
+                    snapshot,
+                    option=
+                    orjson.OPT_INDENT_2
+                )
+
+            )
+
+
+    def load(
+        self,
+        filepath: str,
+    ) -> None:
+
+        with open(
+            filepath,
+            "rb",
+        ) as file:
+
+            snapshot = orjson.loads(
+                file.read()
+            )
+
+
+        GLOBE_ENGINE.clear()
+
+
+        for item in snapshot.get(
+            "nodes",
+            [],
+        ):
+
+            GLOBE_ENGINE.register_node(
+
+                GlobeNode(
+                    **item
+                )
+
+            )
+
+
+        for item in snapshot.get(
+            "flows",
+            [],
+        ):
+
+            GLOBE_ENGINE.register_flow(
+
+                GlobeFlow(
+                    **item
+                )
+
+            )
+
+
+    def backup(
+        self,
+        filepath: str,
+    ) -> None:
+
+        self.save(
+            filepath
+        )
+
+
+    def restore(
+        self,
+        filepath: str,
+    ) -> None:
+
+        self.load(
+            filepath
+        )
+
+
+    def exists(
+        self,
+        filepath: str,
+    ) -> bool:
+
+        return Path(
+            filepath
+        ).exists()
+
+
+    def snapshot_size(
+        self,
+        filepath: str,
+    ) -> int:
+
+        if not self.exists(
+            filepath
+        ):
+
+            return 0
+
+        return Path(
+            filepath
+        ).stat().st_size
+
+
+    def delete(
+        self,
+        filepath: str,
+    ) -> None:
+
+        path = Path(
+            filepath
+        )
+
+        if path.exists():
+
+            path.unlink()
+
+
+GLOBE_PERSISTENCE_ENGINE = (
+    GlobePersistenceEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 284
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 285
+# ==========================================================
+
+class GlobeAutoDiscoveryEngine:
+
+    def discover_node(
+        self,
+        node: GlobeNode,
+    ) -> bool:
+
+        if not GLOBE_VALIDATION_ENGINE.validate_node(
+            node
+        ):
+
+            return False
+
+        if node.id in GLOBE_NODE_DATABASE:
+
+            return False
+
+        GLOBE_ENGINE.register_node(
+            node
+        )
+
+        return True
+
+
+    def discover_flow(
+        self,
+        flow: GlobeFlow,
+    ) -> bool:
+
+        if not GLOBE_VALIDATION_ENGINE.validate_flow(
+            flow
+        ):
+
+            return False
+
+        if flow.id in GLOBE_FLOW_DATABASE:
+
+            return False
+
+        GLOBE_ENGINE.register_flow(
+            flow
+        )
+
+        return True
+
+
+    def discover_nodes(
+        self,
+        nodes: List[GlobeNode],
+    ) -> int:
+
+        discovered = 0
+
+        for node in nodes:
+
+            if self.discover_node(
+                node
+            ):
+
+                discovered += 1
+
+        return discovered
+
+
+    def discover_flows(
+        self,
+        flows: List[GlobeFlow],
+    ) -> int:
+
+        discovered = 0
+
+        for flow in flows:
+
+            if self.discover_flow(
+                flow
+            ):
+
+                discovered += 1
+
+        return discovered
+
+
+    def discover_snapshot(
+        self,
+        nodes: List[GlobeNode],
+        flows: List[GlobeFlow],
+    ) -> Dict[str, int]:
+
+        return {
+
+            "new_nodes":
+                self.discover_nodes(
+                    nodes
+                ),
+
+            "new_flows":
+                self.discover_flows(
+                    flows
+                ),
+
+            "total_nodes":
+                len(
+                    GLOBE_NODE_DATABASE
+                ),
+
+            "total_flows":
+                len(
+                    GLOBE_FLOW_DATABASE
+                ),
+
+        }
+
+
+GLOBE_AUTO_DISCOVERY_ENGINE = (
+    GlobeAutoDiscoveryEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 285
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 286
+# ==========================================================
+
+class GlobeWorldBuilderEngine:
+
+    def initialize(
+        self,
+    ) -> None:
+
+        GLOBE_ENGINE.clear()
+
+        GLOBE_HIERARCHY_ENGINE.clear()
+
+
+    def add_country(
+        self,
+        node: GlobeNode,
+    ) -> None:
+
+        node.layer = GlobeLayerType.COUNTRY
+
+        GLOBE_ENGINE.register_node(
+            node
+        )
+
+
+    def add_region(
+        self,
+        parent_id: str,
+        node: GlobeNode,
+    ) -> None:
+
+        node.layer = GlobeLayerType.REGION
+
+        GLOBE_ENGINE.register_node(
+            node
+        )
+
+        GLOBE_HIERARCHY_ENGINE.add_relation(
+            parent_id,
+            node.id,
+        )
+
+
+    def add_city(
+        self,
+        parent_id: str,
+        node: GlobeNode,
+    ) -> None:
+
+        node.layer = GlobeLayerType.CITY
+
+        GLOBE_ENGINE.register_node(
+            node
+        )
+
+        GLOBE_HIERARCHY_ENGINE.add_relation(
+            parent_id,
+            node.id,
+        )
+
+
+    def add_company(
+        self,
+        parent_id: str,
+        node: GlobeNode,
+    ) -> None:
+
+        node.layer = GlobeLayerType.COMPANY
+
+        GLOBE_ENGINE.register_node(
+            node
+        )
+
+        GLOBE_HIERARCHY_ENGINE.add_relation(
+            parent_id,
+            node.id,
+        )
+
+
+    def connect(
+        self,
+        source_id: str,
+        target_id: str,
+        value: float = 0.0,
+    ) -> None:
+
+        flow = GlobeFlow(
+
+            id=f"{source_id}_{target_id}",
+
+            source_node=source_id,
+
+            target_node=target_id,
+
+            value=value,
+
+            width=max(
+                1.0,
+                value / 1_000_000_000,
+            ),
+
+        )
+
+        GLOBE_ENGINE.register_flow(
+            flow
+        )
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "countries":
+
+                len(
+
+                    GLOBE_SEARCH_ENGINE.search_by_layer(
+
+                        GlobeLayerType.COUNTRY
+
+                    )
+
+                ),
+
+            "regions":
+
+                len(
+
+                    GLOBE_SEARCH_ENGINE.search_by_layer(
+
+                        GlobeLayerType.REGION
+
+                    )
+
+                ),
+
+            "cities":
+
+                len(
+
+                    GLOBE_SEARCH_ENGINE.search_by_layer(
+
+                        GlobeLayerType.CITY
+
+                    )
+
+                ),
+
+            "companies":
+
+                len(
+
+                    GLOBE_SEARCH_ENGINE.search_by_layer(
+
+                        GlobeLayerType.COMPANY
+
+                    )
+
+                ),
+
+            "flows":
+
+                len(
+                    GLOBE_FLOW_DATABASE
+                ),
+
+        }
+
+
+GLOBE_WORLD_BUILDER_ENGINE = (
+    GlobeWorldBuilderEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 286
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 287
+# ==========================================================
+
+class GlobeRealtimeWorldEngine:
+
+    def build(
+        self,
+    ) -> None:
+
+        GLOBE_WORLD_BUILDER_ENGINE.initialize()
+
+        self.load_countries()
+
+        self.load_regions()
+
+        self.load_cities()
+
+        self.load_companies()
+
+        self.load_infrastructure()
+
+        self.build_flows()
+
+
+    def load_countries(
+        self,
+    ) -> None:
+
+        for country in COUNTRY_DATABASE.values():
+
+            node = GlobeNode(
+
+                id=country.id,
+
+                name=country.name,
+
+                layer=GlobeLayerType.COUNTRY,
+
+                latitude=country.latitude,
+
+                longitude=country.longitude,
+
+                size=120000,
+
+                color=[40, 180, 255],
+
+                metadata={
+
+                    "iso": getattr(
+                        country,
+                        "iso_code",
+                        "",
+                    ),
+
+                },
+
+            )
+
+            GLOBE_ENGINE.register_node(
+                node
+            )
+
+
+    def load_regions(
+        self,
+    ) -> None:
+
+        for region in REGION_DATABASE.values():
+
+            node = GlobeNode(
+
+                id=region.id,
+
+                name=region.name,
+
+                layer=GlobeLayerType.REGION,
+
+                latitude=region.latitude,
+
+                longitude=region.longitude,
+
+                size=50000,
+
+                color=[0, 255, 120],
+
+            )
+
+            GLOBE_ENGINE.register_node(
+                node
+            )
+
+
+    def load_cities(
+        self,
+    ) -> None:
+
+        for city in CITY_DATABASE.values():
+
+            node = GlobeNode(
+
+                id=city.id,
+
+                name=city.name,
+
+                layer=GlobeLayerType.CITY,
+
+                latitude=city.latitude,
+
+                longitude=city.longitude,
+
+                size=18000,
+
+                color=[255, 210, 0],
+
+            )
+
+            GLOBE_ENGINE.register_node(
+                node
+            )
+
+
+    def load_companies(
+        self,
+    ) -> None:
+
+        for company in COMPANY_DATABASE.values():
+
+            node = GlobeNode(
+
+                id=company.id,
+
+                name=company.name,
+
+                layer=GlobeLayerType.COMPANY,
+
+                latitude=company.latitude,
+
+                longitude=company.longitude,
+
+                size=9000,
+
+                color=[255, 90, 90],
+
+            )
+
+            GLOBE_ENGINE.register_node(
+                node
+            )
+
+
+    def load_infrastructure(
+        self,
+    ) -> None:
+
+        for factory in FACTORY_DATABASE.values():
+
+            node = GlobeNode(
+
+                id=factory.id,
+
+                name=factory.name,
+
+                layer=GlobeLayerType.FACTORY,
+
+                latitude=factory.latitude,
+
+                longitude=factory.longitude,
+
+                size=6000,
+
+                color=[255, 140, 0],
+
+            )
+
+            GLOBE_ENGINE.register_node(
+                node
+            )
+
+
+    def build_flows(
+        self,
+    ) -> None:
+
+        for flow in GLOBAL_FLOW_ENGINE.flows():
+
+            if (
+
+                flow.source
+
+                not in GLOBE_NODE_DATABASE
+
+            ):
+
+                continue
+
+            if (
+
+                flow.target
+
+                not in GLOBE_NODE_DATABASE
+
+            ):
+
+                continue
+
+            GLOBE_ENGINE.register_flow(
+
+                GlobeFlow(
+
+                    id=flow.id,
+
+                    source_node=flow.source,
+
+                    target_node=flow.target,
+
+                    value=flow.value,
+
+                    width=max(
+
+                        1,
+
+                        flow.value
+
+                        /
+
+                        1_000_000_000,
+
+                    ),
+
+                    color=[0, 255, 255],
+
+                )
+
+            )
+
+
+GLOBE_REALTIME_WORLD_ENGINE = (
+    GlobeRealtimeWorldEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 287
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 288
+# ==========================================================
+
+class GlobeDashboardEngine:
+
+    def render(
+        self,
+    ) -> None:
+
+        GLOBE_ANIMATION_ENGINE.tick()
+
+        GLOBE_REALTIME_SYNC_ENGINE.sync()
+
+        deck = pdk.Deck(
+
+            layers=GLOBE_RENDER_ENGINE.deck_layers(),
+
+            initial_view_state=
+
+            GLOBE_CAMERA_ENGINE.view_state(),
+
+            tooltip={
+
+                "html": (
+                    "<b>{name}</b><br/>"
+                    "{layer}"
+                ),
+
+                "style": {
+
+                    "backgroundColor": "#111111",
+
+                    "color": "white",
+
+                },
+
+            },
+
+            map_style=None,
+
+        )
+
+        st.pydeck_chart(
+
+            deck,
+
+            use_container_width=True,
+
+        )
+
+
+    def render_statistics(
+        self,
+    ) -> None:
+
+        stats = (
+
+            GLOBE_STATISTICS_ENGINE.summary()
+
+        )
+
+        col1, col2, col3, col4, col5 = (
+
+            st.columns(5)
+
+        )
+
+        col1.metric(
+
+            "Countries",
+
+            stats["layers"].get(
+
+                "COUNTRY",
+
+                0,
+
+            ),
+
+        )
+
+        col2.metric(
+
+            "Cities",
+
+            stats["layers"].get(
+
+                "CITY",
+
+                0,
+
+            ),
+
+        )
+
+        col3.metric(
+
+            "Companies",
+
+            stats["layers"].get(
+
+                "COMPANY",
+
+                0,
+
+            ),
+
+        )
+
+        col4.metric(
+
+            "Flows",
+
+            stats["flows"],
+
+        )
+
+        col5.metric(
+
+            "Nodes",
+
+            stats["nodes"],
+
+        )
+
+
+    def render_search(
+        self,
+    ) -> None:
+
+        keyword = st.text_input(
+
+            "Search"
+
+        )
+
+        if not keyword:
+
+            return
+
+        results = (
+
+            GLOBE_SEARCH_ENGINE.search(
+
+                keyword
+
+            )
+
+        )
+
+        for node in results:
+
+            st.write(
+
+                f"{node.layer.value} | "
+
+                f"{node.name}"
+
+            )
+
+
+    def render_system_status(
+        self,
+    ) -> None:
+
+        status = (
+
+            GLOBE_REALTIME_SYNC_ENGINE.status()
+
+        )
+
+        st.caption(
+
+            f"Realtime: "
+
+            f"{status['enabled']}"
+
+        )
+
+        st.caption(
+
+            f"Sync Count: "
+
+            f"{status['sync_count']}"
+
+        )
+
+
+GLOBE_DASHBOARD_ENGINE = (
+    GlobeDashboardEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 288
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 289
+# ==========================================================
+
+class WEOSApplication:
+
+    def __init__(
+        self,
+    ):
+
+        self.initialized = False
+
+
+    def initialize(
+        self,
+    ) -> None:
+
+        if self.initialized:
+
+            return
+
+
+        GLOBE_REALTIME_WORLD_ENGINE.build()
+
+        self.initialized = True
+
+
+    def sidebar(
+        self,
+    ) -> None:
+
+        st.sidebar.title(
+            "WEOS"
+        )
+
+        st.sidebar.caption(
+            "World Economic Observation System"
+        )
+
+        st.sidebar.metric(
+
+            "Zoom",
+
+            round(
+                GLOBE_CAMERA_ENGINE.zoom,
+                2,
+            ),
+
+        )
+
+        if st.sidebar.button(
+            "Reset Camera"
+        ):
+
+            GLOBE_CAMERA_ENGINE.reset()
+
+
+        if st.sidebar.button(
+            "Show All"
+        ):
+
+            GLOBE_INTERACTION_ENGINE.show_all()
+
+
+        if st.sidebar.button(
+            "Sync Now"
+        ):
+
+            GLOBE_REALTIME_SYNC_ENGINE.sync()
+
+
+    def header(
+        self,
+    ) -> None:
+
+        st.title(
+            "🌍 WEOS"
+        )
+
+        st.caption(
+
+            "World Economic Observation System"
+
+        )
+
+
+    def body(
+        self,
+    ) -> None:
+
+        GLOBE_DASHBOARD_ENGINE.render_statistics()
+
+        GLOBE_DASHBOARD_ENGINE.render_search()
+
+        GLOBE_DASHBOARD_ENGINE.render()
+
+        GLOBE_DASHBOARD_ENGINE.render_system_status()
+
+
+    def footer(
+        self,
+    ) -> None:
+
+        st.divider()
+
+        st.caption(
+
+            "WEOS • Real Economy • Realtime"
+
+        )
+
+
+    def run(
+        self,
+    ) -> None:
+
+        self.initialize()
+
+        self.sidebar()
+
+        self.header()
+
+        self.body()
+
+        self.footer()
+
+
+WEOS_APP = WEOSApplication()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 289
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 290
+# ==========================================================
+
+def run_weos() -> None:
+
+    st.set_page_config(
+
+        page_title="WEOS",
+
+        page_icon="🌍",
+
+        layout="wide",
+
+        initial_sidebar_state="expanded",
+
+    )
+
+
+    WEOS_APP.run()
+
+
+
+if __name__ == "__main__":
+
+    run_weos()
+
+
+# ==========================================================
+# WEOS BOOTSTRAP
+# ==========================================================
+
+try:
+
+    if "weos_initialized" not in st.session_state:
+
+        st.session_state.weos_initialized = True
+
+        GLOBE_REALTIME_WORLD_ENGINE.build()
+
+except Exception as error:
+
+    st.error(
+
+        f"Initialization Error: {error}"
+
+    )
+
+
+try:
+
+    GLOBE_ANIMATION_ENGINE.tick()
+
+except Exception:
+
+    pass
+
+
+try:
+
+    GLOBE_REALTIME_SYNC_ENGINE.sync()
+
+except Exception:
+
+    pass
+
+
+try:
+
+    if GLOBE_VALIDATION_ENGINE.is_valid():
+
+        WEOS_APP.run()
+
+    else:
+
+        report = (
+
+            GLOBE_VALIDATION_ENGINE.report()
+
+        )
+
+        st.error(
+
+            "WEOS validation failed."
+
+        )
+
+        st.json(report)
+
+except Exception as error:
+
+    st.exception(error)
+
+
+# ==========================================================
+# BUILD INFORMATION
+# ==========================================================
+
+WEOS_BUILD = {
+
+    "project": "WEOS",
+
+    "version": "1.0.0",
+
+    "status": "Prototype",
+
+    "frontend": "Streamlit",
+
+    "visualization": "PyDeck",
+
+    "mode": "Realtime",
+
+    "globe": True,
+
+    "economic_network": True,
+
+    "capital_flow": True,
+
+    "ai_engine": True,
+
+    "completed_chunk": 290,
+
+}
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 290
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 291
+# ==========================================================
+
+class WEOSHealthEngine:
+
+    def system_status(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "nodes":
+                len(
+                    GLOBE_NODE_DATABASE
+                ),
+
+            "flows":
+                len(
+                    GLOBE_FLOW_DATABASE
+                ),
+
+            "realtime":
+
+                GLOBE_REALTIME_SYNC_ENGINE.enabled,
+
+            "last_sync":
+
+                GLOBE_REALTIME_SYNC_ENGINE.last_sync,
+
+            "validation":
+
+                GLOBE_VALIDATION_ENGINE.is_valid(),
+
+            "build":
+
+                WEOS_BUILD.get(
+                    "version",
+                    "unknown",
+                ),
+
+            "generated_at":
+
+                utc_now(),
+
+        }
+
+
+    def health_score(
+        self,
+    ) -> float:
+
+        score = 100.0
+
+        if not GLOBE_VALIDATION_ENGINE.is_valid():
+
+            score -= 40
+
+        if len(
+            GLOBE_NODE_DATABASE
+        ) == 0:
+
+            score -= 30
+
+        if len(
+            GLOBE_FLOW_DATABASE
+        ) == 0:
+
+            score -= 20
+
+        if not GLOBE_REALTIME_SYNC_ENGINE.enabled:
+
+            score -= 10
+
+        return max(
+            score,
+            0.0,
+        )
+
+
+    def health_level(
+        self,
+    ) -> str:
+
+        score = self.health_score()
+
+        if score >= 90:
+
+            return "EXCELLENT"
+
+        if score >= 75:
+
+            return "GOOD"
+
+        if score >= 50:
+
+            return "WARNING"
+
+        return "CRITICAL"
+
+
+    def render(
+        self,
+    ) -> None:
+
+        status = self.system_status()
+
+        col1, col2, col3 = st.columns(3)
+
+        col1.metric(
+
+            "Health",
+
+            self.health_level(),
+
+        )
+
+        col2.metric(
+
+            "Score",
+
+            f"{self.health_score():.1f}",
+
+        )
+
+        col3.metric(
+
+            "Realtime",
+
+            "ON"
+
+            if status["realtime"]
+
+            else "OFF",
+
+        )
+
+        with st.expander(
+
+            "System Status",
+
+            expanded=False,
+
+        ):
+
+            st.json(
+                status
+            )
+
+
+WEOS_HEALTH_ENGINE = (
+    WEOSHealthEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 291
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 292
+# ==========================================================
+
+class WEOSPerformanceEngine:
+
+    def __init__(self):
+
+        self.start_time = utc_now()
+
+        self.frame_count = 0
+
+        self.last_frame_time = utc_now()
+
+
+    def tick(
+        self,
+    ) -> None:
+
+        self.frame_count += 1
+
+        self.last_frame_time = utc_now()
+
+
+    def uptime_seconds(
+        self,
+    ) -> float:
+
+        return (
+
+            utc_now()
+
+            -
+
+            self.start_time
+
+        ).total_seconds()
+
+
+    def fps(
+        self,
+    ) -> float:
+
+        uptime = self.uptime_seconds()
+
+        if uptime <= 0:
+
+            return 0.0
+
+        return (
+
+            self.frame_count
+
+            /
+
+            uptime
+
+        )
+
+
+    def memory_summary(
+        self,
+    ) -> Dict[str, int]:
+
+        return {
+
+            "nodes":
+
+                len(
+                    GLOBE_NODE_DATABASE
+                ),
+
+            "flows":
+
+                len(
+                    GLOBE_FLOW_DATABASE
+                ),
+
+            "companies":
+
+                len(
+                    COMPANY_DATABASE
+                ),
+
+            "countries":
+
+                len(
+                    COUNTRY_DATABASE
+                ),
+
+        }
+
+
+    def performance_report(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "uptime":
+
+                self.uptime_seconds(),
+
+            "frames":
+
+                self.frame_count,
+
+            "fps":
+
+                round(
+
+                    self.fps(),
+
+                    2,
+
+                ),
+
+            "memory":
+
+                self.memory_summary(),
+
+            "generated_at":
+
+                utc_now(),
+
+        }
+
+
+    def render(
+        self,
+    ) -> None:
+
+        self.tick()
+
+        report = (
+
+            self.performance_report()
+
+        )
+
+        with st.expander(
+
+            "Performance",
+
+            expanded=False,
+
+        ):
+
+            st.json(
+
+                report
+
+            )
+
+
+WEOS_PERFORMANCE_ENGINE = (
+
+    WEOSPerformanceEngine()
+
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 292
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 293
+# ==========================================================
+
+class WEOSMonitoringEngine:
+
+    def __init__(self):
+
+        self.events: List[
+            Dict[str, Any]
+        ] = []
+
+        self.max_events = 1000
+
+
+    def log(
+        self,
+        level: str,
+        message: str,
+        source: str = "SYSTEM",
+    ) -> None:
+
+        self.events.append(
+
+            {
+
+                "time": utc_now(),
+
+                "level": level,
+
+                "source": source,
+
+                "message": message,
+
+            }
+
+        )
+
+        if len(
+            self.events
+        ) > self.max_events:
+
+            self.events.pop(
+                0
+            )
+
+
+    def info(
+        self,
+        message: str,
+        source: str = "SYSTEM",
+    ) -> None:
+
+        self.log(
+            "INFO",
+            message,
+            source,
+        )
+
+
+    def warning(
+        self,
+        message: str,
+        source: str = "SYSTEM",
+    ) -> None:
+
+        self.log(
+            "WARNING",
+            message,
+            source,
+        )
+
+
+    def error(
+        self,
+        message: str,
+        source: str = "SYSTEM",
+    ) -> None:
+
+        self.log(
+            "ERROR",
+            message,
+            source,
+        )
+
+
+    def latest(
+        self,
+        limit: int = 20,
+    ) -> List[
+        Dict[str, Any]
+    ]:
+
+        return self.events[
+            -limit:
+        ]
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        self.events.clear()
+
+
+    def render(
+        self,
+    ) -> None:
+
+        with st.expander(
+
+            "System Log",
+
+            expanded=False,
+
+        ):
+
+            if not self.events:
+
+                st.caption(
+
+                    "No events."
+
+                )
+
+                return
+
+            st.dataframe(
+
+                pd.DataFrame(
+
+                    self.latest()
+
+                ),
+
+                use_container_width=True,
+
+            )
+
+
+WEOS_MONITORING_ENGINE = (
+    WEOSMonitoringEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 293
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 294
+# ==========================================================
+
+class WEOSConfigurationEngine:
+
+    def __init__(self):
+
+        self.config: Dict[
+            str,
+            Any,
+        ] = {
+
+            "theme": "dark",
+
+            "language": "vi",
+
+            "realtime": True,
+
+            "animation": True,
+
+            "auto_sync": True,
+
+            "show_flows": True,
+
+            "show_nodes": True,
+
+            "show_labels": True,
+
+            "debug": False,
+
+        }
+
+
+    def get(
+        self,
+        key: str,
+        default: Any = None,
+    ) -> Any:
+
+        return self.config.get(
+            key,
+            default,
+        )
+
+
+    def set(
+        self,
+        key: str,
+        value: Any,
+    ) -> None:
+
+        self.config[
+            key
+        ] = value
+
+
+    def update(
+        self,
+        values: Dict[
+            str,
+            Any,
+        ],
+    ) -> None:
+
+        self.config.update(
+            values
+        )
+
+
+    def reset(
+        self,
+    ) -> None:
+
+        self.__init__()
+
+
+    def export(
+        self,
+    ) -> Dict[
+        str,
+        Any,
+    ]:
+
+        return dict(
+            self.config
+        )
+
+
+    def render(
+        self,
+    ) -> None:
+
+        with st.sidebar.expander(
+
+            "Configuration",
+
+            expanded=False,
+
+        ):
+
+            realtime = st.checkbox(
+
+                "Realtime",
+
+                value=self.get(
+                    "realtime"
+                ),
+
+            )
+
+            animation = st.checkbox(
+
+                "Animation",
+
+                value=self.get(
+                    "animation"
+                ),
+
+            )
+
+            debug = st.checkbox(
+
+                "Debug",
+
+                value=self.get(
+                    "debug"
+                ),
+
+            )
+
+            self.set(
+                "realtime",
+                realtime,
+            )
+
+            self.set(
+                "animation",
+                animation,
+            )
+
+            self.set(
+                "debug",
+                debug,
+            )
+
+
+WEOS_CONFIGURATION_ENGINE = (
+    WEOSConfigurationEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 294
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 295
+# ==========================================================
+
+class WEOSNotificationEngine:
+
+    def __init__(self):
+
+        self.notifications: List[
+            Dict[str, Any]
+        ] = []
+
+        self.max_notifications = 200
+
+
+    def push(
+        self,
+        title: str,
+        message: str,
+        level: str = "INFO",
+    ) -> None:
+
+        self.notifications.append(
+
+            {
+
+                "time": utc_now(),
+
+                "title": title,
+
+                "message": message,
+
+                "level": level,
+
+            }
+
+        )
+
+        if (
+
+            len(
+                self.notifications
+            )
+
+            >
+
+            self.max_notifications
+
+        ):
+
+            self.notifications.pop(
+                0
+            )
+
+
+    def info(
+        self,
+        title: str,
+        message: str,
+    ) -> None:
+
+        self.push(
+            title,
+            message,
+            "INFO",
+        )
+
+
+    def warning(
+        self,
+        title: str,
+        message: str,
+    ) -> None:
+
+        self.push(
+            title,
+            message,
+            "WARNING",
+        )
+
+
+    def error(
+        self,
+        title: str,
+        message: str,
+    ) -> None:
+
+        self.push(
+            title,
+            message,
+            "ERROR",
+        )
+
+
+    def latest(
+        self,
+        limit: int = 10,
+    ) -> List[
+        Dict[str, Any]
+    ]:
+
+        return self.notifications[
+            -limit:
+        ]
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        self.notifications.clear()
+
+
+    def render(
+        self,
+    ) -> None:
+
+        with st.sidebar.expander(
+
+            "Notifications",
+
+            expanded=False,
+
+        ):
+
+            if not self.notifications:
+
+                st.caption(
+
+                    "No notifications."
+
+                )
+
+                return
+
+
+            for item in reversed(
+
+                self.latest()
+
+            ):
+
+                st.write(
+
+                    f"[{item['level']}] "
+
+                    f"{item['title']}"
+
+                )
+
+                st.caption(
+
+                    item["message"]
+
+                )
+
+
+WEOS_NOTIFICATION_ENGINE = (
+    WEOSNotificationEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 295
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 296
+# ==========================================================
+
+class WEOSStartupEngine:
+
+    def __init__(self):
+
+        self.started = False
+
+        self.started_at: Optional[
+            datetime
+        ] = None
+
+
+    def startup(
+        self,
+    ) -> None:
+
+        if self.started:
+
+            return
+
+
+        WEOS_MONITORING_ENGINE.info(
+
+            "Starting WEOS",
+
+            source="BOOT",
+
+        )
+
+
+        GLOBE_REALTIME_WORLD_ENGINE.build()
+
+
+        GLOBE_REALTIME_SYNC_ENGINE.sync()
+
+
+        GLOBE_ANIMATION_ENGINE.reset()
+
+
+        self.started = True
+
+        self.started_at = utc_now()
+
+
+        WEOS_NOTIFICATION_ENGINE.info(
+
+            "WEOS",
+
+            "System started successfully.",
+
+        )
+
+
+    def shutdown(
+        self,
+    ) -> None:
+
+        WEOS_MONITORING_ENGINE.info(
+
+            "Stopping WEOS",
+
+            source="BOOT",
+
+        )
+
+        GLOBE_REALTIME_SYNC_ENGINE.disable()
+
+        self.started = False
+
+
+    def restart(
+        self,
+    ) -> None:
+
+        self.shutdown()
+
+        self.startup()
+
+
+    def status(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "started":
+
+                self.started,
+
+            "started_at":
+
+                self.started_at,
+
+            "uptime":
+
+                WEOS_PERFORMANCE_ENGINE.uptime_seconds(),
+
+            "health":
+
+                WEOS_HEALTH_ENGINE.health_level(),
+
+        }
+
+
+    def render(
+        self,
+    ) -> None:
+
+        with st.sidebar.expander(
+
+            "System",
+
+            expanded=False,
+
+        ):
+
+            if st.button(
+
+                "Restart WEOS"
+
+            ):
+
+                self.restart()
+
+
+            if st.button(
+
+                "Shutdown WEOS"
+
+            ):
+
+                self.shutdown()
+
+
+            st.json(
+
+                self.status()
+
+            )
+
+
+WEOS_STARTUP_ENGINE = (
+    WEOSStartupEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 296
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 297
+# ==========================================================
+
+class WEOSRuntimeEngine:
+
+    def __init__(self):
+
+        self.running = False
+
+        self.last_update: Optional[
+            datetime
+        ] = None
+
+        self.loop_counter = 0
+
+
+    def start(
+        self,
+    ) -> None:
+
+        self.running = True
+
+        self.last_update = utc_now()
+
+        WEOS_MONITORING_ENGINE.info(
+
+            "Runtime started",
+
+            source="RUNTIME",
+
+        )
+
+
+    def stop(
+        self,
+    ) -> None:
+
+        self.running = False
+
+        WEOS_MONITORING_ENGINE.info(
+
+            "Runtime stopped",
+
+            source="RUNTIME",
+
+        )
+
+
+    def tick(
+        self,
+    ) -> None:
+
+        if not self.running:
+
+            return
+
+
+        self.loop_counter += 1
+
+        self.last_update = utc_now()
+
+
+        if WEOS_CONFIGURATION_ENGINE.get(
+            "animation",
+            True,
+        ):
+
+            GLOBE_ANIMATION_ENGINE.tick()
+
+
+        if WEOS_CONFIGURATION_ENGINE.get(
+            "realtime",
+            True,
+        ):
+
+            GLOBE_REALTIME_SYNC_ENGINE.sync()
+
+
+    def runtime_status(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "running":
+
+                self.running,
+
+            "loops":
+
+                self.loop_counter,
+
+            "last_update":
+
+                self.last_update,
+
+            "animation":
+
+                WEOS_CONFIGURATION_ENGINE.get(
+                    "animation"
+                ),
+
+            "realtime":
+
+                WEOS_CONFIGURATION_ENGINE.get(
+                    "realtime"
+                ),
+
+        }
+
+
+    def render(
+        self,
+    ) -> None:
+
+        self.tick()
+
+        with st.sidebar.expander(
+
+            "Runtime",
+
+            expanded=False,
+
+        ):
+
+            st.json(
+
+                self.runtime_status()
+
+            )
+
+
+WEOS_RUNTIME_ENGINE = (
+    WEOSRuntimeEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 297
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 298
+# ==========================================================
+
+class WEOSLifecycleEngine:
+
+    def __init__(self):
+
+        self.state = "CREATED"
+
+        self.history: List[
+            Dict[str, Any]
+        ] = []
+
+
+    def transition(
+        self,
+        new_state: str,
+    ) -> None:
+
+        self.state = new_state
+
+        self.history.append(
+
+            {
+
+                "state": new_state,
+
+                "time": utc_now(),
+
+            }
+
+        )
+
+        WEOS_MONITORING_ENGINE.info(
+
+            f"Lifecycle -> {new_state}",
+
+            source="LIFECYCLE",
+
+        )
+
+
+    def create(
+        self,
+    ) -> None:
+
+        self.transition(
+            "CREATED"
+        )
+
+
+    def initialize(
+        self,
+    ) -> None:
+
+        self.transition(
+            "INITIALIZED"
+        )
+
+
+    def start(
+        self,
+    ) -> None:
+
+        WEOS_STARTUP_ENGINE.startup()
+
+        WEOS_RUNTIME_ENGINE.start()
+
+        self.transition(
+            "RUNNING"
+        )
+
+
+    def stop(
+        self,
+    ) -> None:
+
+        WEOS_RUNTIME_ENGINE.stop()
+
+        WEOS_STARTUP_ENGINE.shutdown()
+
+        self.transition(
+            "STOPPED"
+        )
+
+
+    def restart(
+        self,
+    ) -> None:
+
+        self.stop()
+
+        self.start()
+
+
+    def status(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "state":
+
+                self.state,
+
+            "history":
+
+                len(
+                    self.history
+                ),
+
+            "runtime":
+
+                WEOS_RUNTIME_ENGINE.running,
+
+            "startup":
+
+                WEOS_STARTUP_ENGINE.started,
+
+            "generated_at":
+
+                utc_now(),
+
+        }
+
+
+    def render(
+        self,
+    ) -> None:
+
+        with st.sidebar.expander(
+
+            "Lifecycle",
+
+            expanded=False,
+
+        ):
+
+            st.json(
+
+                self.status()
+
+            )
+
+
+WEOS_LIFECYCLE_ENGINE = (
+    WEOSLifecycleEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 298
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 299
+# ==========================================================
+
+class WEOSKernel:
+
+    def __init__(self):
+
+        self.version = "1.0.0"
+
+        self.started = False
+
+        self.boot_time: Optional[
+            datetime
+        ] = None
+
+
+    def boot(
+        self,
+    ) -> None:
+
+        if self.started:
+
+            return
+
+        WEOS_LIFECYCLE_ENGINE.initialize()
+
+        WEOS_LIFECYCLE_ENGINE.start()
+
+        self.boot_time = utc_now()
+
+        self.started = True
+
+        WEOS_MONITORING_ENGINE.info(
+
+            "WEOS Kernel Booted",
+
+            source="KERNEL",
+
+        )
+
+
+    def shutdown(
+        self,
+    ) -> None:
+
+        if not self.started:
+
+            return
+
+        WEOS_LIFECYCLE_ENGINE.stop()
+
+        self.started = False
+
+        WEOS_MONITORING_ENGINE.info(
+
+            "WEOS Kernel Shutdown",
+
+            source="KERNEL",
+
+        )
+
+
+    def reboot(
+        self,
+    ) -> None:
+
+        self.shutdown()
+
+        self.boot()
+
+
+    def uptime(
+        self,
+    ) -> float:
+
+        if self.boot_time is None:
+
+            return 0.0
+
+        return (
+
+            utc_now()
+
+            -
+
+            self.boot_time
+
+        ).total_seconds()
+
+
+    def status(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "version":
+
+                self.version,
+
+            "started":
+
+                self.started,
+
+            "boot_time":
+
+                self.boot_time,
+
+            "uptime_seconds":
+
+                self.uptime(),
+
+            "health":
+
+                WEOS_HEALTH_ENGINE.health_level(),
+
+            "performance":
+
+                WEOS_PERFORMANCE_ENGINE.performance_report(),
+
+        }
+
+
+    def render(
+        self,
+    ) -> None:
+
+        with st.sidebar.expander(
+
+            "Kernel",
+
+            expanded=False,
+
+        ):
+
+            st.json(
+
+                self.status()
+
+            )
+
+
+WEOS_KERNEL = (
+    WEOSKernel()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 299
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 300
+# ==========================================================
+
+def main() -> None:
+
+    WEOS_KERNEL.boot()
+
+    WEOS_CONFIGURATION_ENGINE.render()
+
+    WEOS_STARTUP_ENGINE.render()
+
+    WEOS_RUNTIME_ENGINE.render()
+
+    WEOS_HEALTH_ENGINE.render()
+
+    WEOS_PERFORMANCE_ENGINE.render()
+
+    WEOS_MONITORING_ENGINE.render()
+
+    WEOS_NOTIFICATION_ENGINE.render()
+
+    WEOS_LIFECYCLE_ENGINE.render()
+
+    WEOS_KERNEL.render()
+
+    WEOS_APP.run()
+
+
+if __name__ == "__main__":
+
+    main()
+
+
+# ==========================================================
+# FINAL BUILD
+# ==========================================================
+
+WEOS_BUILD.update(
+
+    {
+
+        "completed_chunk": 300,
+
+        "status": "Core Architecture Completed",
+
+        "kernel": "ONLINE",
+
+        "runtime": "ONLINE",
+
+        "health": "ONLINE",
+
+        "globe": "ONLINE",
+
+        "economic_network": "ONLINE",
+
+        "capital_flow": "ONLINE",
+
+        "monitoring": "ONLINE",
+
+        "configuration": "ONLINE",
+
+        "notification": "ONLINE",
+
+        "lifecycle": "ONLINE",
+
+        "frontend": "ONLINE",
+
+        "backend": "ONLINE",
+
+        "ai": "ONLINE",
+
+    }
+
+)
+
+
+WEOS_MONITORING_ENGINE.info(
+
+    "WEOS Core Architecture Completed",
+
+    source="SYSTEM",
+
+)
+
+
+WEOS_NOTIFICATION_ENGINE.info(
+
+    "WEOS",
+
+    "Core Architecture Build Completed (300/300).",
+
+)
+
+
+# ==========================================================
+# END OF WEOS CORE
+# VERSION 1.0.0
+# TOTAL SEGMENTS: 300
+# ==========================================================
