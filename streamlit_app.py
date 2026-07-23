@@ -7974,3 +7974,3082 @@ COMPANY_LOCATION_ENGINE = CompanyLocationEngine()
 # ==========================================================
 # KẾT THÚC ĐOẠN 118
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 119
+# ==========================================================
+
+class EconomicNodeRecord(BaseModel):
+    id: str
+    name: str
+    node_type: str = ""
+    country: str = ""
+    city: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    economic_weight: float = 0.0
+    capital_inflow_usd: float = 0.0
+    capital_outflow_usd: float = 0.0
+    influence_score: float = 0.0
+    connected_nodes: int = 0
+    risk_level: float = 0.0
+    growth_rate: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ECONOMIC_NODE_DATABASE: Dict[
+    str,
+    EconomicNodeRecord,
+] = {}
+
+
+class EconomicNodeEngine:
+
+    def register(
+        self,
+        record: EconomicNodeRecord,
+    ) -> None:
+        ECONOMIC_NODE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[EconomicNodeRecord]:
+        return ECONOMIC_NODE_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        ECONOMIC_NODE_DATABASE.pop(record_id, None)
+
+    def update_flow(
+        self,
+        record_id: str,
+        capital_inflow_usd: float,
+        capital_outflow_usd: float,
+        influence_score: float,
+        risk_level: float,
+        growth_rate: float,
+    ) -> None:
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.capital_inflow_usd = capital_inflow_usd
+        record.capital_outflow_usd = capital_outflow_usd
+        record.influence_score = influence_score
+        record.risk_level = risk_level
+        record.growth_rate = growth_rate
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[EconomicNodeRecord]:
+        return sorted(
+            ECONOMIC_NODE_DATABASE.values(),
+            key=lambda item: item.influence_score,
+            reverse=True,
+        )
+
+
+ECONOMIC_NODE_ENGINE = EconomicNodeEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 119
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 120
+# ==========================================================
+
+class CapitalFlowLinkRecord(BaseModel):
+    id: str
+    source_node: str
+    target_node: str
+    flow_type: str = ""
+    amount_usd: float = 0.0
+    direction: str = "in"
+    speed: float = 0.0
+    intensity: float = 0.0
+    color_state: str = ""
+    pulse_rate: float = 0.0
+    created_time: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+CAPITAL_FLOW_LINK_DATABASE: Dict[
+    str,
+    CapitalFlowLinkRecord,
+] = {}
+
+
+class CapitalFlowLinkEngine:
+
+    def register(
+        self,
+        record: CapitalFlowLinkRecord,
+    ) -> None:
+        CAPITAL_FLOW_LINK_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[CapitalFlowLinkRecord]:
+        return CAPITAL_FLOW_LINK_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        CAPITAL_FLOW_LINK_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        amount_usd: float,
+        intensity: float,
+        speed: float,
+        direction: str,
+        color_state: str,
+    ) -> None:
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.amount_usd = amount_usd
+        record.intensity = intensity
+        record.speed = speed
+        record.direction = direction
+        record.color_state = color_state
+        record.updated_at = utc_now()
+
+    def all(self) -> List[CapitalFlowLinkRecord]:
+        return list(
+            CAPITAL_FLOW_LINK_DATABASE.values()
+        )
+
+
+CAPITAL_FLOW_LINK_ENGINE = CapitalFlowLinkEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 120
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 121
+# ==========================================================
+
+class IndicatorConnectionRecord(BaseModel):
+    id: str
+    source_indicator: str
+    target_indicator: str
+    relationship: str = ""
+    impact_level: float = 0.0
+    correlation_score: float = 0.0
+    delay_days: int = 0
+    direction: str = ""
+    explanation: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+INDICATOR_CONNECTION_DATABASE: Dict[
+    str,
+    IndicatorConnectionRecord,
+] = {}
+
+
+class IndicatorConnectionEngine:
+
+    def register(
+        self,
+        record: IndicatorConnectionRecord,
+    ) -> None:
+        INDICATOR_CONNECTION_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[IndicatorConnectionRecord]:
+        return INDICATOR_CONNECTION_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        INDICATOR_CONNECTION_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        impact_level: float,
+        correlation_score: float,
+        delay_days: int,
+        direction: str,
+        explanation: str,
+    ) -> None:
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.impact_level = impact_level
+        record.correlation_score = correlation_score
+        record.delay_days = delay_days
+        record.direction = direction
+        record.explanation = explanation
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[IndicatorConnectionRecord]:
+        return sorted(
+            INDICATOR_CONNECTION_DATABASE.values(),
+            key=lambda item: item.impact_level,
+            reverse=True,
+        )
+
+
+INDICATOR_CONNECTION_ENGINE = IndicatorConnectionEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 121
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 122
+# ==========================================================
+
+class MacroEventRecord(BaseModel):
+    id: str
+    event_name: str
+    country: str = ""
+    category: str = ""
+    importance: str = ""
+    actual_value: float = 0.0
+    forecast_value: float = 0.0
+    previous_value: float = 0.0
+    market_impact: str = ""
+    affected_assets: List[str] = []
+    event_time: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MACRO_EVENT_DATABASE: Dict[
+    str,
+    MacroEventRecord,
+] = {}
+
+
+class MacroEventEngine:
+
+    def register(
+        self,
+        record: MacroEventRecord,
+    ) -> None:
+        MACRO_EVENT_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MacroEventRecord]:
+        return MACRO_EVENT_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        MACRO_EVENT_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        actual_value: float,
+        forecast_value: float,
+        previous_value: float,
+        market_impact: str,
+        affected_assets: List[str],
+    ) -> None:
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.actual_value = actual_value
+        record.forecast_value = forecast_value
+        record.previous_value = previous_value
+        record.market_impact = market_impact
+        record.affected_assets = affected_assets
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[MacroEventRecord]:
+        return sorted(
+            MACRO_EVENT_DATABASE.values(),
+            key=lambda item: item.importance,
+        )
+
+
+MACRO_EVENT_ENGINE = MacroEventEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 122
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 123
+# ==========================================================
+
+class EconomicForecastRecord(BaseModel):
+    id: str
+    country: str
+    indicator: str
+    forecast_period: str = ""
+    current_value: float = 0.0
+    forecast_value: float = 0.0
+    previous_forecast: float = 0.0
+    confidence_level: float = 0.0
+    upside_probability: float = 0.0
+    downside_probability: float = 0.0
+    analyst_count: int = 0
+    forecast_source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ECONOMIC_FORECAST_DATABASE: Dict[
+    str,
+    EconomicForecastRecord,
+] = {}
+
+
+class EconomicForecastEngine:
+
+    def register(
+        self,
+        record: EconomicForecastRecord,
+    ) -> None:
+        ECONOMIC_FORECAST_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[EconomicForecastRecord]:
+        return ECONOMIC_FORECAST_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        ECONOMIC_FORECAST_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        current_value: float,
+        forecast_value: float,
+        confidence_level: float,
+        upside_probability: float,
+        downside_probability: float,
+        analyst_count: int,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.current_value = current_value
+        record.forecast_value = forecast_value
+        record.confidence_level = confidence_level
+        record.upside_probability = upside_probability
+        record.downside_probability = downside_probability
+        record.analyst_count = analyst_count
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[EconomicForecastRecord]:
+        return sorted(
+            ECONOMIC_FORECAST_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+ECONOMIC_FORECAST_ENGINE = EconomicForecastEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 123
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 124
+# ==========================================================
+
+class MarketSentimentRecord(BaseModel):
+    id: str
+    asset: str
+    region: str = ""
+    bullish_score: float = 0.0
+    bearish_score: float = 0.0
+    neutral_score: float = 0.0
+    investor_positioning: str = ""
+    volatility_expectation: float = 0.0
+    risk_appetite_score: float = 0.0
+    fear_greed_index: float = 0.0
+    news_sentiment_score: float = 0.0
+    social_sentiment_score: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MARKET_SENTIMENT_DATABASE: Dict[
+    str,
+    MarketSentimentRecord,
+] = {}
+
+
+class MarketSentimentEngine:
+
+    def register(
+        self,
+        record: MarketSentimentRecord,
+    ) -> None:
+        MARKET_SENTIMENT_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MarketSentimentRecord]:
+        return MARKET_SENTIMENT_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        MARKET_SENTIMENT_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        bullish_score: float,
+        bearish_score: float,
+        neutral_score: float,
+        volatility_expectation: float,
+        risk_appetite_score: float,
+        fear_greed_index: float,
+        news_sentiment_score: float,
+        social_sentiment_score: float,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.bullish_score = bullish_score
+        record.bearish_score = bearish_score
+        record.neutral_score = neutral_score
+        record.volatility_expectation = volatility_expectation
+        record.risk_appetite_score = risk_appetite_score
+        record.fear_greed_index = fear_greed_index
+        record.news_sentiment_score = news_sentiment_score
+        record.social_sentiment_score = social_sentiment_score
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[MarketSentimentRecord]:
+        return sorted(
+            MARKET_SENTIMENT_DATABASE.values(),
+            key=lambda item: item.asset,
+        )
+
+
+MARKET_SENTIMENT_ENGINE = MarketSentimentEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 124
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 125
+# ==========================================================
+
+class AssetCorrelationRecord(BaseModel):
+    id: str
+    asset_a: str
+    asset_b: str
+    correlation_period: str = ""
+    correlation_value: float = 0.0
+    volatility_a: float = 0.0
+    volatility_b: float = 0.0
+    beta_value: float = 0.0
+    relationship_type: str = ""
+    explanation: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ASSET_CORRELATION_DATABASE: Dict[
+    str,
+    AssetCorrelationRecord,
+] = {}
+
+
+class AssetCorrelationEngine:
+
+    def register(
+        self,
+        record: AssetCorrelationRecord,
+    ) -> None:
+        ASSET_CORRELATION_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AssetCorrelationRecord]:
+        return ASSET_CORRELATION_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        ASSET_CORRELATION_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        correlation_value: float,
+        volatility_a: float,
+        volatility_b: float,
+        beta_value: float,
+        relationship_type: str,
+        explanation: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.correlation_value = correlation_value
+        record.volatility_a = volatility_a
+        record.volatility_b = volatility_b
+        record.beta_value = beta_value
+        record.relationship_type = relationship_type
+        record.explanation = explanation
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[AssetCorrelationRecord]:
+        return sorted(
+            ASSET_CORRELATION_DATABASE.values(),
+            key=lambda item: abs(item.correlation_value),
+            reverse=True,
+        )
+
+
+ASSET_CORRELATION_ENGINE = AssetCorrelationEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 125
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 126
+# ==========================================================
+
+class ETFFlowRecord(BaseModel):
+    id: str
+    fund_name: str
+    ticker: str
+    asset_class: str = ""
+    region: str = ""
+    total_assets_usd: float = 0.0
+    daily_inflow_usd: float = 0.0
+    daily_outflow_usd: float = 0.0
+    net_flow_usd: float = 0.0
+    holdings_change_percent: float = 0.0
+    investor_sentiment: str = ""
+    report_date: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ETF_FLOW_DATABASE: Dict[
+    str,
+    ETFFlowRecord,
+] = {}
+
+
+class ETFFlowEngine:
+
+    def register(
+        self,
+        record: ETFFlowRecord,
+    ) -> None:
+        ETF_FLOW_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[ETFFlowRecord]:
+        return ETF_FLOW_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        ETF_FLOW_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        total_assets_usd: float,
+        daily_inflow_usd: float,
+        daily_outflow_usd: float,
+        net_flow_usd: float,
+        holdings_change_percent: float,
+        investor_sentiment: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.total_assets_usd = total_assets_usd
+        record.daily_inflow_usd = daily_inflow_usd
+        record.daily_outflow_usd = daily_outflow_usd
+        record.net_flow_usd = net_flow_usd
+        record.holdings_change_percent = holdings_change_percent
+        record.investor_sentiment = investor_sentiment
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[ETFFlowRecord]:
+        return sorted(
+            ETF_FLOW_DATABASE.values(),
+            key=lambda item: abs(item.net_flow_usd),
+            reverse=True,
+        )
+
+
+ETF_FLOW_ENGINE = ETFFlowEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 126
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 127
+# ==========================================================
+
+class GoldETFFlowRecord(BaseModel):
+    id: str
+    fund_name: str
+    ticker: str
+    gold_holdings_tonnes: float = 0.0
+    gold_value_usd: float = 0.0
+    daily_change_tonnes: float = 0.0
+    monthly_change_tonnes: float = 0.0
+    net_inflow_usd: float = 0.0
+    net_outflow_usd: float = 0.0
+    investor_demand_score: float = 0.0
+    report_date: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GOLD_ETF_FLOW_DATABASE: Dict[
+    str,
+    GoldETFFlowRecord,
+] = {}
+
+
+class GoldETFFlowEngine:
+
+    def register(
+        self,
+        record: GoldETFFlowRecord,
+    ) -> None:
+        GOLD_ETF_FLOW_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GoldETFFlowRecord]:
+        return GOLD_ETF_FLOW_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        GOLD_ETF_FLOW_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        gold_holdings_tonnes: float,
+        gold_value_usd: float,
+        daily_change_tonnes: float,
+        monthly_change_tonnes: float,
+        net_inflow_usd: float,
+        net_outflow_usd: float,
+        investor_demand_score: float,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.gold_holdings_tonnes = gold_holdings_tonnes
+        record.gold_value_usd = gold_value_usd
+        record.daily_change_tonnes = daily_change_tonnes
+        record.monthly_change_tonnes = monthly_change_tonnes
+        record.net_inflow_usd = net_inflow_usd
+        record.net_outflow_usd = net_outflow_usd
+        record.investor_demand_score = investor_demand_score
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[GoldETFFlowRecord]:
+        return sorted(
+            GOLD_ETF_FLOW_DATABASE.values(),
+            key=lambda item: abs(item.net_inflow_usd),
+            reverse=True,
+        )
+
+
+GOLD_ETF_FLOW_ENGINE = GoldETFFlowEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 127
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 128
+# ==========================================================
+
+class CommodityPriceRecord(BaseModel):
+    id: str
+    commodity_name: str
+    symbol: str = ""
+    category: str = ""
+    price_usd: float = 0.0
+    daily_change_percent: float = 0.0
+    weekly_change_percent: float = 0.0
+    monthly_change_percent: float = 0.0
+    yearly_change_percent: float = 0.0
+    trading_volume_usd: float = 0.0
+    supply_index: float = 0.0
+    demand_index: float = 0.0
+    volatility_index: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+COMMODITY_PRICE_DATABASE: Dict[
+    str,
+    CommodityPriceRecord,
+] = {}
+
+
+class CommodityPriceEngine:
+
+    def register(
+        self,
+        record: CommodityPriceRecord,
+    ) -> None:
+        COMMODITY_PRICE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[CommodityPriceRecord]:
+        return COMMODITY_PRICE_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        COMMODITY_PRICE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        price_usd: float,
+        daily_change_percent: float,
+        weekly_change_percent: float,
+        monthly_change_percent: float,
+        yearly_change_percent: float,
+        trading_volume_usd: float,
+        supply_index: float,
+        demand_index: float,
+        volatility_index: float,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.price_usd = price_usd
+        record.daily_change_percent = daily_change_percent
+        record.weekly_change_percent = weekly_change_percent
+        record.monthly_change_percent = monthly_change_percent
+        record.yearly_change_percent = yearly_change_percent
+        record.trading_volume_usd = trading_volume_usd
+        record.supply_index = supply_index
+        record.demand_index = demand_index
+        record.volatility_index = volatility_index
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[CommodityPriceRecord]:
+        return sorted(
+            COMMODITY_PRICE_DATABASE.values(),
+            key=lambda item: abs(item.daily_change_percent),
+            reverse=True,
+        )
+
+
+COMMODITY_PRICE_ENGINE = CommodityPriceEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 128
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 129
+# ==========================================================
+
+class EnergyPriceRecord(BaseModel):
+    id: str
+    energy_name: str
+    symbol: str = ""
+    category: str = ""
+    price_usd: float = 0.0
+    daily_change_percent: float = 0.0
+    weekly_change_percent: float = 0.0
+    monthly_change_percent: float = 0.0
+    yearly_change_percent: float = 0.0
+    production_index: float = 0.0
+    consumption_index: float = 0.0
+    inventory_level: float = 0.0
+    geopolitical_risk_score: float = 0.0
+    volatility_index: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ENERGY_PRICE_DATABASE: Dict[
+    str,
+    EnergyPriceRecord,
+] = {}
+
+
+class EnergyPriceEngine:
+
+    def register(
+        self,
+        record: EnergyPriceRecord,
+    ) -> None:
+        ENERGY_PRICE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[EnergyPriceRecord]:
+        return ENERGY_PRICE_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        ENERGY_PRICE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        price_usd: float,
+        daily_change_percent: float,
+        weekly_change_percent: float,
+        monthly_change_percent: float,
+        yearly_change_percent: float,
+        production_index: float,
+        consumption_index: float,
+        inventory_level: float,
+        geopolitical_risk_score: float,
+        volatility_index: float,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.price_usd = price_usd
+        record.daily_change_percent = daily_change_percent
+        record.weekly_change_percent = weekly_change_percent
+        record.monthly_change_percent = monthly_change_percent
+        record.yearly_change_percent = yearly_change_percent
+        record.production_index = production_index
+        record.consumption_index = consumption_index
+        record.inventory_level = inventory_level
+        record.geopolitical_risk_score = geopolitical_risk_score
+        record.volatility_index = volatility_index
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[EnergyPriceRecord]:
+        return sorted(
+            ENERGY_PRICE_DATABASE.values(),
+            key=lambda item: abs(item.daily_change_percent),
+            reverse=True,
+        )
+
+
+ENERGY_PRICE_ENGINE = EnergyPriceEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 129
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 130
+# ==========================================================
+
+class InterestRateMarketRecord(BaseModel):
+    id: str
+    country: str
+    central_bank: str = ""
+    benchmark_rate: float = 0.0
+    two_year_yield: float = 0.0
+    five_year_yield: float = 0.0
+    ten_year_yield: float = 0.0
+    thirty_year_yield: float = 0.0
+    yield_curve_slope: float = 0.0
+    market_expectation: str = ""
+    rate_cut_probability: float = 0.0
+    rate_hike_probability: float = 0.0
+    report_date: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+INTEREST_RATE_MARKET_DATABASE: Dict[
+    str,
+    InterestRateMarketRecord,
+] = {}
+
+
+class InterestRateMarketEngine:
+
+    def register(
+        self,
+        record: InterestRateMarketRecord,
+    ) -> None:
+        INTEREST_RATE_MARKET_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[InterestRateMarketRecord]:
+        return INTEREST_RATE_MARKET_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        INTEREST_RATE_MARKET_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        benchmark_rate: float,
+        two_year_yield: float,
+        five_year_yield: float,
+        ten_year_yield: float,
+        thirty_year_yield: float,
+        yield_curve_slope: float,
+        rate_cut_probability: float,
+        rate_hike_probability: float,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.benchmark_rate = benchmark_rate
+        record.two_year_yield = two_year_yield
+        record.five_year_yield = five_year_yield
+        record.ten_year_yield = ten_year_yield
+        record.thirty_year_yield = thirty_year_yield
+        record.yield_curve_slope = yield_curve_slope
+        record.rate_cut_probability = rate_cut_probability
+        record.rate_hike_probability = rate_hike_probability
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[InterestRateMarketRecord]:
+        return sorted(
+            INTEREST_RATE_MARKET_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+INTEREST_RATE_MARKET_ENGINE = InterestRateMarketEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 130
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 131
+# ==========================================================
+
+class CurrencyStrengthRecord(BaseModel):
+    id: str
+    currency: str
+    country: str = ""
+    dxy_component: float = 0.0
+    relative_strength_score: float = 0.0
+    purchasing_power_index: float = 0.0
+    inflation_pressure: float = 0.0
+    interest_rate_support: float = 0.0
+    trade_support: float = 0.0
+    capital_flow_support: float = 0.0
+    weekly_change_percent: float = 0.0
+    monthly_change_percent: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+CURRENCY_STRENGTH_DATABASE: Dict[
+    str,
+    CurrencyStrengthRecord,
+] = {}
+
+
+class CurrencyStrengthEngine:
+
+    def register(
+        self,
+        record: CurrencyStrengthRecord,
+    ) -> None:
+        CURRENCY_STRENGTH_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[CurrencyStrengthRecord]:
+        return CURRENCY_STRENGTH_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        CURRENCY_STRENGTH_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        relative_strength_score: float,
+        purchasing_power_index: float,
+        inflation_pressure: float,
+        interest_rate_support: float,
+        trade_support: float,
+        capital_flow_support: float,
+        weekly_change_percent: float,
+        monthly_change_percent: float,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.relative_strength_score = (
+            relative_strength_score
+        )
+        record.purchasing_power_index = (
+            purchasing_power_index
+        )
+        record.inflation_pressure = inflation_pressure
+        record.interest_rate_support = interest_rate_support
+        record.trade_support = trade_support
+        record.capital_flow_support = capital_flow_support
+        record.weekly_change_percent = weekly_change_percent
+        record.monthly_change_percent = monthly_change_percent
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[CurrencyStrengthRecord]:
+        return sorted(
+            CURRENCY_STRENGTH_DATABASE.values(),
+            key=lambda item: item.relative_strength_score,
+            reverse=True,
+        )
+
+
+CURRENCY_STRENGTH_ENGINE = CurrencyStrengthEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 131
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 132
+# ==========================================================
+
+class MacroScoreRecord(BaseModel):
+    id: str
+    country: str
+    economic_strength_score: float = 0.0
+    inflation_score: float = 0.0
+    growth_score: float = 0.0
+    employment_score: float = 0.0
+    debt_score: float = 0.0
+    currency_score: float = 0.0
+    financial_stability_score: float = 0.0
+    geopolitical_score: float = 0.0
+    total_macro_score: float = 0.0
+    ranking: int = 0
+    report_date: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MACRO_SCORE_DATABASE: Dict[
+    str,
+    MacroScoreRecord,
+] = {}
+
+
+class MacroScoreEngine:
+
+    def register(
+        self,
+        record: MacroScoreRecord,
+    ) -> None:
+        MACRO_SCORE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MacroScoreRecord]:
+        return MACRO_SCORE_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        MACRO_SCORE_DATABASE.pop(record_id, None)
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.total_macro_score = (
+            record.economic_strength_score * 0.25
+            + record.growth_score * 0.15
+            + record.employment_score * 0.15
+            + record.inflation_score * 0.10
+            + record.debt_score * 0.10
+            + record.currency_score * 0.10
+            + record.financial_stability_score * 0.10
+            + record.geopolitical_score * 0.05
+        )
+
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def ranking(self) -> List[MacroScoreRecord]:
+        return sorted(
+            MACRO_SCORE_DATABASE.values(),
+            key=lambda item: item.total_macro_score,
+            reverse=True,
+        )
+
+
+MACRO_SCORE_ENGINE = MacroScoreEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 132
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 133
+# ==========================================================
+
+class RiskScoreRecord(BaseModel):
+    id: str
+    country: str
+    market_risk: float = 0.0
+    currency_risk: float = 0.0
+    debt_risk: float = 0.0
+    inflation_risk: float = 0.0
+    political_risk: float = 0.0
+    liquidity_risk: float = 0.0
+    banking_risk: float = 0.0
+    geopolitical_risk: float = 0.0
+    total_risk_score: float = 0.0
+    risk_level: str = ""
+    report_date: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+RISK_SCORE_DATABASE: Dict[
+    str,
+    RiskScoreRecord,
+] = {}
+
+
+class RiskScoreEngine:
+
+    def register(
+        self,
+        record: RiskScoreRecord,
+    ) -> None:
+        RISK_SCORE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[RiskScoreRecord]:
+        return RISK_SCORE_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        RISK_SCORE_DATABASE.pop(record_id, None)
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.total_risk_score = (
+            record.market_risk * 0.20
+            + record.currency_risk * 0.15
+            + record.debt_risk * 0.15
+            + record.inflation_risk * 0.10
+            + record.political_risk * 0.15
+            + record.liquidity_risk * 0.10
+            + record.banking_risk * 0.10
+            + record.geopolitical_risk * 0.05
+        )
+
+        if record.total_risk_score >= 80:
+            record.risk_level = "HIGH"
+
+        elif record.total_risk_score >= 50:
+            record.risk_level = "MEDIUM"
+
+        else:
+            record.risk_level = "LOW"
+
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def ranking(self) -> List[RiskScoreRecord]:
+        return sorted(
+            RISK_SCORE_DATABASE.values(),
+            key=lambda item: item.total_risk_score,
+            reverse=True,
+        )
+
+
+RISK_SCORE_ENGINE = RiskScoreEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 133
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 134
+# ==========================================================
+
+class EconomicCycleRecord(BaseModel):
+    id: str
+    country: str
+    cycle_phase: str = ""
+    expansion_score: float = 0.0
+    slowdown_score: float = 0.0
+    recession_score: float = 0.0
+    recovery_score: float = 0.0
+    leading_indicator_score: float = 0.0
+    coincident_indicator_score: float = 0.0
+    lagging_indicator_score: float = 0.0
+    probability_recession: float = 0.0
+    probability_expansion: float = 0.0
+    analysis_text: str = ""
+    report_date: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ECONOMIC_CYCLE_DATABASE: Dict[
+    str,
+    EconomicCycleRecord,
+] = {}
+
+
+class EconomicCycleEngine:
+
+    def register(
+        self,
+        record: EconomicCycleRecord,
+    ) -> None:
+        ECONOMIC_CYCLE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[EconomicCycleRecord]:
+        return ECONOMIC_CYCLE_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        ECONOMIC_CYCLE_DATABASE.pop(record_id, None)
+
+    def analyze(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        scores = {
+            "EXPANSION": record.expansion_score,
+            "SLOWDOWN": record.slowdown_score,
+            "RECESSION": record.recession_score,
+            "RECOVERY": record.recovery_score,
+        }
+
+        record.cycle_phase = max(
+            scores,
+            key=scores.get,
+        )
+
+        total = sum(scores.values())
+
+        if total > 0:
+            record.probability_expansion = (
+                record.expansion_score / total
+            )
+
+            record.probability_recession = (
+                record.recession_score / total
+            )
+
+        record.analysis_text = (
+            f"Economic cycle phase: "
+            f"{record.cycle_phase}"
+        )
+
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[EconomicCycleRecord]:
+        return sorted(
+            ECONOMIC_CYCLE_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+ECONOMIC_CYCLE_ENGINE = EconomicCycleEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 134
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 135
+# ==========================================================
+
+class MacroSignalRecord(BaseModel):
+    id: str
+    country: str
+    signal_name: str
+    signal_type: str = ""
+    value: float = 0.0
+    weight: float = 0.0
+    direction: str = ""
+    impact_score: float = 0.0
+    confidence_score: float = 0.0
+    explanation: str = ""
+    generated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MACRO_SIGNAL_DATABASE: Dict[
+    str,
+    MacroSignalRecord,
+] = {}
+
+
+class MacroSignalEngine:
+
+    def register(
+        self,
+        record: MacroSignalRecord,
+    ) -> None:
+        MACRO_SIGNAL_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MacroSignalRecord]:
+        return MACRO_SIGNAL_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        MACRO_SIGNAL_DATABASE.pop(record_id, None)
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.impact_score = (
+            record.value
+            * record.weight
+            * record.confidence_score
+        )
+
+        if record.impact_score > 0:
+            record.direction = "POSITIVE"
+
+        elif record.impact_score < 0:
+            record.direction = "NEGATIVE"
+
+        else:
+            record.direction = "NEUTRAL"
+
+        record.explanation = (
+            f"{record.signal_name} "
+            f"creates {record.direction} impact "
+            f"with score {record.impact_score}"
+        )
+
+        record.status = DataStatus.REALTIME
+        record.generated_time = utc_now()
+        record.updated_at = utc_now()
+
+    def all(self) -> List[MacroSignalRecord]:
+        return sorted(
+            MACRO_SIGNAL_DATABASE.values(),
+            key=lambda item: abs(item.impact_score),
+            reverse=True,
+        )
+
+
+MACRO_SIGNAL_ENGINE = MacroSignalEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 135
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 136
+# ==========================================================
+
+class MarketImpactRecord(BaseModel):
+    id: str
+    event_name: str
+    asset: str
+    country: str = ""
+    impact_direction: str = ""
+    impact_strength: float = 0.0
+    probability: float = 0.0
+    expected_move_percent: float = 0.0
+    volatility_effect: float = 0.0
+    liquidity_effect: float = 0.0
+    explanation: str = ""
+    generated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MARKET_IMPACT_DATABASE: Dict[
+    str,
+    MarketImpactRecord,
+] = {}
+
+
+class MarketImpactEngine:
+
+    def register(
+        self,
+        record: MarketImpactRecord,
+    ) -> None:
+        MARKET_IMPACT_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MarketImpactRecord]:
+        return MARKET_IMPACT_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        MARKET_IMPACT_DATABASE.pop(record_id, None)
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.impact_strength = (
+            record.probability
+            * (
+                abs(record.expected_move_percent)
+                + record.volatility_effect
+                + record.liquidity_effect
+            )
+        )
+
+        if record.expected_move_percent > 0:
+            record.impact_direction = "BULLISH"
+
+        elif record.expected_move_percent < 0:
+            record.impact_direction = "BEARISH"
+
+        else:
+            record.impact_direction = "NEUTRAL"
+
+        record.explanation = (
+            f"{record.event_name} impacts "
+            f"{record.asset} with "
+            f"{record.impact_direction} bias"
+        )
+
+        record.generated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(self) -> List[MarketImpactRecord]:
+        return sorted(
+            MARKET_IMPACT_DATABASE.values(),
+            key=lambda item: item.impact_strength,
+            reverse=True,
+        )
+
+
+MARKET_IMPACT_ENGINE = MarketImpactEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 136
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 137
+# ==========================================================
+
+class AssetFlowPredictionRecord(BaseModel):
+    id: str
+    asset: str
+    source_region: str = ""
+    destination_region: str = ""
+    prediction_period: str = ""
+    expected_inflow_usd: float = 0.0
+    expected_outflow_usd: float = 0.0
+    confidence_score: float = 0.0
+    macro_support_score: float = 0.0
+    liquidity_score: float = 0.0
+    risk_adjustment_score: float = 0.0
+    final_prediction_score: float = 0.0
+    prediction_direction: str = ""
+    explanation: str = ""
+    generated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ASSET_FLOW_PREDICTION_DATABASE: Dict[
+    str,
+    AssetFlowPredictionRecord,
+] = {}
+
+
+class AssetFlowPredictionEngine:
+
+    def register(
+        self,
+        record: AssetFlowPredictionRecord,
+    ) -> None:
+        ASSET_FLOW_PREDICTION_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AssetFlowPredictionRecord]:
+        return ASSET_FLOW_PREDICTION_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        ASSET_FLOW_PREDICTION_DATABASE.pop(record_id, None)
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        net_flow = (
+            record.expected_inflow_usd
+            - record.expected_outflow_usd
+        )
+
+        record.final_prediction_score = (
+            record.confidence_score * 0.25
+            + record.macro_support_score * 0.30
+            + record.liquidity_score * 0.20
+            + record.risk_adjustment_score * 0.25
+        )
+
+        if net_flow > 0:
+            record.prediction_direction = "INFLOW"
+
+        elif net_flow < 0:
+            record.prediction_direction = "OUTFLOW"
+
+        else:
+            record.prediction_direction = "NEUTRAL"
+
+        record.explanation = (
+            f"Predicted capital movement for "
+            f"{record.asset}: "
+            f"{record.prediction_direction}"
+        )
+
+        record.generated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(self) -> List[AssetFlowPredictionRecord]:
+        return sorted(
+            ASSET_FLOW_PREDICTION_DATABASE.values(),
+            key=lambda item: item.final_prediction_score,
+            reverse=True,
+        )
+
+
+ASSET_FLOW_PREDICTION_ENGINE = AssetFlowPredictionEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 137
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 138
+# ==========================================================
+
+class MacroScenarioRecord(BaseModel):
+    id: str
+    scenario_name: str
+    country: str = ""
+    scenario_type: str = ""
+    probability: float = 0.0
+    growth_impact: float = 0.0
+    inflation_impact: float = 0.0
+    currency_impact: float = 0.0
+    bond_impact: float = 0.0
+    equity_impact: float = 0.0
+    gold_impact: float = 0.0
+    risk_level: str = ""
+    explanation: str = ""
+    generated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MACRO_SCENARIO_DATABASE: Dict[
+    str,
+    MacroScenarioRecord,
+] = {}
+
+
+class MacroScenarioEngine:
+
+    def register(
+        self,
+        record: MacroScenarioRecord,
+    ) -> None:
+        MACRO_SCENARIO_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MacroScenarioRecord]:
+        return MACRO_SCENARIO_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        MACRO_SCENARIO_DATABASE.pop(record_id, None)
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        impact_values = [
+            abs(record.growth_impact),
+            abs(record.inflation_impact),
+            abs(record.currency_impact),
+            abs(record.bond_impact),
+            abs(record.equity_impact),
+            abs(record.gold_impact),
+        ]
+
+        total_impact = sum(impact_values)
+
+        if total_impact >= 70:
+            record.risk_level = "HIGH"
+
+        elif total_impact >= 35:
+            record.risk_level = "MEDIUM"
+
+        else:
+            record.risk_level = "LOW"
+
+        record.explanation = (
+            f"Scenario {record.scenario_name} "
+            f"has probability "
+            f"{record.probability}% with "
+            f"{record.risk_level} impact"
+        )
+
+        record.generated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(self) -> List[MacroScenarioRecord]:
+        return sorted(
+            MACRO_SCENARIO_DATABASE.values(),
+            key=lambda item: item.probability,
+            reverse=True,
+        )
+
+
+MACRO_SCENARIO_ENGINE = MacroScenarioEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 138
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 139
+# ==========================================================
+
+class AIAnalysisRecord(BaseModel):
+    id: str
+    analysis_type: str
+    target: str
+    country: str = ""
+    asset: str = ""
+    input_data: Dict[str, Any] = {}
+    prediction: str = ""
+    confidence_score: float = 0.0
+    bullish_probability: float = 0.0
+    bearish_probability: float = 0.0
+    neutral_probability: float = 0.0
+    reasoning: str = ""
+    generated_time: Optional[datetime] = None
+    model_version: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_ANALYSIS_DATABASE: Dict[
+    str,
+    AIAnalysisRecord,
+] = {}
+
+
+class AIAnalysisEngine:
+
+    def register(
+        self,
+        record: AIAnalysisRecord,
+    ) -> None:
+        AI_ANALYSIS_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AIAnalysisRecord]:
+        return AI_ANALYSIS_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        AI_ANALYSIS_DATABASE.pop(record_id, None)
+
+    def analyze(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        highest_probability = max(
+            record.bullish_probability,
+            record.bearish_probability,
+            record.neutral_probability,
+        )
+
+        if highest_probability == record.bullish_probability:
+            record.prediction = "BULLISH"
+
+        elif highest_probability == record.bearish_probability:
+            record.prediction = "BEARISH"
+
+        else:
+            record.prediction = "NEUTRAL"
+
+        record.confidence_score = highest_probability
+
+        record.reasoning = (
+            f"AI analysis for {record.target}: "
+            f"{record.prediction} "
+            f"with confidence "
+            f"{record.confidence_score}"
+        )
+
+        record.generated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def all(self) -> List[AIAnalysisRecord]:
+        return sorted(
+            AI_ANALYSIS_DATABASE.values(),
+            key=lambda item: item.confidence_score,
+            reverse=True,
+        )
+
+
+AI_ANALYSIS_ENGINE = AIAnalysisEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 139
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 140
+# ==========================================================
+
+class NewsAnalysisRecord(BaseModel):
+    id: str
+    headline: str
+    source_name: str = ""
+    country: str = ""
+    category: str = ""
+    related_assets: List[str] = []
+    sentiment_score: float = 0.0
+    importance_score: float = 0.0
+    market_impact_score: float = 0.0
+    positive_keywords: List[str] = []
+    negative_keywords: List[str] = []
+    ai_summary: str = ""
+    publication_time: Optional[datetime] = None
+    analyzed_time: Optional[datetime] = None
+    source_url: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+NEWS_ANALYSIS_DATABASE: Dict[
+    str,
+    NewsAnalysisRecord,
+] = {}
+
+
+class NewsAnalysisEngine:
+
+    def register(
+        self,
+        record: NewsAnalysisRecord,
+    ) -> None:
+        NEWS_ANALYSIS_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[NewsAnalysisRecord]:
+        return NEWS_ANALYSIS_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        NEWS_ANALYSIS_DATABASE.pop(record_id, None)
+
+    def analyze(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        sentiment = (
+            len(record.positive_keywords)
+            -
+            len(record.negative_keywords)
+        )
+
+        record.sentiment_score = sentiment
+
+        record.market_impact_score = (
+            record.importance_score
+            *
+            abs(record.sentiment_score)
+        )
+
+        if record.sentiment_score > 0:
+            record.ai_summary = (
+                f"Positive impact detected "
+                f"for {record.related_assets}"
+            )
+
+        elif record.sentiment_score < 0:
+            record.ai_summary = (
+                f"Negative impact detected "
+                f"for {record.related_assets}"
+            )
+
+        else:
+            record.ai_summary = (
+                "Neutral market impact"
+            )
+
+        record.analyzed_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(self) -> List[NewsAnalysisRecord]:
+        return sorted(
+            NEWS_ANALYSIS_DATABASE.values(),
+            key=lambda item: item.market_impact_score,
+            reverse=True,
+        )
+
+
+NEWS_ANALYSIS_ENGINE = NewsAnalysisEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 140
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 141
+# ==========================================================
+
+class DataQualityRecord(BaseModel):
+    id: str
+    dataset_name: str
+    source_name: str = ""
+    completeness_score: float = 0.0
+    accuracy_score: float = 0.0
+    freshness_score: float = 0.0
+    reliability_score: float = 0.0
+    total_quality_score: float = 0.0
+    missing_fields: int = 0
+    duplicate_records: int = 0
+    last_check_time: Optional[datetime] = None
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+DATA_QUALITY_DATABASE: Dict[
+    str,
+    DataQualityRecord,
+] = {}
+
+
+class DataQualityEngine:
+
+    def register(
+        self,
+        record: DataQualityRecord,
+    ) -> None:
+        DATA_QUALITY_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[DataQualityRecord]:
+        return DATA_QUALITY_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        DATA_QUALITY_DATABASE.pop(record_id, None)
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.total_quality_score = (
+            record.completeness_score * 0.25
+            + record.accuracy_score * 0.30
+            + record.freshness_score * 0.25
+            + record.reliability_score * 0.20
+        )
+
+        record.last_check_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(self) -> List[DataQualityRecord]:
+        return sorted(
+            DATA_QUALITY_DATABASE.values(),
+            key=lambda item: item.total_quality_score,
+            reverse=True,
+        )
+
+
+DATA_QUALITY_ENGINE = DataQualityEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 141
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 142
+# ==========================================================
+
+class DataSourceRecord(BaseModel):
+    id: str
+    source_name: str
+    source_type: str = ""
+    provider: str = ""
+    api_endpoint: str = ""
+    update_frequency: str = ""
+    supported_data: List[str] = []
+    reliability_score: float = 0.0
+    response_time_ms: float = 0.0
+    last_sync_time: Optional[datetime] = None
+    connection_status: str = ""
+    error_count: int = 0
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+DATA_SOURCE_DATABASE: Dict[
+    str,
+    DataSourceRecord,
+] = {}
+
+
+class DataSourceEngine:
+
+    def register(
+        self,
+        record: DataSourceRecord,
+    ) -> None:
+        DATA_SOURCE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[DataSourceRecord]:
+        return DATA_SOURCE_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        DATA_SOURCE_DATABASE.pop(record_id, None)
+
+    def update_status(
+        self,
+        record_id: str,
+        connection_status: str,
+        response_time_ms: float,
+        error_count: int,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.connection_status = connection_status
+        record.response_time_ms = response_time_ms
+        record.error_count = error_count
+        record.last_sync_time = utc_now()
+        record.updated_at = utc_now()
+
+        if connection_status == "CONNECTED":
+            record.status = DataStatus.REALTIME
+
+        else:
+            record.status = DataStatus.ERROR
+
+    def all(self) -> List[DataSourceRecord]:
+        return sorted(
+            DATA_SOURCE_DATABASE.values(),
+            key=lambda item: item.reliability_score,
+            reverse=True,
+        )
+
+
+DATA_SOURCE_ENGINE = DataSourceEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 142
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 143
+# ==========================================================
+
+class DataSyncRecord(BaseModel):
+    id: str
+    source_id: str
+    dataset_name: str
+    sync_type: str = ""
+    records_received: int = 0
+    records_updated: int = 0
+    records_failed: int = 0
+    sync_duration_seconds: float = 0.0
+    sync_frequency: str = ""
+    last_sync_time: Optional[datetime] = None
+    next_sync_time: Optional[datetime] = None
+    sync_status: str = ""
+    error_message: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+DATA_SYNC_DATABASE: Dict[
+    str,
+    DataSyncRecord,
+] = {}
+
+
+class DataSyncEngine:
+
+    def register(
+        self,
+        record: DataSyncRecord,
+    ) -> None:
+        DATA_SYNC_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[DataSyncRecord]:
+        return DATA_SYNC_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        DATA_SYNC_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        records_received: int,
+        records_updated: int,
+        records_failed: int,
+        sync_duration_seconds: float,
+        sync_status: str,
+        error_message: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.records_received = records_received
+        record.records_updated = records_updated
+        record.records_failed = records_failed
+        record.sync_duration_seconds = sync_duration_seconds
+        record.sync_status = sync_status
+        record.error_message = error_message
+        record.last_sync_time = utc_now()
+        record.updated_at = utc_now()
+
+        if sync_status == "SUCCESS":
+            record.status = DataStatus.REALTIME
+
+        elif sync_status == "FAILED":
+            record.status = DataStatus.ERROR
+
+        else:
+            record.status = DataStatus.WAITING
+
+    def all(self) -> List[DataSyncRecord]:
+        return sorted(
+            DATA_SYNC_DATABASE.values(),
+            key=lambda item: item.last_sync_time
+            or datetime.min,
+            reverse=True,
+        )
+
+
+DATA_SYNC_ENGINE = DataSyncEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 143
+# ==========================================================v
+# ==========================================================
+# WEOS
+# ĐOẠN 144
+# ==========================================================
+
+class APIConnectorRecord(BaseModel):
+    id: str
+    name: str
+    provider: str = ""
+    api_type: str = ""
+    endpoint: str = ""
+    authentication_type: str = ""
+    request_limit: int = 0
+    requests_used: int = 0
+    response_time_ms: float = 0.0
+    last_request_time: Optional[datetime] = None
+    connection_status: str = ""
+    error_message: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+API_CONNECTOR_DATABASE: Dict[
+    str,
+    APIConnectorRecord,
+] = {}
+
+
+class APIConnectorEngine:
+
+    def register(
+        self,
+        record: APIConnectorRecord,
+    ) -> None:
+        API_CONNECTOR_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[APIConnectorRecord]:
+        return API_CONNECTOR_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        API_CONNECTOR_DATABASE.pop(record_id, None)
+
+    def update_connection(
+        self,
+        record_id: str,
+        connection_status: str,
+        response_time_ms: float,
+        error_message: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.connection_status = connection_status
+        record.response_time_ms = response_time_ms
+        record.error_message = error_message
+        record.last_request_time = utc_now()
+        record.updated_at = utc_now()
+
+        if connection_status == "CONNECTED":
+            record.status = DataStatus.REALTIME
+
+        elif connection_status == "ERROR":
+            record.status = DataStatus.ERROR
+
+        else:
+            record.status = DataStatus.WAITING
+
+    def usage(
+        self,
+        record_id: str,
+    ) -> float:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return 0.0
+
+        if record.request_limit == 0:
+            return 0.0
+
+        return (
+            record.requests_used
+            /
+            record.request_limit
+        ) * 100
+
+    def all(self) -> List[APIConnectorRecord]:
+        return sorted(
+            API_CONNECTOR_DATABASE.values(),
+            key=lambda item: item.response_time_ms,
+        )
+
+
+API_CONNECTOR_ENGINE = APIConnectorEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 144
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 145
+# ==========================================================
+
+class RealtimeStreamRecord(BaseModel):
+    id: str
+    stream_name: str
+    data_type: str = ""
+    source: str = ""
+    update_interval_seconds: int = 0
+    messages_received: int = 0
+    messages_processed: int = 0
+    messages_failed: int = 0
+    latency_ms: float = 0.0
+    throughput_per_second: float = 0.0
+    stream_status: str = ""
+    last_message_time: Optional[datetime] = None
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+REALTIME_STREAM_DATABASE: Dict[
+    str,
+    RealtimeStreamRecord,
+] = {}
+
+
+class RealtimeStreamEngine:
+
+    def register(
+        self,
+        record: RealtimeStreamRecord,
+    ) -> None:
+        REALTIME_STREAM_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[RealtimeStreamRecord]:
+        return REALTIME_STREAM_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        REALTIME_STREAM_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        messages_received: int,
+        messages_processed: int,
+        messages_failed: int,
+        latency_ms: float,
+        throughput_per_second: float,
+        stream_status: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.messages_received = messages_received
+        record.messages_processed = messages_processed
+        record.messages_failed = messages_failed
+        record.latency_ms = latency_ms
+        record.throughput_per_second = throughput_per_second
+        record.stream_status = stream_status
+        record.last_message_time = utc_now()
+        record.updated_at = utc_now()
+
+        if stream_status == "ACTIVE":
+            record.status = DataStatus.REALTIME
+
+        elif stream_status == "ERROR":
+            record.status = DataStatus.ERROR
+
+        else:
+            record.status = DataStatus.WAITING
+
+    def health_score(
+        self,
+        record_id: str,
+    ) -> float:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return 0.0
+
+        latency_score = max(
+            0,
+            100 - record.latency_ms / 10
+        )
+
+        failure_score = 100
+
+        if record.messages_received > 0:
+            failure_score = (
+                1 -
+                (
+                    record.messages_failed
+                    /
+                    record.messages_received
+                )
+            ) * 100
+
+        return (
+            latency_score * 0.4
+            +
+            failure_score * 0.6
+        )
+
+    def all(self) -> List[RealtimeStreamRecord]:
+        return sorted(
+            REALTIME_STREAM_DATABASE.values(),
+            key=lambda item: item.latency_ms,
+        )
+
+
+REALTIME_STREAM_ENGINE = RealtimeStreamEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 145
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 146
+# ==========================================================
+
+class CacheRecord(BaseModel):
+    id: str
+    cache_name: str
+    data_type: str = ""
+    storage_type: str = ""
+    key_count: int = 0
+    memory_usage_mb: float = 0.0
+    hit_count: int = 0
+    miss_count: int = 0
+    hit_rate_percent: float = 0.0
+    ttl_seconds: int = 0
+    last_refresh_time: Optional[datetime] = None
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+CACHE_DATABASE: Dict[
+    str,
+    CacheRecord,
+] = {}
+
+
+class CacheEngine:
+
+    def register(
+        self,
+        record: CacheRecord,
+    ) -> None:
+        CACHE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[CacheRecord]:
+        return CACHE_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        CACHE_DATABASE.pop(record_id, None)
+
+    def update_usage(
+        self,
+        record_id: str,
+        key_count: int,
+        memory_usage_mb: float,
+        hit_count: int,
+        miss_count: int,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.key_count = key_count
+        record.memory_usage_mb = memory_usage_mb
+        record.hit_count = hit_count
+        record.miss_count = miss_count
+
+        total_requests = (
+            hit_count + miss_count
+        )
+
+        if total_requests > 0:
+            record.hit_rate_percent = (
+                hit_count
+                /
+                total_requests
+            ) * 100
+
+        record.last_refresh_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def clear(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.key_count = 0
+        record.memory_usage_mb = 0.0
+        record.hit_count = 0
+        record.miss_count = 0
+        record.hit_rate_percent = 0.0
+        record.updated_at = utc_now()
+
+    def all(self) -> List[CacheRecord]:
+        return sorted(
+            CACHE_DATABASE.values(),
+            key=lambda item: item.hit_rate_percent,
+            reverse=True,
+        )
+
+
+CACHE_ENGINE = CacheEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 146
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 147
+# ==========================================================
+
+class DatabaseRecord(BaseModel):
+    id: str
+    database_name: str
+    database_type: str = ""
+    host: str = ""
+    port: int = 0
+    table_count: int = 0
+    record_count: int = 0
+    storage_size_gb: float = 0.0
+    query_per_second: float = 0.0
+    connection_count: int = 0
+    max_connection: int = 0
+    backup_status: str = ""
+    last_backup_time: Optional[datetime] = None
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+DATABASE_MONITOR_DATABASE: Dict[
+    str,
+    DatabaseRecord,
+] = {}
+
+
+class DatabaseEngine:
+
+    def register(
+        self,
+        record: DatabaseRecord,
+    ) -> None:
+        DATABASE_MONITOR_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[DatabaseRecord]:
+        return DATABASE_MONITOR_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        DATABASE_MONITOR_DATABASE.pop(record_id, None)
+
+    def update_metrics(
+        self,
+        record_id: str,
+        record_count: int,
+        storage_size_gb: float,
+        query_per_second: float,
+        connection_count: int,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.record_count = record_count
+        record.storage_size_gb = storage_size_gb
+        record.query_per_second = query_per_second
+        record.connection_count = connection_count
+        record.updated_at = utc_now()
+
+        record.status = DataStatus.REALTIME
+
+    def health_score(
+        self,
+        record_id: str,
+    ) -> float:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return 0.0
+
+        connection_score = 100
+
+        if record.max_connection > 0:
+            usage = (
+                record.connection_count
+                /
+                record.max_connection
+            )
+
+            connection_score = (
+                1 - usage
+            ) * 100
+
+        return max(
+            0,
+            connection_score,
+        )
+
+    def all(self) -> List[DatabaseRecord]:
+        return sorted(
+            DATABASE_MONITOR_DATABASE.values(),
+            key=lambda item: item.database_name,
+        )
+
+
+DATABASE_ENGINE = DatabaseEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 147
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 148
+# ==========================================================
+
+class SystemHealthRecord(BaseModel):
+    id: str
+    service_name: str
+    service_type: str = ""
+    cpu_usage_percent: float = 0.0
+    memory_usage_percent: float = 0.0
+    disk_usage_percent: float = 0.0
+    network_usage_percent: float = 0.0
+    response_time_ms: float = 0.0
+    uptime_percent: float = 0.0
+    error_rate_percent: float = 0.0
+    active_users: int = 0
+    health_score: float = 0.0
+    last_check_time: Optional[datetime] = None
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+SYSTEM_HEALTH_DATABASE: Dict[
+    str,
+    SystemHealthRecord,
+] = {}
+
+
+class SystemHealthEngine:
+
+    def register(
+        self,
+        record: SystemHealthRecord,
+    ) -> None:
+        SYSTEM_HEALTH_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[SystemHealthRecord]:
+        return SYSTEM_HEALTH_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        SYSTEM_HEALTH_DATABASE.pop(record_id, None)
+
+    def calculate_health(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        performance_score = (
+            100
+            -
+            (
+                record.cpu_usage_percent * 0.2
+                +
+                record.memory_usage_percent * 0.2
+                +
+                record.disk_usage_percent * 0.1
+                +
+                record.error_rate_percent * 0.3
+                +
+                record.response_time_ms * 0.01
+            )
+        )
+
+        uptime_score = (
+            record.uptime_percent * 0.2
+        )
+
+        record.health_score = max(
+            0,
+            min(
+                100,
+                performance_score * 0.8
+                +
+                uptime_score,
+            ),
+        )
+
+        record.last_check_time = utc_now()
+        record.updated_at = utc_now()
+
+        if record.health_score >= 80:
+            record.status = DataStatus.REALTIME
+
+        elif record.health_score >= 50:
+            record.status = DataStatus.WAITING
+
+        else:
+            record.status = DataStatus.ERROR
+
+    def ranking(self) -> List[SystemHealthRecord]:
+        return sorted(
+            SYSTEM_HEALTH_DATABASE.values(),
+            key=lambda item: item.health_score,
+            reverse=True,
+        )
+
+
+SYSTEM_HEALTH_ENGINE = SystemHealthEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 148
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 149
+# ==========================================================
+
+class UserActivityRecord(BaseModel):
+    id: str
+    user_id: str
+    session_id: str = ""
+    activity_type: str = ""
+    page_name: str = ""
+    action_name: str = ""
+    duration_seconds: float = 0.0
+    device_type: str = ""
+    location_country: str = ""
+    timestamp: Optional[datetime] = None
+    metadata: Dict[str, Any] = {}
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+USER_ACTIVITY_DATABASE: Dict[
+    str,
+    UserActivityRecord,
+] = {}
+
+
+class UserActivityEngine:
+
+    def register(
+        self,
+        record: UserActivityRecord,
+    ) -> None:
+        USER_ACTIVITY_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[UserActivityRecord]:
+        return USER_ACTIVITY_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        USER_ACTIVITY_DATABASE.pop(record_id, None)
+
+    def track(
+        self,
+        record_id: str,
+        activity_type: str,
+        page_name: str,
+        action_name: str,
+        duration_seconds: float,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.activity_type = activity_type
+        record.page_name = page_name
+        record.action_name = action_name
+        record.duration_seconds = duration_seconds
+        record.timestamp = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def activity_summary(
+        self,
+        user_id: str,
+    ) -> Dict[str, int]:
+
+        result = {}
+
+        for item in USER_ACTIVITY_DATABASE.values():
+
+            if item.user_id == user_id:
+
+                if item.activity_type not in result:
+                    result[item.activity_type] = 0
+
+                result[item.activity_type] += 1
+
+        return result
+
+    def all(self) -> List[UserActivityRecord]:
+        return sorted(
+            USER_ACTIVITY_DATABASE.values(),
+            key=lambda item: item.timestamp
+            or datetime.min,
+            reverse=True,
+        )
+
+
+USER_ACTIVITY_ENGINE = UserActivityEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 149
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 150
+# ==========================================================
+
+class AlertRecord(BaseModel):
+    id: str
+    alert_type: str
+    target: str
+    severity: str = ""
+    title: str = ""
+    message: str = ""
+    trigger_value: float = 0.0
+    current_value: float = 0.0
+    threshold_value: float = 0.0
+    affected_assets: List[str] = []
+    affected_countries: List[str] = []
+    created_time: Optional[datetime] = None
+    resolved_time: Optional[datetime] = None
+    alert_status: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ALERT_DATABASE: Dict[
+    str,
+    AlertRecord,
+] = {}
+
+
+class AlertEngine:
+
+    def register(
+        self,
+        record: AlertRecord,
+    ) -> None:
+        ALERT_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AlertRecord]:
+        return ALERT_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        ALERT_DATABASE.pop(record_id, None)
+
+    def trigger(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        difference = (
+            record.current_value
+            -
+            record.threshold_value
+        )
+
+        if abs(difference) >= abs(
+            record.trigger_value
+        ):
+            record.alert_status = "TRIGGERED"
+
+        else:
+            record.alert_status = "NORMAL"
+
+        record.created_time = utc_now()
+        record.updated_at = utc_now()
+
+        if record.alert_status == "TRIGGERED":
+            record.status = DataStatus.REALTIME
+
+        else:
+            record.status = DataStatus.WAITING
+
+    def active_alerts(self) -> List[AlertRecord]:
+        return sorted(
+            [
+                item
+                for item in ALERT_DATABASE.values()
+                if item.alert_status == "TRIGGERED"
+            ],
+            key=lambda item: item.severity,
+        )
+
+
+ALERT_ENGINE = AlertEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 150
+# ==========================================================
