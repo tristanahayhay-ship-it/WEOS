@@ -1363,3 +1363,1164 @@ async def publish_node_update(node_id: str) -> None:
 # ==========================================================
 # KẾT THÚC ĐOẠN 020
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 021
+# ==========================================================
+
+class MetricsEngine:
+
+    def __init__(self) -> None:
+        self.metrics: Dict[str, Any] = {}
+
+    def update(self) -> None:
+        self.metrics["nodes"] = len(GLOBAL_GRAPH.nodes)
+        self.metrics["flows"] = len(GLOBAL_GRAPH.flows)
+        self.metrics["markets"] = len(MARKETS)
+        self.metrics["sources"] = len(DATA_SOURCES)
+        self.metrics["timeline_events"] = sum(
+            len(events) for events in TIMELINE_EVENTS.values()
+        )
+        self.metrics["uptime"] = WORLD_CLOCK.uptime
+        self.metrics["frame"] = WORLD_CLOCK.frame
+        self.metrics["last_update"] = utc_now()
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self.metrics.get(key, default)
+
+    def snapshot(self) -> Dict[str, Any]:
+        self.update()
+        return dict(self.metrics)
+
+
+METRICS_ENGINE = MetricsEngine()
+
+
+def refresh_metrics() -> None:
+    METRICS_ENGINE.update()
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 021
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 022
+# ==========================================================
+
+class CacheEngine:
+
+    def __init__(self) -> None:
+        self.cache = CACHE
+
+    def has(self, key: str) -> bool:
+        return key in self.cache
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self.cache.get(key, default)
+
+    def set(self, key: str, value: Any) -> None:
+        self.cache[key] = value
+
+    def remove(self, key: str) -> None:
+        self.cache.pop(key, None)
+
+    def clear(self) -> None:
+        self.cache.clear()
+
+    def remember(
+        self,
+        key: str,
+        creator: Callable[..., Any],
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
+        if key in self.cache:
+            return self.cache[key]
+        value = creator(*args, **kwargs)
+        self.cache[key] = value
+        return value
+
+    async def remember_async(
+        self,
+        key: str,
+        creator: Callable[..., Any],
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
+        if key in self.cache:
+            return self.cache[key]
+        value = creator(*args, **kwargs)
+        if asyncio.iscoroutine(value):
+            value = await value
+        self.cache[key] = value
+        return value
+
+
+CACHE_ENGINE = CacheEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 022
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 023
+# ==========================================================
+
+class GeoEngine:
+
+    def distance(
+        self,
+        lat1: float,
+        lon1: float,
+        lat2: float,
+        lon2: float,
+    ) -> float:
+        return geodesic((lat1, lon1), (lat2, lon2)).kilometers
+
+    def node_distance(
+        self,
+        node_a: EconomicNode,
+        node_b: EconomicNode,
+    ) -> float:
+        return self.distance(
+            node_a.latitude,
+            node_a.longitude,
+            node_b.latitude,
+            node_b.longitude,
+        )
+
+    def nearest(
+        self,
+        latitude: float,
+        longitude: float,
+        limit: int = 10,
+    ) -> List[EconomicNode]:
+        items = []
+        for node in GLOBAL_GRAPH.nodes.values():
+            d = self.distance(
+                latitude,
+                longitude,
+                node.latitude,
+                node.longitude,
+            )
+            items.append((d, node))
+        items.sort(key=lambda item: item[0])
+        return [item[1] for item in items[:limit]]
+
+    def bounds(self) -> Tuple[float, float, float, float]:
+        if not GLOBAL_GRAPH.nodes:
+            return (-90.0, -180.0, 90.0, 180.0)
+        lats = [n.latitude for n in GLOBAL_GRAPH.nodes.values()]
+        lons = [n.longitude for n in GLOBAL_GRAPH.nodes.values()]
+        return (
+            min(lats),
+            min(lons),
+            max(lats),
+            max(lons),
+        )
+
+
+GEO_ENGINE = GeoEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 023
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 024
+# ==========================================================
+
+class DiscoveryEngine:
+
+    def __init__(self) -> None:
+        self.discovered: Set[str] = set()
+
+    def exists(self, external_id: str) -> bool:
+        return external_id in self.discovered
+
+    def mark(self, external_id: str) -> None:
+        self.discovered.add(external_id)
+
+    def discover(
+        self,
+        external_id: str,
+        name: str,
+        node_type: NodeType,
+        latitude: float,
+        longitude: float,
+        country: str = "",
+        region: str = "",
+        founded: str = "",
+    ) -> Optional[EconomicNode]:
+        if self.exists(external_id):
+            return None
+        node = NODE_ENGINE.create(
+            name=name,
+            node_type=node_type,
+            latitude=latitude,
+            longitude=longitude,
+            country=country,
+            region=region,
+            founded=founded,
+        )
+        node.metadata["external_id"] = external_id
+        node.metadata["discovered_at"] = utc_now().isoformat()
+        self.mark(external_id)
+        return node
+
+    def count(self) -> int:
+        return len(self.discovered)
+
+    def clear(self) -> None:
+        self.discovered.clear()
+
+
+DISCOVERY_ENGINE = DiscoveryEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 024
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 025
+# ==========================================================
+
+class IndicatorType(str, Enum):
+    GDP = "gdp"
+    CPI = "cpi"
+    PPI = "ppi"
+    PCE = "pce"
+    NFP = "nfp"
+    ADP = "adp"
+    PMI = "pmi"
+    ISM = "ism"
+    GDP_NOW = "gdp_now"
+    UNEMPLOYMENT = "unemployment"
+    RETAIL_SALES = "retail_sales"
+    INTEREST_RATE = "interest_rate"
+    INFLATION = "inflation"
+    DXY = "dxy"
+    FOREX = "forex"
+    BOND_YIELD = "bond_yield"
+    ETF_FLOW = "etf_flow"
+    GOLD_RESERVE = "gold_reserve"
+    FX_RESERVE = "fx_reserve"
+    TRADE_BALANCE = "trade_balance"
+
+
+class EconomicIndicator(BaseModel):
+    id: str
+    node_id: str
+    indicator: IndicatorType
+    value: Optional[float] = None
+    unit: str = ""
+    status: DataStatus = DataStatus.WAITING
+    source: str = ""
+    updated_at: Optional[datetime] = None
+
+
+INDICATORS: Dict[str, EconomicIndicator] = {}
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 025
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 026
+# ==========================================================
+
+class IndicatorEngine:
+
+    def register(
+        self,
+        node_id: str,
+        indicator: IndicatorType,
+        unit: str = "",
+    ) -> EconomicIndicator:
+        key = f"{node_id}:{indicator.value}"
+        if key not in INDICATORS:
+            INDICATORS[key] = EconomicIndicator(
+                id=key,
+                node_id=node_id,
+                indicator=indicator,
+                unit=unit,
+            )
+        return INDICATORS[key]
+
+    def update(
+        self,
+        node_id: str,
+        indicator: IndicatorType,
+        value: float,
+        source: str,
+    ) -> EconomicIndicator:
+        item = self.register(node_id, indicator)
+        item.value = value
+        item.source = source
+        item.status = DataStatus.LIVE
+        item.updated_at = utc_now()
+        return item
+
+    def get(
+        self,
+        node_id: str,
+        indicator: IndicatorType,
+    ) -> Optional[EconomicIndicator]:
+        return INDICATORS.get(f"{node_id}:{indicator.value}")
+
+    def all(
+        self,
+        node_id: str,
+    ) -> List[EconomicIndicator]:
+        return [
+            indicator
+            for indicator in INDICATORS.values()
+            if indicator.node_id == node_id
+        ]
+
+
+INDICATOR_ENGINE = IndicatorEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 026
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 027
+# ==========================================================
+
+class NewsItem(BaseModel):
+    id: str
+    title: str
+    summary: str = ""
+    url: str = ""
+    source: str = ""
+    published_at: Optional[datetime] = None
+    countries: List[str] = Field(default_factory=list)
+    companies: List[str] = Field(default_factory=list)
+    importance: int = 0
+
+
+NEWS: Dict[str, NewsItem] = {}
+
+
+class NewsEngine:
+
+    def add(self, item: NewsItem) -> None:
+        NEWS[item.id] = item
+
+    def remove(self, news_id: str) -> None:
+        NEWS.pop(news_id, None)
+
+    def get(self, news_id: str) -> Optional[NewsItem]:
+        return NEWS.get(news_id)
+
+    def latest(self, limit: int = 100) -> List[NewsItem]:
+        return sorted(
+            NEWS.values(),
+            key=lambda item: item.published_at or datetime.min.replace(tzinfo=timezone.utc),
+            reverse=True,
+        )[:limit]
+
+    def clear(self) -> None:
+        NEWS.clear()
+
+
+NEWS_ENGINE = NewsEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 027
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 028
+# ==========================================================
+
+class InfrastructureType(str, Enum):
+    FACTORY = "factory"
+    PORT = "port"
+    AIRPORT = "airport"
+    DATA_CENTER = "data_center"
+    POWER_PLANT = "power_plant"
+    MINE = "mine"
+    WAREHOUSE = "warehouse"
+    LOGISTICS_CENTER = "logistics_center"
+    HEADQUARTERS = "headquarters"
+
+
+class InfrastructureRecord(BaseModel):
+    id: str
+    external_id: str
+    name: str
+    infrastructure_type: InfrastructureType
+    country: str = ""
+    city: str = ""
+    latitude: float
+    longitude: float
+    founded: str = ""
+    owner: str = ""
+    source: str = ""
+    updated_at: Optional[datetime] = None
+
+
+INFRASTRUCTURES: Dict[str, InfrastructureRecord] = {}
+
+
+class InfrastructureEngine:
+
+    def register(self, record: InfrastructureRecord) -> None:
+        INFRASTRUCTURES[record.id] = record
+
+    def get(self, record_id: str) -> Optional[InfrastructureRecord]:
+        return INFRASTRUCTURES.get(record_id)
+
+    def all(self) -> List[InfrastructureRecord]:
+        return list(INFRASTRUCTURES.values())
+
+    def remove(self, record_id: str) -> None:
+        INFRASTRUCTURES.pop(record_id, None)
+
+
+INFRASTRUCTURE_ENGINE = InfrastructureEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 028
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 029
+# ==========================================================
+
+class CompanyRecord(BaseModel):
+    id: str
+    name: str
+    ticker: str = ""
+    country: str = ""
+    headquarters: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    sector: str = ""
+    industry: str = ""
+    market_cap_usd: Optional[float] = None
+    employees: Optional[int] = None
+    founded: str = ""
+    website: str = ""
+    source: str = ""
+    updated_at: Optional[datetime] = None
+
+
+COMPANIES: Dict[str, CompanyRecord] = {}
+
+
+class CompanyEngine:
+
+    def register(self, company: CompanyRecord) -> None:
+        COMPANIES[company.id] = company
+
+    def get(self, company_id: str) -> Optional[CompanyRecord]:
+        return COMPANIES.get(company_id)
+
+    def remove(self, company_id: str) -> None:
+        COMPANIES.pop(company_id, None)
+
+    def all(self) -> List[CompanyRecord]:
+        return list(COMPANIES.values())
+
+    def find_by_ticker(self, ticker: str) -> Optional[CompanyRecord]:
+        ticker = ticker.upper()
+        for company in COMPANIES.values():
+            if company.ticker.upper() == ticker:
+                return company
+        return None
+
+
+COMPANY_ENGINE = CompanyEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 029
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 030
+# ==========================================================
+
+class CountryRecord(BaseModel):
+    code: str
+    name: str
+    capital: str = ""
+    continent: str = ""
+    currency: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    population: Optional[int] = None
+    area_km2: Optional[float] = None
+    gdp_usd: Optional[float] = None
+    timezone: str = ""
+    updated_at: Optional[datetime] = None
+
+
+COUNTRIES: Dict[str, CountryRecord] = {}
+
+
+class CountryEngine:
+
+    def register(self, country: CountryRecord) -> None:
+        COUNTRIES[country.code.upper()] = country
+
+    def get(self, code: str) -> Optional[CountryRecord]:
+        return COUNTRIES.get(code.upper())
+
+    def remove(self, code: str) -> None:
+        COUNTRIES.pop(code.upper(), None)
+
+    def all(self) -> List[CountryRecord]:
+        return sorted(
+            COUNTRIES.values(),
+            key=lambda item: item.name,
+        )
+
+    def exists(self, code: str) -> bool:
+        return code.upper() in COUNTRIES
+
+
+COUNTRY_ENGINE = CountryEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 030
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 031
+# ==========================================================
+
+class RegionRecord(BaseModel):
+    id: str
+    name: str
+    country_code: str
+    latitude: float = 0.0
+    longitude: float = 0.0
+    population: Optional[int] = None
+    area_km2: Optional[float] = None
+    updated_at: Optional[datetime] = None
+
+
+REGIONS: Dict[str, RegionRecord] = {}
+
+
+class RegionEngine:
+
+    def register(self, region: RegionRecord) -> None:
+        REGIONS[region.id] = region
+
+    def get(self, region_id: str) -> Optional[RegionRecord]:
+        return REGIONS.get(region_id)
+
+    def remove(self, region_id: str) -> None:
+        REGIONS.pop(region_id, None)
+
+    def all(self) -> List[RegionRecord]:
+        return sorted(
+            REGIONS.values(),
+            key=lambda item: item.name,
+        )
+
+    def by_country(
+        self,
+        country_code: str,
+    ) -> List[RegionRecord]:
+        return [
+            region
+            for region in REGIONS.values()
+            if region.country_code.upper() == country_code.upper()
+        ]
+
+
+REGION_ENGINE = RegionEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 031
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 032
+# ==========================================================
+
+class CityRecord(BaseModel):
+    id: str
+    name: str
+    region_id: str = ""
+    country_code: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    population: Optional[int] = None
+    area_km2: Optional[float] = None
+    is_capital: bool = False
+    updated_at: Optional[datetime] = None
+
+
+CITIES: Dict[str, CityRecord] = {}
+
+
+class CityEngine:
+
+    def register(self, city: CityRecord) -> None:
+        CITIES[city.id] = city
+
+    def get(self, city_id: str) -> Optional[CityRecord]:
+        return CITIES.get(city_id)
+
+    def remove(self, city_id: str) -> None:
+        CITIES.pop(city_id, None)
+
+    def all(self) -> List[CityRecord]:
+        return sorted(
+            CITIES.values(),
+            key=lambda item: item.name,
+        )
+
+    def by_country(
+        self,
+        country_code: str,
+    ) -> List[CityRecord]:
+        return [
+            city
+            for city in CITIES.values()
+            if city.country_code.upper() == country_code.upper()
+        ]
+
+    def capitals(self) -> List[CityRecord]:
+        return [city for city in CITIES.values() if city.is_capital]
+
+
+CITY_ENGINE = CityEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 032
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 033
+# ==========================================================
+
+class OrganizationRecord(BaseModel):
+    id: str
+    name: str
+    organization_type: str = ""
+    country_code: str = ""
+    city_id: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    founded: str = ""
+    website: str = ""
+    source: str = ""
+    updated_at: Optional[datetime] = None
+
+
+ORGANIZATIONS: Dict[str, OrganizationRecord] = {}
+
+
+class OrganizationEngine:
+
+    def register(self, organization: OrganizationRecord) -> None:
+        ORGANIZATIONS[organization.id] = organization
+
+    def get(self, organization_id: str) -> Optional[OrganizationRecord]:
+        return ORGANIZATIONS.get(organization_id)
+
+    def remove(self, organization_id: str) -> None:
+        ORGANIZATIONS.pop(organization_id, None)
+
+    def all(self) -> List[OrganizationRecord]:
+        return sorted(
+            ORGANIZATIONS.values(),
+            key=lambda item: item.name,
+        )
+
+    def by_country(
+        self,
+        country_code: str,
+    ) -> List[OrganizationRecord]:
+        return [
+            organization
+            for organization in ORGANIZATIONS.values()
+            if organization.country_code.upper() == country_code.upper()
+        ]
+
+
+ORGANIZATION_ENGINE = OrganizationEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 033
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 034
+# ==========================================================
+
+class EconomicCalendarEvent(BaseModel):
+    id: str
+    country: str
+    title: str
+    indicator: str
+    importance: int = 0
+    previous: Optional[float] = None
+    forecast: Optional[float] = None
+    actual: Optional[float] = None
+    unit: str = ""
+    release_time: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+ECONOMIC_CALENDAR: Dict[str, EconomicCalendarEvent] = {}
+
+
+class EconomicCalendarEngine:
+
+    def register(self, event: EconomicCalendarEvent) -> None:
+        ECONOMIC_CALENDAR[event.id] = event
+
+    def get(self, event_id: str) -> Optional[EconomicCalendarEvent]:
+        return ECONOMIC_CALENDAR.get(event_id)
+
+    def remove(self, event_id: str) -> None:
+        ECONOMIC_CALENDAR.pop(event_id, None)
+
+    def all(self) -> List[EconomicCalendarEvent]:
+        return sorted(
+            ECONOMIC_CALENDAR.values(),
+            key=lambda item: item.release_time or utc_now(),
+        )
+
+    def upcoming(self) -> List[EconomicCalendarEvent]:
+        now = utc_now()
+        return [
+            item
+            for item in self.all()
+            if item.release_time is not None
+            and item.release_time >= now
+        ]
+
+
+ECONOMIC_CALENDAR_ENGINE = EconomicCalendarEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 034
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 035
+# ==========================================================
+
+class CurrencyRecord(BaseModel):
+    code: str
+    name: str
+    symbol: str = ""
+    country: str = ""
+    exchange_rate_usd: Optional[float] = None
+    change: float = 0.0
+    change_percent: float = 0.0
+    updated_at: Optional[datetime] = None
+
+
+CURRENCIES: Dict[str, CurrencyRecord] = {}
+
+
+class CurrencyEngine:
+
+    def register(self, currency: CurrencyRecord) -> None:
+        CURRENCIES[currency.code.upper()] = currency
+
+    def get(self, code: str) -> Optional[CurrencyRecord]:
+        return CURRENCIES.get(code.upper())
+
+    def update_rate(
+        self,
+        code: str,
+        rate: float,
+        change: float,
+        change_percent: float,
+    ) -> None:
+        currency = self.get(code)
+        if currency is None:
+            currency = CurrencyRecord(
+                code=code.upper(),
+                name=code.upper(),
+            )
+            self.register(currency)
+        currency.exchange_rate_usd = rate
+        currency.change = change
+        currency.change_percent = change_percent
+        currency.updated_at = utc_now()
+
+    def all(self) -> List[CurrencyRecord]:
+        return sorted(
+            CURRENCIES.values(),
+            key=lambda item: item.code,
+        )
+
+
+CURRENCY_ENGINE = CurrencyEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 035
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 036
+# ==========================================================
+
+class CommodityType(str, Enum):
+    GOLD = "gold"
+    SILVER = "silver"
+    OIL_WTI = "oil_wti"
+    OIL_BRENT = "oil_brent"
+    NATURAL_GAS = "natural_gas"
+    COPPER = "copper"
+    ALUMINUM = "aluminum"
+    IRON_ORE = "iron_ore"
+    LITHIUM = "lithium"
+    COAL = "coal"
+
+
+class CommodityRecord(BaseModel):
+    symbol: str
+    commodity: CommodityType
+    price: float = 0.0
+    currency: str = "USD"
+    unit: str = ""
+    change: float = 0.0
+    change_percent: float = 0.0
+    updated_at: Optional[datetime] = None
+
+
+COMMODITIES: Dict[str, CommodityRecord] = {}
+
+
+class CommodityEngine:
+
+    def register(self, commodity: CommodityRecord) -> None:
+        COMMODITIES[commodity.symbol.upper()] = commodity
+
+    def get(self, symbol: str) -> Optional[CommodityRecord]:
+        return COMMODITIES.get(symbol.upper())
+
+    def update(
+        self,
+        symbol: str,
+        price: float,
+        change: float,
+        change_percent: float,
+    ) -> None:
+        item = self.get(symbol)
+        if item is None:
+            return
+        item.price = price
+        item.change = change
+        item.change_percent = change_percent
+        item.updated_at = utc_now()
+
+    def all(self) -> List[CommodityRecord]:
+        return sorted(COMMODITIES.values(), key=lambda item: item.symbol)
+
+
+COMMODITY_ENGINE = CommodityEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 036
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 037
+# ==========================================================
+
+class MarketIndexRecord(BaseModel):
+    symbol: str
+    name: str
+    country: str = ""
+    price: float = 0.0
+    change: float = 0.0
+    change_percent: float = 0.0
+    currency: str = "USD"
+    updated_at: Optional[datetime] = None
+
+
+MARKET_INDICES: Dict[str, MarketIndexRecord] = {}
+
+
+class MarketIndexEngine:
+
+    def register(self, index: MarketIndexRecord) -> None:
+        MARKET_INDICES[index.symbol.upper()] = index
+
+    def get(self, symbol: str) -> Optional[MarketIndexRecord]:
+        return MARKET_INDICES.get(symbol.upper())
+
+    def update(
+        self,
+        symbol: str,
+        price: float,
+        change: float,
+        change_percent: float,
+    ) -> None:
+        index = self.get(symbol)
+        if index is None:
+            return
+        index.price = price
+        index.change = change
+        index.change_percent = change_percent
+        index.updated_at = utc_now()
+
+    def all(self) -> List[MarketIndexRecord]:
+        return sorted(
+            MARKET_INDICES.values(),
+            key=lambda item: item.symbol,
+        )
+
+
+MARKET_INDEX_ENGINE = MarketIndexEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 037
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 038
+# ==========================================================
+
+class BondRecord(BaseModel):
+    symbol: str
+    country: str
+    maturity: str
+    yield_percent: float = 0.0
+    change: float = 0.0
+    currency: str = ""
+    updated_at: Optional[datetime] = None
+
+
+BONDS: Dict[str, BondRecord] = {}
+
+
+class BondEngine:
+
+    def register(self, bond: BondRecord) -> None:
+        BONDS[bond.symbol.upper()] = bond
+
+    def get(self, symbol: str) -> Optional[BondRecord]:
+        return BONDS.get(symbol.upper())
+
+    def update(
+        self,
+        symbol: str,
+        yield_percent: float,
+        change: float,
+    ) -> None:
+        bond = self.get(symbol)
+        if bond is None:
+            return
+        bond.yield_percent = yield_percent
+        bond.change = change
+        bond.updated_at = utc_now()
+
+    def all(self) -> List[BondRecord]:
+        return sorted(
+            BONDS.values(),
+            key=lambda item: item.symbol,
+        )
+
+    def by_country(
+        self,
+        country: str,
+    ) -> List[BondRecord]:
+        return [
+            bond
+            for bond in BONDS.values()
+            if bond.country.lower() == country.lower()
+        ]
+
+
+BOND_ENGINE = BondEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 038
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 039
+# ==========================================================
+
+class ETFRecord(BaseModel):
+    symbol: str
+    name: str
+    issuer: str = ""
+    category: str = ""
+    aum_usd: Optional[float] = None
+    price: float = 0.0
+    nav: float = 0.0
+    flow_usd: float = 0.0
+    holdings: int = 0
+    updated_at: Optional[datetime] = None
+
+
+ETFS: Dict[str, ETFRecord] = {}
+
+
+class ETFEngine:
+
+    def register(self, etf: ETFRecord) -> None:
+        ETFS[etf.symbol.upper()] = etf
+
+    def get(self, symbol: str) -> Optional[ETFRecord]:
+        return ETFS.get(symbol.upper())
+
+    def update(
+        self,
+        symbol: str,
+        price: float,
+        nav: float,
+        flow_usd: float,
+    ) -> None:
+        etf = self.get(symbol)
+        if etf is None:
+            return
+        etf.price = price
+        etf.nav = nav
+        etf.flow_usd = flow_usd
+        etf.updated_at = utc_now()
+
+    def all(self) -> List[ETFRecord]:
+        return sorted(
+            ETFS.values(),
+            key=lambda item: item.symbol,
+        )
+
+
+ETF_ENGINE = ETFEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 039
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 040
+# ==========================================================
+
+class LogisticsRoute(BaseModel):
+    id: str
+    origin_node: str
+    destination_node: str
+    transport_mode: str
+    distance_km: float = 0.0
+    capacity: float = 0.0
+    flow_usd: float = 0.0
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+LOGISTICS_ROUTES: Dict[str, LogisticsRoute] = {}
+
+
+class LogisticsEngine:
+
+    def register(self, route: LogisticsRoute) -> None:
+        LOGISTICS_ROUTES[route.id] = route
+
+    def get(self, route_id: str) -> Optional[LogisticsRoute]:
+        return LOGISTICS_ROUTES.get(route_id)
+
+    def update_flow(
+        self,
+        route_id: str,
+        flow_usd: float,
+    ) -> None:
+        route = self.get(route_id)
+        if route is None:
+            return
+        route.flow_usd = flow_usd
+        route.updated_at = utc_now()
+
+    def remove(self, route_id: str) -> None:
+        LOGISTICS_ROUTES.pop(route_id, None)
+
+    def all(self) -> List[LogisticsRoute]:
+        return sorted(
+            LOGISTICS_ROUTES.values(),
+            key=lambda item: item.id,
+        )
+
+    def by_node(self, node_id: str) -> List[LogisticsRoute]:
+        return [
+            route
+            for route in LOGISTICS_ROUTES.values()
+            if route.origin_node == node_id
+            or route.destination_node == node_id
+        ]
+
+
+LOGISTICS_ENGINE = LogisticsEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 040
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 041
+# ==========================================================
+
+class SupplyChainRecord(BaseModel):
+    id: str
+    supplier_node: str
+    customer_node: str
+    product: str = ""
+    annual_value_usd: float = 0.0
+    volume: float = 0.0
+    unit: str = ""
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+SUPPLY_CHAINS: Dict[str, SupplyChainRecord] = {}
+
+
+class SupplyChainEngine:
+
+    def register(self, record: SupplyChainRecord) -> None:
+        SUPPLY_CHAINS[record.id] = record
+
+    def get(self, record_id: str) -> Optional[SupplyChainRecord]:
+        return SUPPLY_CHAINS.get(record_id)
+
+    def update_value(
+        self,
+        record_id: str,
+        annual_value_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+        record.annual_value_usd = annual_value_usd
+        record.updated_at = utc_now()
+
+    def remove(self, record_id: str) -> None:
+        SUPPLY_CHAINS.pop(record_id, None)
+
+    def all(self) -> List[SupplyChainRecord]:
+        return sorted(
+            SUPPLY_CHAINS.values(),
+            key=lambda item: item.id,
+        )
+
+    def by_node(self, node_id: str) -> List[SupplyChainRecord]:
+        return [
+            record
+            for record in SUPPLY_CHAINS.values()
+            if record.supplier_node == node_id
+            or record.customer_node == node_id
+        ]
+
+
+SUPPLY_CHAIN_ENGINE = SupplyChainEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 041
+# ==========================================================
