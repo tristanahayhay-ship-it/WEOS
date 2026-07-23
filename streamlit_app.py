@@ -7473,3 +7473,504 @@ INSURANCE_ENGINE = InsuranceEngine()
 # ==========================================================
 # KẾT THÚC ĐOẠN 112
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 113
+# ==========================================================
+
+class InvestmentFundRecord(BaseModel):
+    id: str
+    fund_name: str
+    country: str
+    fund_type: str = ""
+    asset_under_management_usd: float = 0.0
+    equity_holdings_usd: float = 0.0
+    bond_holdings_usd: float = 0.0
+    commodity_holdings_usd: float = 0.0
+    real_estate_holdings_usd: float = 0.0
+    crypto_holdings_usd: float = 0.0
+    cash_position_usd: float = 0.0
+    investor_count: int = 0
+    annual_return_percent: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+INVESTMENT_FUND_DATABASE: Dict[
+    str,
+    InvestmentFundRecord,
+] = {}
+
+
+class InvestmentFundEngine:
+
+    def register(self, record: InvestmentFundRecord) -> None:
+        INVESTMENT_FUND_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[InvestmentFundRecord]:
+        return INVESTMENT_FUND_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        INVESTMENT_FUND_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        asset_under_management_usd: float,
+        equity_holdings_usd: float,
+        bond_holdings_usd: float,
+        commodity_holdings_usd: float,
+        real_estate_holdings_usd: float,
+        crypto_holdings_usd: float,
+        cash_position_usd: float,
+        annual_return_percent: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.asset_under_management_usd = (
+            asset_under_management_usd
+        )
+        record.equity_holdings_usd = equity_holdings_usd
+        record.bond_holdings_usd = bond_holdings_usd
+        record.commodity_holdings_usd = commodity_holdings_usd
+        record.real_estate_holdings_usd = (
+            real_estate_holdings_usd
+        )
+        record.crypto_holdings_usd = crypto_holdings_usd
+        record.cash_position_usd = cash_position_usd
+        record.annual_return_percent = annual_return_percent
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[InvestmentFundRecord]:
+        return sorted(
+            INVESTMENT_FUND_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.fund_name,
+            ),
+        )
+
+
+INVESTMENT_FUND_ENGINE = InvestmentFundEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 113
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 114
+# ==========================================================
+
+class VentureCapitalRecord(BaseModel):
+    id: str
+    fund_name: str
+    country: str
+    investment_stage: str = ""
+    total_capital_usd: float = 0.0
+    invested_capital_usd: float = 0.0
+    portfolio_company_count: int = 0
+    technology_focus: str = ""
+    healthcare_focus: float = 0.0
+    ai_focus: float = 0.0
+    energy_focus: float = 0.0
+    annual_investment_usd: float = 0.0
+    exit_value_usd: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+VENTURE_CAPITAL_DATABASE: Dict[
+    str,
+    VentureCapitalRecord,
+] = {}
+
+
+class VentureCapitalEngine:
+
+    def register(self, record: VentureCapitalRecord) -> None:
+        VENTURE_CAPITAL_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[VentureCapitalRecord]:
+        return VENTURE_CAPITAL_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        VENTURE_CAPITAL_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        total_capital_usd: float,
+        invested_capital_usd: float,
+        portfolio_company_count: int,
+        annual_investment_usd: float,
+        exit_value_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.total_capital_usd = total_capital_usd
+        record.invested_capital_usd = invested_capital_usd
+        record.portfolio_company_count = portfolio_company_count
+        record.annual_investment_usd = annual_investment_usd
+        record.exit_value_usd = exit_value_usd
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[VentureCapitalRecord]:
+        return sorted(
+            VENTURE_CAPITAL_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.fund_name,
+            ),
+        )
+
+
+VENTURE_CAPITAL_ENGINE = VentureCapitalEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 114
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 115
+# ==========================================================
+
+class PrivateEquityRecord(BaseModel):
+    id: str
+    fund_name: str
+    country: str
+    strategy: str = ""
+    assets_under_management_usd: float = 0.0
+    invested_companies: int = 0
+    acquisition_value_usd: float = 0.0
+    exit_value_usd: float = 0.0
+    portfolio_value_usd: float = 0.0
+    sector_focus: str = ""
+    average_holding_years: float = 0.0
+    employee_count: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+PRIVATE_EQUITY_DATABASE: Dict[
+    str,
+    PrivateEquityRecord,
+] = {}
+
+
+class PrivateEquityEngine:
+
+    def register(self, record: PrivateEquityRecord) -> None:
+        PRIVATE_EQUITY_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[PrivateEquityRecord]:
+        return PRIVATE_EQUITY_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        PRIVATE_EQUITY_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        assets_under_management_usd: float,
+        invested_companies: int,
+        acquisition_value_usd: float,
+        exit_value_usd: float,
+        portfolio_value_usd: float,
+        average_holding_years: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.assets_under_management_usd = (
+            assets_under_management_usd
+        )
+        record.invested_companies = invested_companies
+        record.acquisition_value_usd = acquisition_value_usd
+        record.exit_value_usd = exit_value_usd
+        record.portfolio_value_usd = portfolio_value_usd
+        record.average_holding_years = average_holding_years
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[PrivateEquityRecord]:
+        return sorted(
+            PRIVATE_EQUITY_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.fund_name,
+            ),
+        )
+
+
+PRIVATE_EQUITY_ENGINE = PrivateEquityEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 115
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 116
+# ==========================================================
+
+class RealEstateAssetRecord(BaseModel):
+    id: str
+    owner: str
+    country: str
+    city: str = ""
+    asset_type: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    area_m2: float = 0.0
+    estimated_value_usd: float = 0.0
+    rental_income_usd: float = 0.0
+    occupancy_rate: float = 0.0
+    development_status: str = ""
+    transaction_volume_usd: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+REAL_ESTATE_DATABASE: Dict[
+    str,
+    RealEstateAssetRecord,
+] = {}
+
+
+class RealEstateEngine:
+
+    def register(self, record: RealEstateAssetRecord) -> None:
+        REAL_ESTATE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[RealEstateAssetRecord]:
+        return REAL_ESTATE_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        REAL_ESTATE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        estimated_value_usd: float,
+        rental_income_usd: float,
+        occupancy_rate: float,
+        transaction_volume_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.estimated_value_usd = estimated_value_usd
+        record.rental_income_usd = rental_income_usd
+        record.occupancy_rate = occupancy_rate
+        record.transaction_volume_usd = transaction_volume_usd
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[RealEstateAssetRecord]:
+        return sorted(
+            REAL_ESTATE_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.city,
+            ),
+        )
+
+
+REAL_ESTATE_ENGINE = RealEstateEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 116
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 117
+# ==========================================================
+
+class CompanyRecord(BaseModel):
+    id: str
+    name: str
+    country: str
+    headquarters_city: str = ""
+    industry: str = ""
+    sector: str = ""
+    founded_year: int = 0
+    employees: int = 0
+    annual_revenue_usd: float = 0.0
+    market_cap_usd: float = 0.0
+    total_assets_usd: float = 0.0
+    debt_usd: float = 0.0
+    profit_usd: float = 0.0
+    latitude: float = 0.0
+    longitude: float = 0.0
+    website: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+COMPANY_DATABASE: Dict[str, CompanyRecord] = {}
+
+
+class CompanyEngine:
+
+    def register(self, record: CompanyRecord) -> None:
+        COMPANY_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[CompanyRecord]:
+        return COMPANY_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        COMPANY_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        employees: int,
+        annual_revenue_usd: float,
+        market_cap_usd: float,
+        total_assets_usd: float,
+        debt_usd: float,
+        profit_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.employees = employees
+        record.annual_revenue_usd = annual_revenue_usd
+        record.market_cap_usd = market_cap_usd
+        record.total_assets_usd = total_assets_usd
+        record.debt_usd = debt_usd
+        record.profit_usd = profit_usd
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[CompanyRecord]:
+        return sorted(
+            COMPANY_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.name,
+            ),
+        )
+
+
+COMPANY_ENGINE = CompanyEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 117
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 118
+# ==========================================================
+
+class CompanyLocationRecord(BaseModel):
+    id: str
+    company_id: str
+    company_name: str
+    location_type: str = ""
+    country: str = ""
+    city: str = ""
+    address: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    employees: int = 0
+    annual_output: float = 0.0
+    output_unit: str = ""
+    investment_usd: float = 0.0
+    cash_flow_in_usd: float = 0.0
+    cash_flow_out_usd: float = 0.0
+    growth_rate: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+COMPANY_LOCATION_DATABASE: Dict[
+    str,
+    CompanyLocationRecord,
+] = {}
+
+
+class CompanyLocationEngine:
+
+    def register(
+        self,
+        record: CompanyLocationRecord,
+    ) -> None:
+        COMPANY_LOCATION_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[CompanyLocationRecord]:
+        return COMPANY_LOCATION_DATABASE.get(record_id)
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+        COMPANY_LOCATION_DATABASE.pop(record_id, None)
+
+    def update_flow(
+        self,
+        record_id: str,
+        cash_flow_in_usd: float,
+        cash_flow_out_usd: float,
+        growth_rate: float,
+        employees: int,
+    ) -> None:
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.cash_flow_in_usd = cash_flow_in_usd
+        record.cash_flow_out_usd = cash_flow_out_usd
+        record.growth_rate = growth_rate
+        record.employees = employees
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[CompanyLocationRecord]:
+        return sorted(
+            COMPANY_LOCATION_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.company_name,
+            ),
+        )
+
+
+COMPANY_LOCATION_ENGINE = CompanyLocationEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 118
+# ==========================================================
