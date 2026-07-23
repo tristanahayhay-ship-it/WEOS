@@ -97877,3 +97877,10892 @@ if st.session_state.page == "Gold":
 # ==========================================================
 # KẾT THÚC ĐOẠN 262
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 263
+# REAL DATA ENGINE V263
+# ==========================================================
+
+# ==========================================================
+# REAL MARKET DATA CORE
+# ==========================================================
+
+import requests
+import pandas as pd
+from datetime import datetime
+
+
+# ==========================================================
+# CONFIGURATION
+# ==========================================================
+
+if "real_data_config_v263" not in st.session_state:
+
+    st.session_state.real_data_config_v263 = {
+
+        "Market":
+
+        "XAUUSD",
+
+        "Source":
+
+        "API",
+
+        "Status":
+
+        "INITIALIZING"
+
+    }
+
+
+
+# ==========================================================
+# REAL PRICE DATA CONNECTOR V263
+# ==========================================================
+
+def get_real_xauusd_price_v263():
+
+    """
+
+    Lấy giá vàng realtime từ nguồn dữ liệu thật.
+
+    API key sẽ được thêm vào khi người dùng kết nối
+    broker/data provider.
+
+    """
+
+    try:
+
+        # Placeholder cho API thật
+
+        # Ví dụ:
+        # response = requests.get(API_URL)
+
+        # data = response.json()
+
+
+        return {
+
+            "Symbol":
+
+            "XAUUSD",
+
+            "Price":
+
+            None,
+
+            "Time":
+
+            datetime.utcnow(),
+
+            "Status":
+
+            "WAITING API"
+
+        }
+
+
+    except Exception as e:
+
+        return {
+
+            "Symbol":
+
+            "XAUUSD",
+
+            "Price":
+
+            None,
+
+            "Time":
+
+            datetime.utcnow(),
+
+            "Status":
+
+            str(e)
+
+        }
+
+
+
+# ==========================================================
+# REAL DATA VALIDATOR V263
+# ==========================================================
+
+def real_data_validator_v263():
+
+    data = get_real_xauusd_price_v263()
+
+
+    validator = {
+
+        "Source":
+
+        data["Symbol"],
+
+        "Connected":
+
+        False,
+
+        "Price":
+
+        data["Price"],
+
+        "Time":
+
+        data["Time"],
+
+        "Status":
+
+        data["Status"]
+
+    }
+
+
+    if data["Price"] is not None:
+
+        validator["Connected"] = True
+
+        validator["Status"] = "LIVE DATA"
+
+
+    return validator
+
+
+
+# ==========================================================
+# REAL DATA DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📡 WEOS Real Data Engine V263"
+
+    )
+
+
+    real_data = real_data_validator_v263()
+
+
+    real_data_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            real_data.keys(),
+
+            "Value":
+
+            real_data.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        real_data_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL DATA MEMORY V263
+# ==========================================================
+
+if "real_data_memory_v263" not in st.session_state:
+
+    st.session_state.real_data_memory_v263 = []
+
+
+
+def save_real_data_memory_v263():
+
+    data = real_data_validator_v263()
+
+
+    st.session_state.real_data_memory_v263.append(
+
+        {
+
+            "Time":
+
+            data["Time"],
+
+            "Symbol":
+
+            data["Source"],
+
+            "Price":
+
+            data["Price"],
+
+            "Status":
+
+            data["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_data_memory_v263
+
+    ) > 1000:
+
+        st.session_state.real_data_memory_v263.pop(
+
+            0
+
+        )
+
+
+save_real_data_memory_v263()
+
+
+
+# ==========================================================
+# REAL DATA MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📚 Real Data Memory V263"
+
+    )
+
+
+    real_memory_df = pd.DataFrame(
+
+        st.session_state.real_data_memory_v263[-20:]
+
+    )
+
+
+    st.dataframe(
+
+        real_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 263
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 264
+# REAL CANDLE DATA ENGINE V264
+# ==========================================================
+
+
+# ==========================================================
+# XAUUSD OHLC DATA CONNECTOR
+# ==========================================================
+
+def get_real_candle_data_v264(
+    timeframe="M1",
+    limit=200
+):
+
+    """
+    Module nhận dữ liệu nến thật XAUUSD.
+
+    Dữ liệu cần lấy:
+    - Open
+    - High
+    - Low
+    - Close
+    - Volume
+    - Time
+
+    Nguồn thật sẽ được kết nối:
+    - MT5 Broker API
+    - OANDA API
+    - Data Provider API
+
+    """
+
+
+    candles = {
+
+        "Symbol":
+
+        "XAUUSD",
+
+        "Timeframe":
+
+        timeframe,
+
+        "Data":
+
+        [],
+
+        "Status":
+
+        "WAITING SOURCE"
+
+    }
+
+
+    try:
+
+        # API thật sẽ thay thế phần này
+
+        # Ví dụ:
+
+        # candles_data = broker.get_rates(
+        #     "XAUUSD",
+        #     timeframe,
+        #     limit
+        # )
+
+
+        candles["Status"] = "READY FOR API"
+
+
+    except Exception as e:
+
+        candles["Status"] = str(e)
+
+
+    return candles
+
+
+
+# ==========================================================
+# CANDLE DATA VALIDATION ENGINE V264
+# ==========================================================
+
+def validate_candle_data_v264():
+
+    data = get_real_candle_data_v264()
+
+
+    validation = {
+
+        "Symbol":
+
+        data["Symbol"],
+
+        "Timeframe":
+
+        data["Timeframe"],
+
+        "Candles":
+
+        len(data["Data"]),
+
+        "Valid":
+
+        False,
+
+        "Status":
+
+        data["Status"]
+
+    }
+
+
+    if len(data["Data"]) > 0:
+
+        validation["Valid"] = True
+
+        validation["Status"] = "LIVE CANDLES"
+
+
+    return validation
+
+
+
+# ==========================================================
+# CANDLE DATA DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🕯 Real Candle Data Engine V264"
+
+    )
+
+
+    candle_status = validate_candle_data_v264()
+
+
+    candle_status_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            candle_status.keys(),
+
+            "Value":
+
+            candle_status.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        candle_status_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# MULTI TIMEFRAME CANDLE STORAGE
+# ==========================================================
+
+if "multi_timeframe_memory_v264" not in st.session_state:
+
+    st.session_state.multi_timeframe_memory_v264 = []
+
+
+
+def save_multi_timeframe_memory_v264():
+
+    timeframes = [
+
+        "M1",
+
+        "M5",
+
+        "M15",
+
+        "H1",
+
+        "H4",
+
+        "D1"
+
+    ]
+
+
+    for tf in timeframes:
+
+        data = get_real_candle_data_v264(tf)
+
+
+        st.session_state.multi_timeframe_memory_v264.append(
+
+            {
+
+                "Time":
+
+                current_time(),
+
+                "Symbol":
+
+                data["Symbol"],
+
+                "TF":
+
+                tf,
+
+                "Candles":
+
+                len(data["Data"]),
+
+                "Status":
+
+                data["Status"]
+
+            }
+
+        )
+
+
+
+    if len(
+
+        st.session_state.multi_timeframe_memory_v264
+
+    ) > 2000:
+
+        st.session_state.multi_timeframe_memory_v264 = (
+
+            st.session_state.multi_timeframe_memory_v264[-2000:]
+
+        )
+
+
+
+save_multi_timeframe_memory_v264()
+
+
+
+# ==========================================================
+# MULTI TIMEFRAME DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 Multi Timeframe Real Data Memory V264"
+
+    )
+
+
+    mtf_df = pd.DataFrame(
+
+        st.session_state.multi_timeframe_memory_v264[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        mtf_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL MARKET STRUCTURE ANALYZER V264
+# ==========================================================
+
+def real_market_structure_analyzer_v264():
+
+    structure = {
+
+        "Trend":
+
+        "UNKNOWN",
+
+        "Support":
+
+        None,
+
+        "Resistance":
+
+        None,
+
+        "Source":
+
+        "REAL DATA",
+
+        "Status":
+
+        "WAITING"
+
+    }
+
+
+    candle = validate_candle_data_v264()
+
+
+    if candle["Valid"]:
+
+        structure["Status"] = "ANALYZING"
+
+
+        # Phân tích thật sẽ chạy
+        # trên OHLC data
+
+
+    return structure
+
+
+
+# ==========================================================
+# MARKET STRUCTURE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🏗 Real Market Structure Analyzer V264"
+
+    )
+
+
+    structure = real_market_structure_analyzer_v264()
+
+
+    structure_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            structure.keys(),
+
+            "Value":
+
+            structure.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        structure_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 264
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 265
+# REAL TECHNICAL ANALYSIS ENGINE V265
+# ==========================================================
+
+
+# ==========================================================
+# TECHNICAL INDICATOR ENGINE
+# ==========================================================
+
+def calculate_real_indicators_v265(candle_data):
+
+    """
+    Tính toán chỉ báo từ dữ liệu nến thật.
+
+    Bao gồm:
+
+    - EMA
+    - SMA
+    - RSI
+    - MACD
+    - ATR
+    - Volatility
+
+    Không tạo tín hiệu giả.
+    Chỉ tính khi có OHLC thật.
+    """
+
+
+    indicators = {
+
+        "EMA20":
+
+        None,
+
+        "EMA50":
+
+        None,
+
+        "RSI14":
+
+        None,
+
+        "MACD":
+
+        None,
+
+        "ATR":
+
+        None,
+
+        "Status":
+
+        "WAITING DATA"
+
+    }
+
+
+    if len(candle_data) > 50:
+
+
+        df = pd.DataFrame(
+
+            candle_data
+
+        )
+
+
+        close = df["close"]
+
+
+        indicators["EMA20"] = (
+
+            close.ewm(
+
+                span=20
+
+            ).mean().iloc[-1]
+
+        )
+
+
+        indicators["EMA50"] = (
+
+            close.ewm(
+
+                span=50
+
+            ).mean().iloc[-1]
+
+        )
+
+
+        delta = close.diff()
+
+
+        gain = delta.where(
+
+            delta > 0,
+
+            0
+
+        )
+
+
+        loss = -delta.where(
+
+            delta < 0,
+
+            0
+
+        )
+
+
+        avg_gain = gain.rolling(14).mean()
+
+        avg_loss = loss.rolling(14).mean()
+
+
+        rs = avg_gain / avg_loss
+
+
+        indicators["RSI14"] = (
+
+            100 -
+
+            (
+
+                100 /
+
+                (1 + rs)
+
+            )
+
+        ).iloc[-1]
+
+
+        indicators["Status"] = "CALCULATED"
+
+
+
+    return indicators
+
+
+
+# ==========================================================
+# REAL INDICATOR CONNECTOR
+# ==========================================================
+
+def real_indicator_engine_v265():
+
+    result = {
+
+        "Symbol":
+
+        "XAUUSD",
+
+        "Timeframe":
+
+        "M1",
+
+        "Indicators":
+
+        {},
+
+        "Source":
+
+        "REAL OHLC DATA"
+
+    }
+
+
+    candles = get_real_candle_data_v264(
+
+        "M1"
+
+    )
+
+
+    result["Indicators"] = calculate_real_indicators_v265(
+
+        candles["Data"]
+
+    )
+
+
+    return result
+
+
+
+# ==========================================================
+# INDICATOR DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📈 Real Technical Indicator Engine V265"
+
+    )
+
+
+    indicators = real_indicator_engine_v265()
+
+
+    indicator_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            indicators.keys(),
+
+            "Value":
+
+            indicators.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        indicator_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# INDICATOR MEMORY
+# ==========================================================
+
+if "real_indicator_memory_v265" not in st.session_state:
+
+    st.session_state.real_indicator_memory_v265 = []
+
+
+
+def save_real_indicator_memory_v265():
+
+    data = real_indicator_engine_v265()
+
+
+    st.session_state.real_indicator_memory_v265.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Symbol":
+
+            data["Symbol"],
+
+            "RSI":
+
+            data["Indicators"].get(
+
+                "RSI14"
+
+            ),
+
+            "EMA20":
+
+            data["Indicators"].get(
+
+                "EMA20"
+
+            ),
+
+            "EMA50":
+
+            data["Indicators"].get(
+
+                "EMA50"
+
+            )
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_indicator_memory_v265
+
+    ) > 2000:
+
+        st.session_state.real_indicator_memory_v265.pop(
+
+            0
+
+        )
+
+
+
+save_real_indicator_memory_v265()
+
+
+
+# ==========================================================
+# INDICATOR MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📚 Real Indicator Memory V265"
+
+    )
+
+
+    indicator_memory_df = pd.DataFrame(
+
+        st.session_state.real_indicator_memory_v265[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        indicator_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL TREND ANALYSIS ENGINE V265
+# ==========================================================
+
+def real_trend_analysis_v265():
+
+    trend = {
+
+        "Trend":
+
+        "UNKNOWN",
+
+        "Strength":
+
+        0,
+
+        "Source":
+
+        "REAL INDICATORS",
+
+        "Decision":
+
+        "WAIT"
+
+    }
+
+
+    indicators = real_indicator_engine_v265()
+
+    values = indicators["Indicators"]
+
+
+    ema20 = values.get(
+
+        "EMA20"
+
+    )
+
+
+    ema50 = values.get(
+
+        "EMA50"
+
+    )
+
+
+    if ema20 and ema50:
+
+
+        if ema20 > ema50:
+
+            trend["Trend"] = "BULLISH"
+
+        else:
+
+            trend["Trend"] = "BEARISH"
+
+
+
+        trend["Strength"] = 50
+
+
+
+        trend["Decision"] = "ANALYZE"
+
+
+
+    return trend
+
+
+
+# ==========================================================
+# REAL TREND DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 Real Trend Analysis V265"
+
+    )
+
+
+    trend = real_trend_analysis_v265()
+
+
+    trend_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            trend.keys(),
+
+            "Value":
+
+            trend.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        trend_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 265
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 266
+# REAL MARKET MOMENTUM ENGINE V266
+# ==========================================================
+
+
+# ==========================================================
+# REAL MOMENTUM CALCULATION
+# ==========================================================
+
+def calculate_real_momentum_v266(candle_data):
+
+    """
+    Phân tích động lượng từ dữ liệu nến thật.
+
+    Dữ liệu sử dụng:
+
+    - Close price
+    - Volume
+    - Candle body
+    - Price change
+
+    Không tạo tín hiệu nếu thiếu dữ liệu.
+    """
+
+
+    momentum = {
+
+        "Momentum":
+
+        None,
+
+        "Direction":
+
+        "UNKNOWN",
+
+        "Strength":
+
+        0,
+
+        "Status":
+
+        "WAITING DATA"
+
+    }
+
+
+    if len(candle_data) >= 20:
+
+
+        df = pd.DataFrame(
+
+            candle_data
+
+        )
+
+
+        close = df["close"]
+
+
+        change = (
+
+            close.iloc[-1]
+
+            -
+
+            close.iloc[-20]
+
+        )
+
+
+        percentage = (
+
+            change
+
+            /
+
+            close.iloc[-20]
+
+        ) * 100
+
+
+        momentum["Momentum"] = round(
+
+            percentage,
+
+            4
+
+        )
+
+
+        if percentage > 0:
+
+            momentum["Direction"] = "BUYING PRESSURE"
+
+
+        elif percentage < 0:
+
+            momentum["Direction"] = "SELLING PRESSURE"
+
+
+        else:
+
+            momentum["Direction"] = "NEUTRAL"
+
+
+
+        momentum["Strength"] = abs(
+
+            round(
+
+                percentage * 10,
+
+                2
+
+            )
+
+        )
+
+
+        momentum["Status"] = "CALCULATED"
+
+
+    return momentum
+
+
+
+# ==========================================================
+# REAL MOMENTUM ENGINE
+# ==========================================================
+
+def real_market_momentum_engine_v266():
+
+    engine = {
+
+        "Symbol":
+
+        "XAUUSD",
+
+        "Momentum":
+
+        {},
+
+        "Source":
+
+        "REAL CANDLE DATA"
+
+    }
+
+
+    candles = get_real_candle_data_v264(
+
+        "M1"
+
+    )
+
+
+    engine["Momentum"] = calculate_real_momentum_v266(
+
+        candles["Data"]
+
+    )
+
+
+    return engine
+
+
+
+# ==========================================================
+# MOMENTUM DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚡ Real Market Momentum Engine V266"
+
+    )
+
+
+    momentum = real_market_momentum_engine_v266()
+
+
+    momentum_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            momentum.keys(),
+
+            "Value":
+
+            momentum.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        momentum_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# MOMENTUM MEMORY
+# ==========================================================
+
+if "real_momentum_memory_v266" not in st.session_state:
+
+    st.session_state.real_momentum_memory_v266 = []
+
+
+
+def save_real_momentum_memory_v266():
+
+    data = real_market_momentum_engine_v266()
+
+
+    st.session_state.real_momentum_memory_v266.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Momentum":
+
+            data["Momentum"].get(
+
+                "Momentum"
+
+            ),
+
+            "Direction":
+
+            data["Momentum"].get(
+
+                "Direction"
+
+            ),
+
+            "Strength":
+
+            data["Momentum"].get(
+
+                "Strength"
+
+            )
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_momentum_memory_v266
+
+    ) > 2000:
+
+        st.session_state.real_momentum_memory_v266.pop(
+
+            0
+
+        )
+
+
+
+save_real_momentum_memory_v266()
+
+
+
+# ==========================================================
+# MOMENTUM MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚡ Real Momentum Memory V266"
+
+    )
+
+
+    momentum_memory_df = pd.DataFrame(
+
+        st.session_state.real_momentum_memory_v266[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        momentum_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL MARKET CONDITION ENGINE V266
+# ==========================================================
+
+def real_market_condition_engine_v266():
+
+    condition = {
+
+        "Market":
+
+        "UNKNOWN",
+
+        "Trend":
+
+        "UNKNOWN",
+
+        "Momentum":
+
+        "UNKNOWN",
+
+        "State":
+
+        "WAIT"
+
+    }
+
+
+    trend = real_trend_analysis_v265()
+
+    momentum = real_market_momentum_engine_v266()
+
+
+
+    condition["Trend"] = trend["Trend"]
+
+    condition["Momentum"] = momentum["Momentum"]["Direction"]
+
+
+
+    if (
+
+        trend["Trend"] == "BULLISH"
+
+        and
+
+        momentum["Momentum"]["Direction"]
+
+        ==
+
+        "BUYING PRESSURE"
+
+    ):
+
+        condition["Market"] = "BULL TREND"
+
+        condition["State"] = "ACTIVE"
+
+
+
+    elif (
+
+        trend["Trend"] == "BEARISH"
+
+        and
+
+        momentum["Momentum"]["Direction"]
+
+        ==
+
+        "SELLING PRESSURE"
+
+    ):
+
+        condition["Market"] = "BEAR TREND"
+
+        condition["State"] = "ACTIVE"
+
+
+
+    else:
+
+        condition["Market"] = "MIXED"
+
+
+
+    return condition
+
+
+
+# ==========================================================
+# MARKET CONDITION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌍 Real Market Condition Engine V266"
+
+    )
+
+
+    condition = real_market_condition_engine_v266()
+
+
+    condition_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            condition.keys(),
+
+            "Value":
+
+            condition.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        condition_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 266
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 267
+# REAL VOLUME ANALYSIS ENGINE V267
+# ==========================================================
+
+
+# ==========================================================
+# REAL VOLUME DATA PROCESSOR
+# ==========================================================
+
+def calculate_real_volume_analysis_v267(candle_data):
+
+    """
+    Phân tích volume từ dữ liệu nến thật.
+
+    Dữ liệu:
+
+    - Volume hiện tại
+    - Volume trung bình
+    - Volume tăng/giảm
+    - Áp lực mua bán
+
+    Không tạo volume giả.
+    """
+
+
+    volume_analysis = {
+
+        "Current Volume":
+
+        None,
+
+        "Average Volume":
+
+        None,
+
+        "Volume State":
+
+        "UNKNOWN",
+
+        "Pressure":
+
+        "NONE",
+
+        "Status":
+
+        "WAITING DATA"
+
+    }
+
+
+    if len(candle_data) >= 20:
+
+
+        df = pd.DataFrame(
+
+            candle_data
+
+        )
+
+
+        volume = df["volume"]
+
+
+        current_volume = volume.iloc[-1]
+
+
+        average_volume = (
+
+            volume.tail(20)
+
+            .mean()
+
+        )
+
+
+        volume_analysis["Current Volume"] = (
+
+            current_volume
+
+        )
+
+
+        volume_analysis["Average Volume"] = (
+
+            round(
+
+                average_volume,
+
+                2
+
+            )
+
+        )
+
+
+        if current_volume > average_volume * 1.5:
+
+            volume_analysis["Volume State"] = (
+
+                "HIGH VOLUME"
+
+            )
+
+
+        elif current_volume < average_volume * 0.5:
+
+            volume_analysis["Volume State"] = (
+
+                "LOW VOLUME"
+
+            )
+
+
+        else:
+
+            volume_analysis["Volume State"] = (
+
+                "NORMAL"
+
+            )
+
+
+
+        close_change = (
+
+            df["close"].iloc[-1]
+
+            -
+
+            df["close"].iloc[-2]
+
+        )
+
+
+
+        if (
+
+            current_volume > average_volume
+
+            and
+
+            close_change > 0
+
+        ):
+
+            volume_analysis["Pressure"] = (
+
+                "BUYING"
+
+            )
+
+
+        elif (
+
+            current_volume > average_volume
+
+            and
+
+            close_change < 0
+
+        ):
+
+            volume_analysis["Pressure"] = (
+
+                "SELLING"
+
+            )
+
+
+        else:
+
+            volume_analysis["Pressure"] = (
+
+                "NEUTRAL"
+
+            )
+
+
+        volume_analysis["Status"] = (
+
+            "CALCULATED"
+
+        )
+
+
+    return volume_analysis
+
+
+
+# ==========================================================
+# REAL VOLUME ENGINE
+# ==========================================================
+
+def real_volume_engine_v267():
+
+    engine = {
+
+        "Symbol":
+
+        "XAUUSD",
+
+        "Analysis":
+
+        {},
+
+        "Source":
+
+        "REAL MARKET DATA"
+
+    }
+
+
+    candles = get_real_candle_data_v264(
+
+        "M1"
+
+    )
+
+
+    engine["Analysis"] = (
+
+        calculate_real_volume_analysis_v267(
+
+            candles["Data"]
+
+        )
+
+    )
+
+
+    return engine
+
+
+
+# ==========================================================
+# VOLUME DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 Real Volume Analysis Engine V267"
+
+    )
+
+
+    volume = real_volume_engine_v267()
+
+
+    volume_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            volume["Analysis"].keys(),
+
+            "Value":
+
+            volume["Analysis"].values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        volume_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# VOLUME MEMORY
+# ==========================================================
+
+if "real_volume_memory_v267" not in st.session_state:
+
+    st.session_state.real_volume_memory_v267 = []
+
+
+
+def save_real_volume_memory_v267():
+
+    data = real_volume_engine_v267()
+
+
+    analysis = data["Analysis"]
+
+
+    st.session_state.real_volume_memory_v267.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Volume State":
+
+            analysis["Volume State"],
+
+            "Pressure":
+
+            analysis["Pressure"],
+
+            "Current":
+
+            analysis["Current Volume"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_volume_memory_v267
+
+    ) > 2000:
+
+        st.session_state.real_volume_memory_v267.pop(
+
+            0
+
+        )
+
+
+
+save_real_volume_memory_v267()
+
+
+
+# ==========================================================
+# VOLUME MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📚 Real Volume Memory V267"
+
+    )
+
+
+    volume_memory_df = pd.DataFrame(
+
+        st.session_state.real_volume_memory_v267[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        volume_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL ORDER FLOW ANALYSIS V267
+# ==========================================================
+
+def real_order_flow_analysis_v267():
+
+    order_flow = {
+
+        "Flow":
+
+        "UNKNOWN",
+
+        "Direction":
+
+        "NONE",
+
+        "Strength":
+
+        0,
+
+        "Source":
+
+        "REAL VOLUME + PRICE"
+
+    }
+
+
+    volume = real_volume_engine_v267()
+
+    momentum = real_market_momentum_engine_v266()
+
+
+
+    pressure = volume["Analysis"]["Pressure"]
+
+
+
+    order_flow["Flow"] = pressure
+
+
+
+    if pressure == "BUYING":
+
+        order_flow["Direction"] = "LONG"
+
+
+
+    elif pressure == "SELLING":
+
+        order_flow["Direction"] = "SHORT"
+
+
+
+    strength = volume["Analysis"].get(
+
+        "Current Volume"
+
+    )
+
+
+    if strength:
+
+        order_flow["Strength"] = strength
+
+
+
+    return order_flow
+
+
+
+# ==========================================================
+# ORDER FLOW DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌊 Real Order Flow Analysis V267"
+
+    )
+
+
+    order_flow = real_order_flow_analysis_v267()
+
+
+    order_flow_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            order_flow.keys(),
+
+            "Value":
+
+            order_flow.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        order_flow_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 267
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 268
+# REAL MARKET STRUCTURE + ORDER FLOW FUSION V268
+# ==========================================================
+
+
+# ==========================================================
+# ORDER FLOW MEMORY V267
+# ==========================================================
+
+if "real_order_flow_memory_v267" not in st.session_state:
+
+    st.session_state.real_order_flow_memory_v267 = []
+
+
+def save_real_order_flow_memory_v267():
+
+    flow = real_order_flow_analysis_v267()
+
+
+    st.session_state.real_order_flow_memory_v267.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Flow":
+
+            flow["Flow"],
+
+            "Direction":
+
+            flow["Direction"],
+
+            "Strength":
+
+            flow["Strength"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_order_flow_memory_v267
+
+    ) > 2000:
+
+        st.session_state.real_order_flow_memory_v267.pop(
+
+            0
+
+        )
+
+
+save_real_order_flow_memory_v267()
+
+
+
+# ==========================================================
+# ORDER FLOW MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌊 Real Order Flow Memory V267"
+
+    )
+
+
+    order_flow_memory_df = pd.DataFrame(
+
+        st.session_state.real_order_flow_memory_v267[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        order_flow_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL MARKET STRUCTURE FUSION ENGINE V268
+# ==========================================================
+
+def real_market_structure_fusion_v268():
+
+    fusion = {
+
+        "Trend":
+
+        "UNKNOWN",
+
+        "Momentum":
+
+        "UNKNOWN",
+
+        "Order Flow":
+
+        "UNKNOWN",
+
+        "Structure":
+
+        "WAIT",
+
+        "Confidence":
+
+        0
+
+    }
+
+
+    trend = real_trend_analysis_v265()
+
+    momentum = real_market_momentum_engine_v266()
+
+    flow = real_order_flow_analysis_v267()
+
+
+
+    fusion["Trend"] = trend["Trend"]
+
+
+    fusion["Momentum"] = (
+
+        momentum["Momentum"]["Direction"]
+
+    )
+
+
+    fusion["Order Flow"] = flow["Flow"]
+
+
+
+    score = 0
+
+
+
+    if trend["Trend"] == "BULLISH":
+
+        score += 30
+
+
+    elif trend["Trend"] == "BEARISH":
+
+        score += 30
+
+
+
+    if (
+
+        flow["Direction"]
+
+        ==
+
+        "LONG"
+
+    ):
+
+        score += 30
+
+
+
+    elif (
+
+        flow["Direction"]
+
+        ==
+
+        "SHORT"
+
+    ):
+
+        score += 30
+
+
+
+    if momentum["Momentum"]["Strength"]:
+
+        score += 20
+
+
+
+    fusion["Confidence"] = score
+
+
+
+    if score >= 70:
+
+        fusion["Structure"] = "CONFIRMED"
+
+
+    elif score >= 40:
+
+        fusion["Structure"] = "DEVELOPING"
+
+
+    else:
+
+        fusion["Structure"] = "UNCLEAR"
+
+
+
+    return fusion
+
+
+
+# ==========================================================
+# MARKET STRUCTURE FUSION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧩 Real Market Structure Fusion V268"
+
+    )
+
+
+    fusion = real_market_structure_fusion_v268()
+
+
+    fusion_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            fusion.keys(),
+
+            "Value":
+
+            fusion.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        fusion_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# STRUCTURE FUSION MEMORY V268
+# ==========================================================
+
+if "structure_fusion_memory_v268" not in st.session_state:
+
+    st.session_state.structure_fusion_memory_v268 = []
+
+
+
+def save_structure_fusion_memory_v268():
+
+    fusion = real_market_structure_fusion_v268()
+
+
+    st.session_state.structure_fusion_memory_v268.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Trend":
+
+            fusion["Trend"],
+
+            "Flow":
+
+            fusion["Order Flow"],
+
+            "Structure":
+
+            fusion["Structure"],
+
+            "Confidence":
+
+            fusion["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.structure_fusion_memory_v268
+
+    ) > 2000:
+
+        st.session_state.structure_fusion_memory_v268.pop(
+
+            0
+
+        )
+
+
+
+save_structure_fusion_memory_v268()
+
+
+
+# ==========================================================
+# STRUCTURE FUSION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧩 Structure Fusion Memory V268"
+
+    )
+
+
+    structure_memory_df = pd.DataFrame(
+
+        st.session_state.structure_fusion_memory_v268[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        structure_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL SIGNAL FOUNDATION ENGINE V268
+# ==========================================================
+
+def real_signal_foundation_v268():
+
+    signal = {
+
+        "Signal":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Confidence":
+
+        0,
+
+        "Source":
+
+        "REAL DATA FUSION"
+
+    }
+
+
+    fusion = real_market_structure_fusion_v268()
+
+
+
+    signal["Confidence"] = fusion["Confidence"]
+
+
+
+    if fusion["Structure"] == "CONFIRMED":
+
+
+        if (
+
+            fusion["Order Flow"]
+
+            ==
+
+            "BUYING"
+
+        ):
+
+            signal["Signal"] = "BUY"
+
+            signal["Direction"] = "LONG"
+
+
+
+        elif (
+
+            fusion["Order Flow"]
+
+            ==
+
+            "SELLING"
+
+        ):
+
+            signal["Signal"] = "SELL"
+
+            signal["Direction"] = "SHORT"
+
+
+
+    return signal
+
+
+
+# ==========================================================
+# REAL SIGNAL DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Real Signal Foundation V268"
+
+    )
+
+
+    signal = real_signal_foundation_v268()
+
+
+    signal_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            signal.keys(),
+
+            "Value":
+
+            signal.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        signal_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 268
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 269
+# REAL SIGNAL VALIDATION ENGINE V269
+# ==========================================================
+
+
+# ==========================================================
+# REAL SIGNAL MEMORY V268
+# ==========================================================
+
+if "real_signal_memory_v268" not in st.session_state:
+
+    st.session_state.real_signal_memory_v268 = []
+
+
+def save_real_signal_memory_v268():
+
+    signal = real_signal_foundation_v268()
+
+
+    st.session_state.real_signal_memory_v268.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Signal":
+
+            signal["Signal"],
+
+            "Direction":
+
+            signal["Direction"],
+
+            "Confidence":
+
+            signal["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_signal_memory_v268
+
+    ) > 2000:
+
+        st.session_state.real_signal_memory_v268.pop(
+
+            0
+
+        )
+
+
+save_real_signal_memory_v268()
+
+
+
+# ==========================================================
+# SIGNAL MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Real Signal Memory V268"
+
+    )
+
+
+    signal_memory_df = pd.DataFrame(
+
+        st.session_state.real_signal_memory_v268[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        signal_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL SIGNAL VALIDATION ENGINE V269
+# ==========================================================
+
+def real_signal_validation_v269():
+
+    validation = {
+
+        "Signal":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Validation":
+
+        "FAILED",
+
+        "Score":
+
+        0,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    signal = real_signal_foundation_v268()
+
+    condition = real_market_condition_engine_v266()
+
+    fusion = real_market_structure_fusion_v268()
+
+
+
+    validation["Signal"] = signal["Signal"]
+
+    validation["Direction"] = signal["Direction"]
+
+
+
+    score = 0
+
+
+
+    if signal["Confidence"] >= 70:
+
+        score += 30
+
+        validation["Reason"].append(
+
+            "Signal confidence passed"
+
+        )
+
+
+    if condition["State"] == "ACTIVE":
+
+        score += 30
+
+        validation["Reason"].append(
+
+            "Market active"
+
+        )
+
+
+    if fusion["Structure"] == "CONFIRMED":
+
+        score += 40
+
+        validation["Reason"].append(
+
+            "Structure confirmed"
+
+        )
+
+
+
+    validation["Score"] = score
+
+
+
+    if score >= 70:
+
+        validation["Validation"] = "PASSED"
+
+
+
+    return validation
+
+
+
+# ==========================================================
+# SIGNAL VALIDATION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Real Signal Validation Engine V269"
+
+    )
+
+
+    validation = real_signal_validation_v269()
+
+
+    validation_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            validation.keys(),
+
+            "Value":
+
+            validation.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        validation_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# SIGNAL VALIDATION MEMORY V269
+# ==========================================================
+
+if "signal_validation_memory_v269" not in st.session_state:
+
+    st.session_state.signal_validation_memory_v269 = []
+
+
+
+def save_signal_validation_memory_v269():
+
+    validation = real_signal_validation_v269()
+
+
+    st.session_state.signal_validation_memory_v269.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Signal":
+
+            validation["Signal"],
+
+            "Validation":
+
+            validation["Validation"],
+
+            "Score":
+
+            validation["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.signal_validation_memory_v269
+
+    ) > 2000:
+
+        st.session_state.signal_validation_memory_v269.pop(
+
+            0
+
+        )
+
+
+save_signal_validation_memory_v269()
+
+
+
+# ==========================================================
+# SIGNAL VALIDATION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "✅ Signal Validation Memory V269"
+
+    )
+
+
+    signal_validation_memory_df = pd.DataFrame(
+
+        st.session_state.signal_validation_memory_v269[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        signal_validation_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL ENTRY ZONE CALCULATOR V269
+# ==========================================================
+
+def real_entry_zone_calculator_v269():
+
+    entry = {
+
+        "Entry Zone":
+
+        None,
+
+        "Support":
+
+        None,
+
+        "Resistance":
+
+        None,
+
+        "Source":
+
+        "REAL PRICE DATA"
+
+    }
+
+
+    candles = get_real_candle_data_v264(
+
+        "M15"
+
+    )
+
+
+    if len(candles["Data"]) > 0:
+
+
+        df = pd.DataFrame(
+
+            candles["Data"]
+
+        )
+
+
+        entry["Support"] = (
+
+            df["low"]
+
+            .tail(50)
+
+            .min()
+
+        )
+
+
+        entry["Resistance"] = (
+
+            df["high"]
+
+            .tail(50)
+
+            .max()
+
+        )
+
+
+    return entry
+
+
+
+# ==========================================================
+# ENTRY ZONE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Real Entry Zone Calculator V269"
+
+    )
+
+
+    entry = real_entry_zone_calculator_v269()
+
+
+    entry_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            entry.keys(),
+
+            "Value":
+
+            entry.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        entry_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 269
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 270
+# REAL ENTRY CONFIRMATION ENGINE V270
+# ==========================================================
+
+
+# ==========================================================
+# ENTRY ZONE MEMORY V269
+# ==========================================================
+
+if "real_entry_zone_memory_v269" not in st.session_state:
+
+    st.session_state.real_entry_zone_memory_v269 = []
+
+
+def save_real_entry_zone_memory_v269():
+
+    entry = real_entry_zone_calculator_v269()
+
+
+    st.session_state.real_entry_zone_memory_v269.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Support":
+
+            entry["Support"],
+
+            "Resistance":
+
+            entry["Resistance"],
+
+            "Source":
+
+            entry["Source"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_entry_zone_memory_v269
+
+    ) > 2000:
+
+        st.session_state.real_entry_zone_memory_v269.pop(
+
+            0
+
+        )
+
+
+save_real_entry_zone_memory_v269()
+
+
+
+# ==========================================================
+# ENTRY ZONE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Real Entry Zone Memory V269"
+
+    )
+
+
+    entry_zone_memory_df = pd.DataFrame(
+
+        st.session_state.real_entry_zone_memory_v269[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        entry_zone_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL ENTRY CONFIRMATION ENGINE V270
+# ==========================================================
+
+def real_entry_confirmation_v270():
+
+    confirmation = {
+
+        "Status":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry":
+
+        None,
+
+        "Score":
+
+        0,
+
+        "Reason":
+
+        []
+
+    }
+
+
+    signal = real_signal_validation_v269()
+
+    zone = real_entry_zone_calculator_v269()
+
+    structure = real_market_structure_fusion_v268()
+
+    momentum = real_market_momentum_engine_v266()
+
+
+
+    score = 0
+
+
+
+    if signal["Validation"] == "PASSED":
+
+        score += 40
+
+        confirmation["Reason"].append(
+
+            "Signal validated"
+
+        )
+
+
+
+    if structure["Structure"] == "CONFIRMED":
+
+        score += 30
+
+        confirmation["Reason"].append(
+
+            "Structure confirmed"
+
+        )
+
+
+
+    if momentum["Momentum"]["Strength"] > 0:
+
+        score += 20
+
+        confirmation["Reason"].append(
+
+            "Momentum available"
+
+        )
+
+
+
+    confirmation["Direction"] = (
+
+        signal["Direction"]
+
+    )
+
+
+    confirmation["Score"] = score
+
+
+
+    if score >= 70:
+
+        confirmation["Status"] = "CONFIRMED"
+
+
+        if confirmation["Direction"] == "LONG":
+
+            confirmation["Entry"] = zone["Support"]
+
+
+        elif confirmation["Direction"] == "SHORT":
+
+            confirmation["Entry"] = zone["Resistance"]
+
+
+
+    return confirmation
+
+
+
+# ==========================================================
+# ENTRY CONFIRMATION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Real Entry Confirmation Engine V270"
+
+    )
+
+
+    confirmation = real_entry_confirmation_v270()
+
+
+    confirmation_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            confirmation.keys(),
+
+            "Value":
+
+            confirmation.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        confirmation_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# ENTRY CONFIRMATION MEMORY V270
+# ==========================================================
+
+if "real_entry_confirmation_memory_v270" not in st.session_state:
+
+    st.session_state.real_entry_confirmation_memory_v270 = []
+
+
+
+def save_real_entry_confirmation_memory_v270():
+
+    confirmation = real_entry_confirmation_v270()
+
+
+    st.session_state.real_entry_confirmation_memory_v270.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            confirmation["Status"],
+
+            "Direction":
+
+            confirmation["Direction"],
+
+            "Score":
+
+            confirmation["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_entry_confirmation_memory_v270
+
+    ) > 2000:
+
+        st.session_state.real_entry_confirmation_memory_v270.pop(
+
+            0
+
+        )
+
+
+save_real_entry_confirmation_memory_v270()
+
+
+
+# ==========================================================
+# ENTRY CONFIRMATION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Real Entry Confirmation Memory V270"
+
+    )
+
+
+    entry_confirmation_memory_df = pd.DataFrame(
+
+        st.session_state.real_entry_confirmation_memory_v270[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        entry_confirmation_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL STOP LOSS CALCULATOR V270
+# ==========================================================
+
+def real_stop_loss_calculator_v270():
+
+    sl = {
+
+        "Stop Loss":
+
+        None,
+
+        "Method":
+
+        "ATR + STRUCTURE",
+
+        "Source":
+
+        "REAL DATA"
+
+    }
+
+
+    candles = get_real_candle_data_v264(
+
+        "M15"
+
+    )
+
+
+    if len(candles["Data"]) > 20:
+
+
+        df = pd.DataFrame(
+
+            candles["Data"]
+
+        )
+
+
+        low = df["low"].tail(20).min()
+
+        high = df["high"].tail(20).max()
+
+
+
+        confirmation = real_entry_confirmation_v270()
+
+
+
+        if confirmation["Direction"] == "LONG":
+
+            sl["Stop Loss"] = low
+
+
+        elif confirmation["Direction"] == "SHORT":
+
+            sl["Stop Loss"] = high
+
+
+
+    return sl
+
+
+
+# ==========================================================
+# STOP LOSS DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🛡 Real Stop Loss Calculator V270"
+
+    )
+
+
+    sl = real_stop_loss_calculator_v270()
+
+
+    sl_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            sl.keys(),
+
+            "Value":
+
+            sl.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        sl_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 270
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 271
+# REAL RISK MANAGEMENT ENGINE V271
+# ==========================================================
+
+
+# ==========================================================
+# STOP LOSS MEMORY V270
+# ==========================================================
+
+if "real_stop_loss_memory_v270" not in st.session_state:
+
+    st.session_state.real_stop_loss_memory_v270 = []
+
+
+def save_real_stop_loss_memory_v270():
+
+    sl = real_stop_loss_calculator_v270()
+
+
+    st.session_state.real_stop_loss_memory_v270.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Stop Loss":
+
+            sl["Stop Loss"],
+
+            "Method":
+
+            sl["Method"],
+
+            "Source":
+
+            sl["Source"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_stop_loss_memory_v270
+
+    ) > 2000:
+
+        st.session_state.real_stop_loss_memory_v270.pop(
+
+            0
+
+        )
+
+
+save_real_stop_loss_memory_v270()
+
+
+
+# ==========================================================
+# STOP LOSS MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🛡 Real Stop Loss Memory V270"
+
+    )
+
+
+    sl_memory_df = pd.DataFrame(
+
+        st.session_state.real_stop_loss_memory_v270[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        sl_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL RISK CALCULATION ENGINE V271
+# ==========================================================
+
+def real_risk_management_engine_v271(
+    capital=1000,
+    risk_percent=1
+):
+
+    risk = {
+
+        "Capital":
+
+        capital,
+
+        "Risk Percent":
+
+        risk_percent,
+
+        "Max Loss":
+
+        0,
+
+        "Position Size":
+
+        0,
+
+        "Status":
+
+        "CALCULATING"
+
+    }
+
+
+    risk["Max Loss"] = (
+
+        capital
+
+        *
+
+        risk_percent
+
+        /
+
+        100
+
+    )
+
+
+    sl = real_stop_loss_calculator_v270()
+
+
+    if sl["Stop Loss"] is not None:
+
+        risk["Position Size"] = (
+
+            risk["Max Loss"]
+
+            /
+
+            abs(sl["Stop Loss"])
+
+        )
+
+
+        risk["Status"] = "CALCULATED"
+
+
+
+    return risk
+
+
+
+# ==========================================================
+# RISK DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚖ Real Risk Management Engine V271"
+
+    )
+
+
+    risk = real_risk_management_engine_v271()
+
+
+    risk_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            risk.keys(),
+
+            "Value":
+
+            risk.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        risk_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# RISK MEMORY V271
+# ==========================================================
+
+if "real_risk_memory_v271" not in st.session_state:
+
+    st.session_state.real_risk_memory_v271 = []
+
+
+
+def save_real_risk_memory_v271():
+
+    risk = real_risk_management_engine_v271()
+
+
+    st.session_state.real_risk_memory_v271.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Capital":
+
+            risk["Capital"],
+
+            "Max Loss":
+
+            risk["Max Loss"],
+
+            "Status":
+
+            risk["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_risk_memory_v271
+
+    ) > 2000:
+
+        st.session_state.real_risk_memory_v271.pop(
+
+            0
+
+        )
+
+
+save_real_risk_memory_v271()
+
+
+
+# ==========================================================
+# RISK MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚖ Real Risk Memory V271"
+
+    )
+
+
+    risk_memory_df = pd.DataFrame(
+
+        st.session_state.real_risk_memory_v271[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        risk_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL TAKE PROFIT CALCULATOR V271
+# ==========================================================
+
+def real_take_profit_calculator_v271():
+
+    tp = {
+
+        "Take Profit":
+
+        None,
+
+        "Risk Reward":
+
+        "1:2",
+
+        "Method":
+
+        "STRUCTURE BASED",
+
+        "Source":
+
+        "REAL DATA"
+
+    }
+
+
+    confirmation = real_entry_confirmation_v270()
+
+    zone = real_entry_zone_calculator_v269()
+
+
+    if confirmation["Status"] == "CONFIRMED":
+
+
+        if confirmation["Direction"] == "LONG":
+
+            if zone["Resistance"]:
+
+                tp["Take Profit"] = (
+
+                    zone["Resistance"]
+
+                )
+
+
+        elif confirmation["Direction"] == "SHORT":
+
+            if zone["Support"]:
+
+                tp["Take Profit"] = (
+
+                    zone["Support"]
+
+                )
+
+
+    return tp
+
+
+
+# ==========================================================
+# TAKE PROFIT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Real Take Profit Calculator V271"
+
+    )
+
+
+    tp = real_take_profit_calculator_v271()
+
+
+    tp_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            tp.keys(),
+
+            "Value":
+
+            tp.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        tp_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 271
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 272
+# REAL TRADE PLAN GENERATOR V272
+# ==========================================================
+
+
+# ==========================================================
+# TAKE PROFIT MEMORY V271
+# ==========================================================
+
+if "real_take_profit_memory_v271" not in st.session_state:
+
+    st.session_state.real_take_profit_memory_v271 = []
+
+
+def save_real_take_profit_memory_v271():
+
+    tp = real_take_profit_calculator_v271()
+
+
+    st.session_state.real_take_profit_memory_v271.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Take Profit":
+
+            tp["Take Profit"],
+
+            "Risk Reward":
+
+            tp["Risk Reward"],
+
+            "Source":
+
+            tp["Source"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_take_profit_memory_v271
+
+    ) > 2000:
+
+        st.session_state.real_take_profit_memory_v271.pop(
+
+            0
+
+        )
+
+
+save_real_take_profit_memory_v271()
+
+
+
+# ==========================================================
+# TAKE PROFIT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Real Take Profit Memory V271"
+
+    )
+
+
+    tp_memory_df = pd.DataFrame(
+
+        st.session_state.real_take_profit_memory_v271[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        tp_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL TRADE PLAN GENERATOR V272
+# ==========================================================
+
+def real_trade_plan_generator_v272():
+
+    plan = {
+
+        "Status":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry":
+
+        None,
+
+        "Stop Loss":
+
+        None,
+
+        "Take Profit":
+
+        None,
+
+        "Risk":
+
+        None,
+
+        "Source":
+
+        "REAL MARKET DATA"
+
+    }
+
+
+    confirmation = real_entry_confirmation_v270()
+
+    sl = real_stop_loss_calculator_v270()
+
+    tp = real_take_profit_calculator_v271()
+
+    risk = real_risk_management_engine_v271()
+
+
+
+    if confirmation["Status"] == "CONFIRMED":
+
+
+        plan["Status"] = "READY"
+
+
+        plan["Direction"] = (
+
+            confirmation["Direction"]
+
+        )
+
+
+        plan["Entry"] = (
+
+            confirmation["Entry"]
+
+        )
+
+
+        plan["Stop Loss"] = (
+
+            sl["Stop Loss"]
+
+        )
+
+
+        plan["Take Profit"] = (
+
+            tp["Take Profit"]
+
+        )
+
+
+        plan["Risk"] = (
+
+            risk["Max Loss"]
+
+        )
+
+
+
+    return plan
+
+
+
+# ==========================================================
+# TRADE PLAN DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📋 Real Trade Plan Generator V272"
+
+    )
+
+
+    plan = real_trade_plan_generator_v272()
+
+
+    plan_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            plan.keys(),
+
+            "Value":
+
+            plan.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        plan_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# TRADE PLAN MEMORY V272
+# ==========================================================
+
+if "real_trade_plan_memory_v272" not in st.session_state:
+
+    st.session_state.real_trade_plan_memory_v272 = []
+
+
+
+def save_real_trade_plan_memory_v272():
+
+    plan = real_trade_plan_generator_v272()
+
+
+    st.session_state.real_trade_plan_memory_v272.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            plan["Status"],
+
+            "Direction":
+
+            plan["Direction"],
+
+            "Entry":
+
+            plan["Entry"],
+
+            "SL":
+
+            plan["Stop Loss"],
+
+            "TP":
+
+            plan["Take Profit"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_trade_plan_memory_v272
+
+    ) > 2000:
+
+        st.session_state.real_trade_plan_memory_v272.pop(
+
+            0
+
+        )
+
+
+save_real_trade_plan_memory_v272()
+
+
+
+# ==========================================================
+# TRADE PLAN MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📋 Real Trade Plan Memory V272"
+
+    )
+
+
+    trade_plan_memory_df = pd.DataFrame(
+
+        st.session_state.real_trade_plan_memory_v272[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        trade_plan_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL EXECUTION VALIDATOR V272
+# ==========================================================
+
+def real_execution_validator_v272():
+
+    validator = {
+
+        "Permission":
+
+        "DENIED",
+
+        "Reason":
+
+        [],
+
+        "Status":
+
+        "WAIT"
+
+    }
+
+
+    plan = real_trade_plan_generator_v272()
+
+
+
+    if plan["Status"] == "READY":
+
+
+        validator["Permission"] = "APPROVED"
+
+        validator["Status"] = "READY"
+
+
+        validator["Reason"].append(
+
+            "Trade plan completed from real data"
+
+        )
+
+
+    else:
+
+        validator["Reason"].append(
+
+            "Waiting real market confirmation"
+
+        )
+
+
+
+    return validator
+
+
+
+# ==========================================================
+# EXECUTION VALIDATOR DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚦 Real Execution Validator V272"
+
+    )
+
+
+    validator = real_execution_validator_v272()
+
+
+    validator_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            validator.keys(),
+
+            "Value":
+
+            validator.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        validator_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 272
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 273
+# REAL TRADE EXECUTION CONTROL V273
+# ==========================================================
+
+
+# ==========================================================
+# EXECUTION VALIDATOR MEMORY V272
+# ==========================================================
+
+if "real_execution_validator_memory_v272" not in st.session_state:
+
+    st.session_state.real_execution_validator_memory_v272 = []
+
+
+def save_real_execution_validator_memory_v272():
+
+    validator = real_execution_validator_v272()
+
+
+    st.session_state.real_execution_validator_memory_v272.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Permission":
+
+            validator["Permission"],
+
+            "Status":
+
+            validator["Status"],
+
+            "Reason":
+
+            validator["Reason"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_execution_validator_memory_v272
+
+    ) > 2000:
+
+        st.session_state.real_execution_validator_memory_v272.pop(
+
+            0
+
+        )
+
+
+save_real_execution_validator_memory_v272()
+
+
+
+# ==========================================================
+# EXECUTION VALIDATOR MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚦 Real Execution Validator Memory V272"
+
+    )
+
+
+    execution_memory_df = pd.DataFrame(
+
+        st.session_state.real_execution_validator_memory_v272[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        execution_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL TRADE EXECUTION CONTROL V273
+# ==========================================================
+
+def real_trade_execution_control_v273():
+
+    execution = {
+
+        "Action":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry":
+
+        None,
+
+        "SL":
+
+        None,
+
+        "TP":
+
+        None,
+
+        "Status":
+
+        "BLOCKED"
+
+    }
+
+
+    validator = real_execution_validator_v272()
+
+    plan = real_trade_plan_generator_v272()
+
+
+
+    if validator["Permission"] == "APPROVED":
+
+
+        execution["Action"] = "PREPARE"
+
+
+        execution["Direction"] = (
+
+            plan["Direction"]
+
+        )
+
+
+        execution["Entry"] = (
+
+            plan["Entry"]
+
+        )
+
+
+        execution["SL"] = (
+
+            plan["Stop Loss"]
+
+        )
+
+
+        execution["TP"] = (
+
+            plan["Take Profit"]
+
+        )
+
+
+        execution["Status"] = "READY"
+
+
+
+    return execution
+
+
+
+# ==========================================================
+# EXECUTION CONTROL DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚙ Real Trade Execution Control V273"
+
+    )
+
+
+    execution = real_trade_execution_control_v273()
+
+
+    execution_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            execution.keys(),
+
+            "Value":
+
+            execution.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        execution_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# EXECUTION CONTROL MEMORY V273
+# ==========================================================
+
+if "real_execution_control_memory_v273" not in st.session_state:
+
+    st.session_state.real_execution_control_memory_v273 = []
+
+
+
+def save_real_execution_control_memory_v273():
+
+    execution = real_trade_execution_control_v273()
+
+
+    st.session_state.real_execution_control_memory_v273.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Action":
+
+            execution["Action"],
+
+            "Direction":
+
+            execution["Direction"],
+
+            "Status":
+
+            execution["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_execution_control_memory_v273
+
+    ) > 2000:
+
+        st.session_state.real_execution_control_memory_v273.pop(
+
+            0
+
+        )
+
+
+save_real_execution_control_memory_v273()
+
+
+
+# ==========================================================
+# EXECUTION CONTROL MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⚙ Real Execution Control Memory V273"
+
+    )
+
+
+    execution_control_memory_df = pd.DataFrame(
+
+        st.session_state.real_execution_control_memory_v273[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        execution_control_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL TRADE JOURNAL ENGINE V273
+# ==========================================================
+
+if "real_trade_journal_v273" not in st.session_state:
+
+    st.session_state.real_trade_journal_v273 = []
+
+
+
+def save_real_trade_journal_v273():
+
+    execution = real_trade_execution_control_v273()
+
+
+    st.session_state.real_trade_journal_v273.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Direction":
+
+            execution["Direction"],
+
+            "Entry":
+
+            execution["Entry"],
+
+            "SL":
+
+            execution["SL"],
+
+            "TP":
+
+            execution["TP"],
+
+            "Status":
+
+            execution["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_trade_journal_v273
+
+    ) > 5000:
+
+        st.session_state.real_trade_journal_v273.pop(
+
+            0
+
+        )
+
+
+save_real_trade_journal_v273()
+
+
+
+# ==========================================================
+# TRADE JOURNAL DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📖 Real Trade Journal V273"
+
+    )
+
+
+    journal_df = pd.DataFrame(
+
+        st.session_state.real_trade_journal_v273[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        journal_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 273
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 274
+# REAL TRADE RESULT TRACKER V274
+# ==========================================================
+
+
+# ==========================================================
+# REAL TRADE RESULT DATABASE
+# ==========================================================
+
+if "real_trade_results_v274" not in st.session_state:
+
+    st.session_state.real_trade_results_v274 = []
+
+
+
+# ==========================================================
+# TRADE RESULT RECORDER
+# ==========================================================
+
+def record_real_trade_result_v274(
+    ticket,
+    exit_price,
+    result
+):
+
+    """
+
+    Lưu kết quả giao dịch thật.
+
+    Dữ liệu:
+
+    - Entry thật
+    - Exit thật
+    - Profit/Loss
+    - Thời gian giữ lệnh
+    - Kết quả
+
+    """
+
+
+    trade_result = {
+
+        "Time":
+
+        current_time(),
+
+        "Direction":
+
+        ticket.get(
+
+            "Direction"
+
+        ),
+
+
+        "Entry":
+
+        ticket.get(
+
+            "Entry"
+
+        ),
+
+
+        "Exit":
+
+        exit_price,
+
+
+        "Result":
+
+        result,
+
+
+        "Source":
+
+        "REAL TRADE DATA"
+
+    }
+
+
+
+    st.session_state.real_trade_results_v274.append(
+
+        trade_result
+
+    )
+
+
+
+    if len(
+
+        st.session_state.real_trade_results_v274
+
+    ) > 5000:
+
+        st.session_state.real_trade_results_v274.pop(
+
+            0
+
+        )
+
+
+
+    return trade_result
+
+
+
+# ==========================================================
+# TRADE RESULT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📒 Real Trade Result Database V274"
+
+    )
+
+
+    trade_result_df = pd.DataFrame(
+
+        st.session_state.real_trade_results_v274[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        trade_result_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL PERFORMANCE CALCULATOR V274
+# ==========================================================
+
+def real_performance_calculator_v274():
+
+    performance = {
+
+        "Total Trades":
+
+        0,
+
+        "Winning Trades":
+
+        0,
+
+        "Losing Trades":
+
+        0,
+
+        "Win Rate":
+
+        0,
+
+        "Status":
+
+        "NO DATA"
+
+    }
+
+
+
+    trades = (
+
+        st.session_state.real_trade_results_v274
+
+    )
+
+
+
+    if len(trades) > 0:
+
+
+        performance["Total Trades"] = len(
+
+            trades
+
+        )
+
+
+        wins = 0
+
+
+        losses = 0
+
+
+
+        for trade in trades:
+
+
+            if trade["Result"] == "WIN":
+
+                wins += 1
+
+
+            elif trade["Result"] == "LOSS":
+
+                losses += 1
+
+
+
+        performance["Winning Trades"] = wins
+
+
+        performance["Losing Trades"] = losses
+
+
+
+        performance["Win Rate"] = round(
+
+            wins
+
+            /
+
+            len(trades)
+
+            *
+
+            100,
+
+            2
+
+        )
+
+
+        performance["Status"] = (
+
+            "ACTIVE"
+
+        )
+
+
+
+    return performance
+
+
+
+# ==========================================================
+# PERFORMANCE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📈 Real Performance Calculator V274"
+
+    )
+
+
+    performance = real_performance_calculator_v274()
+
+
+    performance_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            performance.keys(),
+
+            "Value":
+
+            performance.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        performance_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL PERFORMANCE MEMORY
+# ==========================================================
+
+if "real_performance_memory_v274" not in st.session_state:
+
+    st.session_state.real_performance_memory_v274 = []
+
+
+
+def save_real_performance_memory_v274():
+
+    performance = real_performance_calculator_v274()
+
+
+    st.session_state.real_performance_memory_v274.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Trades":
+
+            performance["Total Trades"],
+
+            "Win Rate":
+
+            performance["Win Rate"],
+
+            "Status":
+
+            performance["Status"]
+
+        }
+
+    )
+
+
+
+    if len(
+
+        st.session_state.real_performance_memory_v274
+
+    ) > 2000:
+
+        st.session_state.real_performance_memory_v274.pop(
+
+            0
+
+        )
+
+
+
+save_real_performance_memory_v274()
+
+
+
+# ==========================================================
+# PERFORMANCE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 Real Performance Memory V274"
+
+    )
+
+
+    performance_memory_df = pd.DataFrame(
+
+        st.session_state.real_performance_memory_v274[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        performance_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL STRATEGY EVALUATION ENGINE V274
+# ==========================================================
+
+def real_strategy_evaluation_v274():
+
+    evaluation = {
+
+        "Strategy":
+
+        "WEOS REAL SIGNAL",
+
+        "Evaluation":
+
+        "WAITING DATA",
+
+        "Score":
+
+        0
+
+    }
+
+
+    performance = real_performance_calculator_v274()
+
+
+
+    if performance["Total Trades"] >= 20:
+
+
+        evaluation["Evaluation"] = (
+
+            "ANALYZING"
+
+        )
+
+
+        evaluation["Score"] = (
+
+            performance["Win Rate"]
+
+        )
+
+
+
+    return evaluation
+
+
+
+# ==========================================================
+# STRATEGY EVALUATION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Real Strategy Evaluation V274"
+
+    )
+
+
+    evaluation = real_strategy_evaluation_v274()
+
+
+    evaluation_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            evaluation.keys(),
+
+            "Value":
+
+            evaluation.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        evaluation_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 274
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 275
+# REAL MARKET LEARNING ENGINE V275
+# ==========================================================
+
+
+# ==========================================================
+# STRATEGY EVALUATION MEMORY V274
+# ==========================================================
+
+if "real_strategy_evaluation_memory_v274" not in st.session_state:
+
+    st.session_state.real_strategy_evaluation_memory_v274 = []
+
+
+
+def save_real_strategy_evaluation_memory_v274():
+
+    evaluation = real_strategy_evaluation_v274()
+
+
+    st.session_state.real_strategy_evaluation_memory_v274.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Evaluation":
+
+            evaluation["Evaluation"],
+
+            "Score":
+
+            evaluation["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_strategy_evaluation_memory_v274
+
+    ) > 2000:
+
+        st.session_state.real_strategy_evaluation_memory_v274.pop(
+
+            0
+
+        )
+
+
+save_real_strategy_evaluation_memory_v274()
+
+
+
+# ==========================================================
+# STRATEGY EVALUATION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Real Strategy Evaluation Memory V274"
+
+    )
+
+
+    evaluation_memory_df = pd.DataFrame(
+
+        st.session_state.real_strategy_evaluation_memory_v274[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        evaluation_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL MARKET LEARNING ENGINE V275
+# ==========================================================
+
+def real_market_learning_engine_v275():
+
+    learning = {
+
+        "Status":
+
+        "COLLECTING",
+
+        "Experience":
+
+        0,
+
+        "Patterns":
+
+        0,
+
+        "Learning":
+
+        "WAITING DATA"
+
+    }
+
+
+
+    trades = (
+
+        st.session_state.real_trade_results_v274
+
+    )
+
+
+
+    if len(trades) > 0:
+
+
+        learning["Experience"] = len(
+
+            trades
+
+        )
+
+
+        patterns = {}
+
+
+
+        for trade in trades:
+
+
+            direction = trade.get(
+
+                "Direction"
+
+            )
+
+
+            if direction not in patterns:
+
+                patterns[direction] = 0
+
+
+            patterns[direction] += 1
+
+
+
+        learning["Patterns"] = len(
+
+            patterns
+
+        )
+
+
+        learning["Learning"] = (
+
+            "ACTIVE"
+
+        )
+
+
+        learning["Status"] = (
+
+            "ANALYZING"
+
+        )
+
+
+
+    return learning
+
+
+
+# ==========================================================
+# MARKET LEARNING DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Real Market Learning Engine V275"
+
+    )
+
+
+    learning = real_market_learning_engine_v275()
+
+
+    learning_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            learning.keys(),
+
+            "Value":
+
+            learning.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        learning_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL MARKET LEARNING MEMORY
+# ==========================================================
+
+if "real_market_learning_memory_v275" not in st.session_state:
+
+    st.session_state.real_market_learning_memory_v275 = []
+
+
+
+def save_real_market_learning_memory_v275():
+
+    learning = real_market_learning_engine_v275()
+
+
+    st.session_state.real_market_learning_memory_v275.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Experience":
+
+            learning["Experience"],
+
+            "Patterns":
+
+            learning["Patterns"],
+
+            "Status":
+
+            learning["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_market_learning_memory_v275
+
+    ) > 2000:
+
+        st.session_state.real_market_learning_memory_v275.pop(
+
+            0
+
+        )
+
+
+
+save_real_market_learning_memory_v275()
+
+
+
+# ==========================================================
+# LEARNING MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📚 Real Market Learning Memory V275"
+
+    )
+
+
+    learning_memory_df = pd.DataFrame(
+
+        st.session_state.real_market_learning_memory_v275[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        learning_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL PATTERN DISCOVERY ENGINE V275
+# ==========================================================
+
+def real_pattern_discovery_v275():
+
+    pattern = {
+
+        "Detected":
+
+        0,
+
+        "Pattern":
+
+        "NONE",
+
+        "Source":
+
+        "REAL TRADE HISTORY"
+
+    }
+
+
+
+    trades = (
+
+        st.session_state.real_trade_results_v274
+
+    )
+
+
+
+    if len(trades) >= 10:
+
+
+        wins = [
+
+            t for t in trades
+
+            if t["Result"] == "WIN"
+
+        ]
+
+
+
+        if len(wins) > 0:
+
+
+            pattern["Detected"] = len(
+
+                wins
+
+            )
+
+
+            pattern["Pattern"] = (
+
+                "WINNING CONDITIONS ANALYSIS"
+
+            )
+
+
+
+    return pattern
+
+
+
+# ==========================================================
+# PATTERN DISCOVERY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔎 Real Pattern Discovery Engine V275"
+
+    )
+
+
+    pattern = real_pattern_discovery_v275()
+
+
+    pattern_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            pattern.keys(),
+
+            "Value":
+
+            pattern.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        pattern_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 275
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 276
+# REAL PATTERN LEARNING ENGINE V276
+# ==========================================================
+
+
+# ==========================================================
+# PATTERN MEMORY V275
+# ==========================================================
+
+if "real_pattern_memory_v275" not in st.session_state:
+
+    st.session_state.real_pattern_memory_v275 = []
+
+
+
+def save_real_pattern_memory_v275():
+
+    pattern = real_pattern_discovery_v275()
+
+
+    st.session_state.real_pattern_memory_v275.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Detected":
+
+            pattern["Detected"],
+
+            "Pattern":
+
+            pattern["Pattern"],
+
+            "Source":
+
+            pattern["Source"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_pattern_memory_v275
+
+    ) > 2000:
+
+        st.session_state.real_pattern_memory_v275.pop(
+
+            0
+
+        )
+
+
+save_real_pattern_memory_v275()
+
+
+
+# ==========================================================
+# PATTERN MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔎 Real Pattern Memory V275"
+
+    )
+
+
+    pattern_memory_df = pd.DataFrame(
+
+        st.session_state.real_pattern_memory_v275[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        pattern_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL PATTERN LEARNING ENGINE V276
+# ==========================================================
+
+def real_pattern_learning_engine_v276():
+
+    learning = {
+
+        "Status":
+
+        "WAITING",
+
+        "Patterns":
+
+        0,
+
+        "Accuracy":
+
+        0,
+
+        "Recommendation":
+
+        "COLLECT DATA"
+
+    }
+
+
+    patterns = (
+
+        st.session_state.real_pattern_memory_v275
+
+    )
+
+
+    trades = (
+
+        st.session_state.real_trade_results_v274
+
+    )
+
+
+    if len(patterns) > 0:
+
+
+        learning["Patterns"] = len(
+
+            patterns
+
+        )
+
+
+    if len(trades) >= 20:
+
+
+        performance = real_performance_calculator_v274()
+
+
+        learning["Accuracy"] = (
+
+            performance["Win Rate"]
+
+        )
+
+
+        learning["Status"] = (
+
+            "LEARNING"
+
+        )
+
+
+        if performance["Win Rate"] >= 60:
+
+            learning["Recommendation"] = (
+
+                "KEEP CONDITIONS"
+
+            )
+
+
+        else:
+
+            learning["Recommendation"] = (
+
+                "REVIEW CONDITIONS"
+
+            )
+
+
+    return learning
+
+
+
+# ==========================================================
+# PATTERN LEARNING DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Real Pattern Learning Engine V276"
+
+    )
+
+
+    pattern_learning = real_pattern_learning_engine_v276()
+
+
+    pattern_learning_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            pattern_learning.keys(),
+
+            "Value":
+
+            pattern_learning.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        pattern_learning_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL STRATEGY MEMORY ENGINE V276
+# ==========================================================
+
+if "real_strategy_memory_v276" not in st.session_state:
+
+    st.session_state.real_strategy_memory_v276 = []
+
+
+
+def save_real_strategy_memory_v276():
+
+    learning = real_pattern_learning_engine_v276()
+
+    evaluation = real_strategy_evaluation_v274()
+
+
+    st.session_state.real_strategy_memory_v276.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Learning":
+
+            learning["Status"],
+
+            "Accuracy":
+
+            evaluation["Score"],
+
+            "Recommendation":
+
+            learning["Recommendation"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_strategy_memory_v276
+
+    ) > 2000:
+
+        st.session_state.real_strategy_memory_v276.pop(
+
+            0
+
+        )
+
+
+
+save_real_strategy_memory_v276()
+
+
+
+# ==========================================================
+# STRATEGY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📚 Real Strategy Memory V276"
+
+    )
+
+
+    strategy_memory_df = pd.DataFrame(
+
+        st.session_state.real_strategy_memory_v276[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        strategy_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL ADAPTIVE STRATEGY ENGINE V276
+# ==========================================================
+
+def real_adaptive_strategy_engine_v276():
+
+    strategy = {
+
+        "Mode":
+
+        "BASE",
+
+        "Adjustment":
+
+        "NONE",
+
+        "Reason":
+
+        "WAITING DATA"
+
+    }
+
+
+    learning = real_pattern_learning_engine_v276()
+
+
+
+    if learning["Status"] == "LEARNING":
+
+
+        if learning["Accuracy"] >= 70:
+
+
+            strategy["Mode"] = "OPTIMIZED"
+
+            strategy["Adjustment"] = (
+
+                "MAINTAIN SUCCESSFUL CONDITIONS"
+
+            )
+
+
+            strategy["Reason"] = (
+
+                "Historical data supports strategy"
+
+            )
+
+
+        elif learning["Accuracy"] < 50:
+
+
+            strategy["Mode"] = "REVIEW"
+
+            strategy["Adjustment"] = (
+
+                "REANALYZE CONDITIONS"
+
+            )
+
+
+            strategy["Reason"] = (
+
+                "Performance below target"
+
+            )
+
+
+
+    return strategy
+
+
+
+# ==========================================================
+# ADAPTIVE STRATEGY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Real Adaptive Strategy Engine V276"
+
+    )
+
+
+    strategy = real_adaptive_strategy_engine_v276()
+
+
+    strategy_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            strategy.keys(),
+
+            "Value":
+
+            strategy.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        strategy_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 276
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 277
+# REAL ADAPTIVE STRATEGY MEMORY V277
+# ==========================================================
+
+
+# ==========================================================
+# ADAPTIVE STRATEGY MEMORY
+# ==========================================================
+
+if "real_adaptive_strategy_memory_v277" not in st.session_state:
+
+    st.session_state.real_adaptive_strategy_memory_v277 = []
+
+
+
+def save_real_adaptive_strategy_memory_v277():
+
+    strategy = real_adaptive_strategy_engine_v276()
+
+
+    st.session_state.real_adaptive_strategy_memory_v277.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Mode":
+
+            strategy["Mode"],
+
+            "Adjustment":
+
+            strategy["Adjustment"],
+
+            "Reason":
+
+            strategy["Reason"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_adaptive_strategy_memory_v277
+
+    ) > 3000:
+
+        st.session_state.real_adaptive_strategy_memory_v277.pop(
+
+            0
+
+        )
+
+
+
+save_real_adaptive_strategy_memory_v277()
+
+
+
+# ==========================================================
+# ADAPTIVE STRATEGY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Real Adaptive Strategy Memory V277"
+
+    )
+
+
+    adaptive_memory_df = pd.DataFrame(
+
+        st.session_state.real_adaptive_strategy_memory_v277[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        adaptive_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL MARKET REGIME CLASSIFIER V277
+# ==========================================================
+
+def real_market_regime_classifier_v277():
+
+    regime = {
+
+        "Regime":
+
+        "UNKNOWN",
+
+        "Trend":
+
+        "UNKNOWN",
+
+        "Volatility":
+
+        "UNKNOWN",
+
+        "Source":
+
+        "REAL MARKET DATA"
+
+    }
+
+
+    trend = real_trend_analysis_v265()
+
+    momentum = real_market_momentum_engine_v266()
+
+    volume = real_volume_engine_v267()
+
+
+
+    regime["Trend"] = trend["Trend"]
+
+
+
+    strength = momentum["Momentum"]["Strength"]
+
+
+
+    if strength:
+
+        if strength >= 50:
+
+            regime["Volatility"] = "HIGH"
+
+        else:
+
+            regime["Volatility"] = "NORMAL"
+
+
+
+    if (
+
+        trend["Trend"] == "BULLISH"
+
+        and
+
+        momentum["Momentum"]["Direction"]
+
+        ==
+
+        "BUYING PRESSURE"
+
+    ):
+
+        regime["Regime"] = "UPTREND"
+
+
+
+    elif (
+
+        trend["Trend"] == "BEARISH"
+
+        and
+
+        momentum["Momentum"]["Direction"]
+
+        ==
+
+        "SELLING PRESSURE"
+
+    ):
+
+        regime["Regime"] = "DOWNTREND"
+
+
+
+    else:
+
+        regime["Regime"] = "SIDEWAY"
+
+
+
+    return regime
+
+
+
+# ==========================================================
+# MARKET REGIME DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌍 Real Market Regime Classifier V277"
+
+    )
+
+
+    regime = real_market_regime_classifier_v277()
+
+
+    regime_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            regime.keys(),
+
+            "Value":
+
+            regime.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        regime_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# MARKET REGIME MEMORY V277
+# ==========================================================
+
+if "real_market_regime_memory_v277" not in st.session_state:
+
+    st.session_state.real_market_regime_memory_v277 = []
+
+
+
+def save_real_market_regime_memory_v277():
+
+    regime = real_market_regime_classifier_v277()
+
+
+    st.session_state.real_market_regime_memory_v277.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Regime":
+
+            regime["Regime"],
+
+            "Trend":
+
+            regime["Trend"],
+
+            "Volatility":
+
+            regime["Volatility"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_market_regime_memory_v277
+
+    ) > 3000:
+
+        st.session_state.real_market_regime_memory_v277.pop(
+
+            0
+
+        )
+
+
+
+save_real_market_regime_memory_v277()
+
+
+
+# ==========================================================
+# MARKET REGIME MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🌍 Real Market Regime Memory V277"
+
+    )
+
+
+    regime_memory_df = pd.DataFrame(
+
+        st.session_state.real_market_regime_memory_v277[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        regime_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL STRATEGY SELECTOR V277
+# ==========================================================
+
+def real_strategy_selector_v277():
+
+    selector = {
+
+        "Strategy":
+
+        "WAIT",
+
+        "Reason":
+
+        "NO MARKET CONDITION"
+
+    }
+
+
+    regime = real_market_regime_classifier_v277()
+
+
+
+    if regime["Regime"] == "UPTREND":
+
+        selector["Strategy"] = (
+
+            "TREND FOLLOWING LONG"
+
+        )
+
+        selector["Reason"] = (
+
+            "Real bullish market structure"
+
+        )
+
+
+
+    elif regime["Regime"] == "DOWNTREND":
+
+        selector["Strategy"] = (
+
+            "TREND FOLLOWING SHORT"
+
+        )
+
+        selector["Reason"] = (
+
+            "Real bearish market structure"
+
+        )
+
+
+
+    elif regime["Regime"] == "SIDEWAY":
+
+        selector["Strategy"] = (
+
+            "RANGE ANALYSIS"
+
+        )
+
+        selector["Reason"] = (
+
+            "Market lacks trend confirmation"
+
+        )
+
+
+
+    return selector
+
+
+
+# ==========================================================
+# STRATEGY SELECTOR DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Real Strategy Selector V277"
+
+    )
+
+
+    selector = real_strategy_selector_v277()
+
+
+    selector_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            selector.keys(),
+
+            "Value":
+
+            selector.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        selector_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 277
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 278
+# REAL STRATEGY SELECTION MEMORY V278
+# ==========================================================
+
+
+# ==========================================================
+# STRATEGY SELECTOR MEMORY
+# ==========================================================
+
+if "real_strategy_selector_memory_v278" not in st.session_state:
+
+    st.session_state.real_strategy_selector_memory_v278 = []
+
+
+
+def save_real_strategy_selector_memory_v278():
+
+    selector = real_strategy_selector_v277()
+
+
+    st.session_state.real_strategy_selector_memory_v278.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Strategy":
+
+            selector["Strategy"],
+
+            "Reason":
+
+            selector["Reason"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_strategy_selector_memory_v278
+
+    ) > 3000:
+
+        st.session_state.real_strategy_selector_memory_v278.pop(
+
+            0
+
+        )
+
+
+
+save_real_strategy_selector_memory_v278()
+
+
+
+# ==========================================================
+# STRATEGY SELECTOR MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Real Strategy Selector Memory V278"
+
+    )
+
+
+    strategy_selector_memory_df = pd.DataFrame(
+
+        st.session_state.real_strategy_selector_memory_v278[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        strategy_selector_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL MULTI TIMEFRAME CONFIRMATION ENGINE V278
+# ==========================================================
+
+def real_multi_timeframe_confirmation_v278():
+
+    confirmation = {
+
+        "Status":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Timeframes":
+
+        {},
+
+        "Score":
+
+        0,
+
+        "Source":
+
+        "REAL MULTI TF DATA"
+
+    }
+
+
+
+    timeframes = [
+
+        "M1",
+
+        "M5",
+
+        "M15",
+
+        "H1",
+
+        "H4",
+
+        "D1"
+
+    ]
+
+
+
+    score = 0
+
+
+
+    for tf in timeframes:
+
+
+        candles = get_real_candle_data_v264(
+
+            tf
+
+        )
+
+
+        confirmation["Timeframes"][tf] = (
+
+            len(candles["Data"])
+
+        )
+
+
+
+        if len(candles["Data"]) > 0:
+
+            score += 10
+
+
+
+    confirmation["Score"] = score
+
+
+
+    if score >= 50:
+
+
+        trend = real_trend_analysis_v265()
+
+
+        confirmation["Direction"] = (
+
+            "LONG"
+
+            if trend["Trend"] == "BULLISH"
+
+            else
+
+            "SHORT"
+
+            if trend["Trend"] == "BEARISH"
+
+            else
+
+            "NONE"
+
+        )
+
+
+        confirmation["Status"] = (
+
+            "CONFIRMED"
+
+        )
+
+
+
+    return confirmation
+
+
+
+# ==========================================================
+# MULTI TIMEFRAME DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "⏱ Real Multi Timeframe Confirmation V278"
+
+    )
+
+
+    mtf_confirmation = real_multi_timeframe_confirmation_v278()
+
+
+    mtf_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            mtf_confirmation.keys(),
+
+            "Value":
+
+            mtf_confirmation.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        mtf_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# MULTI TIMEFRAME MEMORY V278
+# ==========================================================
+
+if "real_mtf_confirmation_memory_v278" not in st.session_state:
+
+    st.session_state.real_mtf_confirmation_memory_v278 = []
+
+
+
+def save_real_mtf_confirmation_memory_v278():
+
+    confirmation = real_multi_timeframe_confirmation_v278()
+
+
+    st.session_state.real_mtf_confirmation_memory_v278.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            confirmation["Status"],
+
+            "Direction":
+
+            confirmation["Direction"],
+
+            "Score":
+
+            confirmation["Score"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_mtf_confirmation_memory_v278
+
+    ) > 3000:
+
+        st.session_state.real_mtf_confirmation_memory_v278.pop(
+
+            0
+
+        )
+
+
+
+save_real_mtf_confirmation_memory_v278()
+
+
+
+# ==========================================================
+# MULTI TIMEFRAME MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "⏱ Real Multi Timeframe Memory V278"
+
+    )
+
+
+    mtf_memory_df = pd.DataFrame(
+
+        st.session_state.real_mtf_confirmation_memory_v278[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        mtf_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL FINAL MARKET DECISION ENGINE V278
+# ==========================================================
+
+def real_final_market_decision_v278():
+
+    decision = {
+
+        "Decision":
+
+        "WAIT",
+
+        "Direction":
+
+        "NONE",
+
+        "Confidence":
+
+        0,
+
+        "Source":
+
+        "REAL DATA FUSION"
+
+    }
+
+
+
+    signal = real_signal_validation_v269()
+
+    mtf = real_multi_timeframe_confirmation_v278()
+
+    strategy = real_strategy_selector_v277()
+
+
+
+    confidence = (
+
+        signal["Score"]
+
+        +
+
+        mtf["Score"]
+
+    ) / 2
+
+
+
+    decision["Confidence"] = confidence
+
+
+
+    decision["Direction"] = (
+
+        mtf["Direction"]
+
+    )
+
+
+
+    if (
+
+        signal["Validation"]
+
+        ==
+
+        "PASSED"
+
+        and
+
+        mtf["Status"]
+
+        ==
+
+        "CONFIRMED"
+
+    ):
+
+
+        decision["Decision"] = (
+
+            "READY"
+
+        )
+
+
+
+    return decision
+
+
+
+# ==========================================================
+# FINAL MARKET DECISION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Real Final Market Decision Engine V278"
+
+    )
+
+
+    decision = real_final_market_decision_v278()
+
+
+    decision_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            decision.keys(),
+
+            "Value":
+
+            decision.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        decision_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 278
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 279
+# REAL MARKET DECISION MEMORY V279
+# ==========================================================
+
+
+# ==========================================================
+# FINAL MARKET DECISION MEMORY
+# ==========================================================
+
+if "real_final_market_decision_memory_v279" not in st.session_state:
+
+    st.session_state.real_final_market_decision_memory_v279 = []
+
+
+
+def save_real_final_market_decision_memory_v279():
+
+    decision = real_final_market_decision_v278()
+
+
+    st.session_state.real_final_market_decision_memory_v279.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Decision":
+
+            decision["Decision"],
+
+            "Direction":
+
+            decision["Direction"],
+
+            "Confidence":
+
+            decision["Confidence"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_final_market_decision_memory_v279
+
+    ) > 3000:
+
+        st.session_state.real_final_market_decision_memory_v279.pop(
+
+            0
+
+        )
+
+
+
+save_real_final_market_decision_memory_v279()
+
+
+
+# ==========================================================
+# DECISION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Real Final Market Decision Memory V279"
+
+    )
+
+
+    decision_memory_df = pd.DataFrame(
+
+        st.session_state.real_final_market_decision_memory_v279[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        decision_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL ENTRY EXECUTION PRECHECK V279
+# ==========================================================
+
+def real_entry_execution_precheck_v279():
+
+    precheck = {
+
+        "Status":
+
+        "BLOCKED",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry":
+
+        None,
+
+        "Reason":
+
+        []
+
+    }
+
+
+
+    decision = real_final_market_decision_v278()
+
+    plan = real_trade_plan_generator_v272()
+
+    risk = real_risk_management_engine_v271()
+
+
+
+    if decision["Decision"] == "READY":
+
+
+        precheck["Direction"] = (
+
+            decision["Direction"]
+
+        )
+
+
+        precheck["Entry"] = (
+
+            plan["Entry"]
+
+        )
+
+
+        if risk["Status"] == "CALCULATED":
+
+
+            precheck["Status"] = (
+
+                "APPROVED"
+
+            )
+
+
+            precheck["Reason"].append(
+
+                "Risk calculation completed"
+
+            )
+
+
+        else:
+
+            precheck["Reason"].append(
+
+                "Risk not ready"
+
+            )
+
+
+
+    else:
+
+        precheck["Reason"].append(
+
+            "Market decision not confirmed"
+
+        )
+
+
+
+    return precheck
+
+
+
+# ==========================================================
+# ENTRY PRECHECK DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚦 Real Entry Execution Precheck V279"
+
+    )
+
+
+    precheck = real_entry_execution_precheck_v279()
+
+
+    precheck_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            precheck.keys(),
+
+            "Value":
+
+            precheck.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        precheck_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# ENTRY PRECHECK MEMORY
+# ==========================================================
+
+if "real_entry_precheck_memory_v279" not in st.session_state:
+
+    st.session_state.real_entry_precheck_memory_v279 = []
+
+
+
+def save_real_entry_precheck_memory_v279():
+
+    precheck = real_entry_execution_precheck_v279()
+
+
+    st.session_state.real_entry_precheck_memory_v279.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            precheck["Status"],
+
+            "Direction":
+
+            precheck["Direction"],
+
+            "Entry":
+
+            precheck["Entry"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_entry_precheck_memory_v279
+
+    ) > 3000:
+
+        st.session_state.real_entry_precheck_memory_v279.pop(
+
+            0
+
+        )
+
+
+
+save_real_entry_precheck_memory_v279()
+
+
+
+# ==========================================================
+# ENTRY PRECHECK MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚦 Real Entry Precheck Memory V279"
+
+    )
+
+
+    precheck_memory_df = pd.DataFrame(
+
+        st.session_state.real_entry_precheck_memory_v279[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        precheck_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL POSITION SIZE CALCULATOR V279
+# ==========================================================
+
+def real_position_size_calculator_v279():
+
+    position = {
+
+        "Lot":
+
+        0,
+
+        "Risk Money":
+
+        0,
+
+        "Status":
+
+        "WAIT"
+
+    }
+
+
+
+    risk = real_risk_management_engine_v271()
+
+    plan = real_trade_plan_generator_v272()
+
+
+
+    if (
+
+        risk["Status"]
+
+        ==
+
+        "CALCULATED"
+
+        and
+
+        plan["Status"]
+
+        ==
+
+        "READY"
+
+    ):
+
+
+        position["Risk Money"] = (
+
+            risk["Max Loss"]
+
+        )
+
+
+        position["Lot"] = (
+
+            risk["Position Size"]
+
+        )
+
+
+        position["Status"] = (
+
+            "CALCULATED"
+
+        )
+
+
+
+    return position
+
+
+
+# ==========================================================
+# POSITION SIZE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📐 Real Position Size Calculator V279"
+
+    )
+
+
+    position_size = real_position_size_calculator_v279()
+
+
+    position_size_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            position_size.keys(),
+
+            "Value":
+
+            position_size.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        position_size_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 279
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 280
+# REAL POSITION MANAGEMENT FOUNDATION V280
+# ==========================================================
+
+
+# ==========================================================
+# POSITION SIZE MEMORY V279
+# ==========================================================
+
+if "real_position_size_memory_v279" not in st.session_state:
+
+    st.session_state.real_position_size_memory_v279 = []
+
+
+
+def save_real_position_size_memory_v279():
+
+    position = real_position_size_calculator_v279()
+
+
+    st.session_state.real_position_size_memory_v279.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Lot":
+
+            position["Lot"],
+
+            "Risk Money":
+
+            position["Risk Money"],
+
+            "Status":
+
+            position["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_position_size_memory_v279
+
+    ) > 3000:
+
+        st.session_state.real_position_size_memory_v279.pop(
+
+            0
+
+        )
+
+
+
+save_real_position_size_memory_v279()
+
+
+
+# ==========================================================
+# POSITION SIZE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📐 Real Position Size Memory V279"
+
+    )
+
+
+    position_size_memory_df = pd.DataFrame(
+
+        st.session_state.real_position_size_memory_v279[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        position_size_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL POSITION MANAGEMENT FOUNDATION V280
+# ==========================================================
+
+def real_position_management_foundation_v280():
+
+    management = {
+
+        "Position":
+
+        "NONE",
+
+        "Direction":
+
+        "NONE",
+
+        "Entry":
+
+        None,
+
+        "SL":
+
+        None,
+
+        "TP":
+
+        None,
+
+        "Status":
+
+        "WAIT",
+
+        "Source":
+
+        "REAL TRADE PLAN"
+
+    }
+
+
+
+    precheck = real_entry_execution_precheck_v279()
+
+    plan = real_trade_plan_generator_v272()
+
+    size = real_position_size_calculator_v279()
+
+
+
+    if precheck["Status"] == "APPROVED":
+
+
+        management["Position"] = (
+
+            "READY"
+
+        )
+
+
+        management["Direction"] = (
+
+            plan["Direction"]
+
+        )
+
+
+        management["Entry"] = (
+
+            plan["Entry"]
+
+        )
+
+
+        management["SL"] = (
+
+            plan["Stop Loss"]
+
+        )
+
+
+        management["TP"] = (
+
+            plan["Take Profit"]
+
+        )
+
+
+        management["Status"] = (
+
+            "ACTIVE"
+
+        )
+
+
+
+    return management
+
+
+
+# ==========================================================
+# POSITION MANAGEMENT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Real Position Management Foundation V280"
+
+    )
+
+
+    management = real_position_management_foundation_v280()
+
+
+    management_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            management.keys(),
+
+            "Value":
+
+            management.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        management_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# POSITION MANAGEMENT MEMORY V280
+# ==========================================================
+
+if "real_position_management_memory_v280" not in st.session_state:
+
+    st.session_state.real_position_management_memory_v280 = []
+
+
+
+def save_real_position_management_memory_v280():
+
+    management = real_position_management_foundation_v280()
+
+
+    st.session_state.real_position_management_memory_v280.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Position":
+
+            management["Position"],
+
+            "Direction":
+
+            management["Direction"],
+
+            "Status":
+
+            management["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_position_management_memory_v280
+
+    ) > 3000:
+
+        st.session_state.real_position_management_memory_v280.pop(
+
+            0
+
+        )
+
+
+
+save_real_position_management_memory_v280()
+
+
+
+# ==========================================================
+# POSITION MANAGEMENT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Real Position Management Memory V280"
+
+    )
+
+
+    position_management_memory_df = pd.DataFrame(
+
+        st.session_state.real_position_management_memory_v280[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        position_management_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL LIVE PRICE MONITOR V280
+# ==========================================================
+
+def real_live_price_monitor_v280():
+
+    monitor = {
+
+        "Symbol":
+
+        "XAUUSD",
+
+        "Price":
+
+        None,
+
+        "Entry Distance":
+
+        None,
+
+        "Status":
+
+        "WAIT DATA"
+
+    }
+
+
+
+    price = get_real_xauusd_price_v263()
+
+    position = real_position_management_foundation_v280()
+
+
+
+    monitor["Price"] = price["Price"]
+
+
+
+    if (
+
+        price["Price"] is not None
+
+        and
+
+        position["Entry"] is not None
+
+    ):
+
+
+        monitor["Entry Distance"] = (
+
+            price["Price"]
+
+            -
+
+            position["Entry"]
+
+        )
+
+
+        monitor["Status"] = (
+
+            "MONITORING"
+
+        )
+
+
+
+    return monitor
+
+
+
+# ==========================================================
+# LIVE PRICE MONITOR DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📡 Real Live Price Monitor V280"
+
+    )
+
+
+    monitor = real_live_price_monitor_v280()
+
+
+    monitor_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            monitor.keys(),
+
+            "Value":
+
+            monitor.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        monitor_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 280
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 281
+# REAL LIVE POSITION MONITOR MEMORY V281
+# ==========================================================
+
+
+# ==========================================================
+# LIVE PRICE MONITOR MEMORY
+# ==========================================================
+
+if "real_live_price_monitor_memory_v281" not in st.session_state:
+
+    st.session_state.real_live_price_monitor_memory_v281 = []
+
+
+
+def save_real_live_price_monitor_memory_v281():
+
+    monitor = real_live_price_monitor_v280()
+
+
+    st.session_state.real_live_price_monitor_memory_v281.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Symbol":
+
+            monitor["Symbol"],
+
+            "Price":
+
+            monitor["Price"],
+
+            "Distance":
+
+            monitor["Entry Distance"],
+
+            "Status":
+
+            monitor["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_live_price_monitor_memory_v281
+
+    ) > 5000:
+
+        st.session_state.real_live_price_monitor_memory_v281.pop(
+
+            0
+
+        )
+
+
+
+save_real_live_price_monitor_memory_v281()
+
+
+
+# ==========================================================
+# LIVE PRICE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📡 Real Live Price Monitor Memory V281"
+
+    )
+
+
+    live_price_memory_df = pd.DataFrame(
+
+        st.session_state.real_live_price_monitor_memory_v281[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        live_price_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL POSITION STATUS ENGINE V281
+# ==========================================================
+
+def real_position_status_engine_v281():
+
+    status = {
+
+        "Position":
+
+        "NONE",
+
+        "Market Price":
+
+        None,
+
+        "Entry":
+
+        None,
+
+        "Profit/Loss State":
+
+        "WAIT",
+
+        "Status":
+
+        "INACTIVE"
+
+    }
+
+
+
+    position = real_position_management_foundation_v280()
+
+    price = real_live_price_monitor_v280()
+
+
+
+    status["Market Price"] = price["Price"]
+
+    status["Entry"] = position["Entry"]
+
+
+
+    if position["Status"] == "ACTIVE":
+
+
+        status["Position"] = (
+
+            position["Direction"]
+
+        )
+
+
+        status["Status"] = (
+
+            "MONITORING"
+
+        )
+
+
+        if (
+
+            price["Price"] is not None
+
+            and
+
+            position["Entry"] is not None
+
+        ):
+
+
+            if price["Price"] > position["Entry"]:
+
+                status["Profit/Loss State"] = (
+
+                    "POSITIVE MOVEMENT"
+
+                )
+
+
+            elif price["Price"] < position["Entry"]:
+
+                status["Profit/Loss State"] = (
+
+                    "NEGATIVE MOVEMENT"
+
+                )
+
+
+            else:
+
+                status["Profit/Loss State"] = (
+
+                    "BREAKEVEN"
+
+                )
+
+
+
+    return status
+
+
+
+# ==========================================================
+# POSITION STATUS DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Real Position Status Engine V281"
+
+    )
+
+
+    position_status = real_position_status_engine_v281()
+
+
+    position_status_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            position_status.keys(),
+
+            "Value":
+
+            position_status.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        position_status_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# POSITION STATUS MEMORY V281
+# ==========================================================
+
+if "real_position_status_memory_v281" not in st.session_state:
+
+    st.session_state.real_position_status_memory_v281 = []
+
+
+
+def save_real_position_status_memory_v281():
+
+    status = real_position_status_engine_v281()
+
+
+    st.session_state.real_position_status_memory_v281.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Position":
+
+            status["Position"],
+
+            "State":
+
+            status["Profit/Loss State"],
+
+            "Status":
+
+            status["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_position_status_memory_v281
+
+    ) > 5000:
+
+        st.session_state.real_position_status_memory_v281.pop(
+
+            0
+
+        )
+
+
+
+save_real_position_status_memory_v281()
+
+
+
+# ==========================================================
+# POSITION STATUS MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📍 Real Position Status Memory V281"
+
+    )
+
+
+    position_status_memory_df = pd.DataFrame(
+
+        st.session_state.real_position_status_memory_v281[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        position_status_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL STOP MANAGEMENT ENGINE V281
+# ==========================================================
+
+def real_stop_management_engine_v281():
+
+    stop_manager = {
+
+        "Action":
+
+        "HOLD",
+
+        "Current SL":
+
+        None,
+
+        "Adjustment":
+
+        "NONE",
+
+        "Reason":
+
+        "WAIT"
+
+    }
+
+
+
+    position = real_position_management_foundation_v280()
+
+    price = real_live_price_monitor_v280()
+
+
+
+    stop_manager["Current SL"] = (
+
+        position["SL"]
+
+    )
+
+
+
+    if (
+
+        price["Price"] is not None
+
+        and
+
+        position["SL"] is not None
+
+    ):
+
+
+        distance = (
+
+            abs(
+
+                price["Price"]
+
+                -
+
+                position["SL"]
+
+            )
+
+        )
+
+
+        if distance > 0:
+
+
+            stop_manager["Action"] = (
+
+                "MONITOR"
+
+            )
+
+
+            stop_manager["Reason"] = (
+
+                "Position protected by SL"
+
+            )
+
+
+
+    return stop_manager
+
+
+
+# ==========================================================
+# STOP MANAGEMENT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🛡 Real Stop Management Engine V281"
+
+    )
+
+
+    stop_manager = real_stop_management_engine_v281()
+
+
+    stop_manager_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            stop_manager.keys(),
+
+            "Value":
+
+            stop_manager.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        stop_manager_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 281
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 282
+# REAL STOP MANAGEMENT MEMORY V282
+# ==========================================================
+
+
+# ==========================================================
+# STOP MANAGEMENT MEMORY
+# ==========================================================
+
+if "real_stop_management_memory_v282" not in st.session_state:
+
+    st.session_state.real_stop_management_memory_v282 = []
+
+
+
+def save_real_stop_management_memory_v282():
+
+    stop_manager = real_stop_management_engine_v281()
+
+
+    st.session_state.real_stop_management_memory_v282.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Action":
+
+            stop_manager["Action"],
+
+            "Current SL":
+
+            stop_manager["Current SL"],
+
+            "Adjustment":
+
+            stop_manager["Adjustment"],
+
+            "Reason":
+
+            stop_manager["Reason"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_stop_management_memory_v282
+
+    ) > 5000:
+
+        st.session_state.real_stop_management_memory_v282.pop(
+
+            0
+
+        )
+
+
+
+save_real_stop_management_memory_v282()
+
+
+
+# ==========================================================
+# STOP MANAGEMENT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🛡 Real Stop Management Memory V282"
+
+    )
+
+
+    stop_memory_df = pd.DataFrame(
+
+        st.session_state.real_stop_management_memory_v282[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        stop_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL PROFIT PROTECTION ENGINE V282
+# ==========================================================
+
+def real_profit_protection_engine_v282():
+
+    protection = {
+
+        "Status":
+
+        "WAIT",
+
+        "Action":
+
+        "HOLD",
+
+        "Current Profit State":
+
+        "UNKNOWN",
+
+        "Reason":
+
+        []
+
+    }
+
+
+
+    position = real_position_status_engine_v281()
+
+    management = real_position_management_foundation_v280()
+
+    price = real_live_price_monitor_v280()
+
+
+
+    if position["Status"] == "MONITORING":
+
+
+        protection["Status"] = (
+
+            "ACTIVE"
+
+        )
+
+
+        if (
+
+            price["Price"] is not None
+
+            and
+
+            management["Entry"] is not None
+
+        ):
+
+
+            difference = (
+
+                price["Price"]
+
+                -
+
+                management["Entry"]
+
+            )
+
+
+            if difference > 0:
+
+
+                protection["Current Profit State"] = (
+
+                    "PROFIT AREA"
+
+                )
+
+
+                protection["Action"] = (
+
+                    "PROTECT"
+
+                )
+
+
+                protection["Reason"].append(
+
+                    "Price moved favorable"
+
+                )
+
+
+
+            elif difference < 0:
+
+
+                protection["Current Profit State"] = (
+
+                    "LOSS AREA"
+
+                )
+
+
+                protection["Action"] = (
+
+                    "MONITOR"
+
+                )
+
+
+                protection["Reason"].append(
+
+                    "Position under pressure"
+
+                )
+
+
+
+            else:
+
+                protection["Current Profit State"] = (
+
+                    "ENTRY AREA"
+
+                )
+
+
+
+    return protection
+
+
+
+# ==========================================================
+# PROFIT PROTECTION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "💰 Real Profit Protection Engine V282"
+
+    )
+
+
+    protection = real_profit_protection_engine_v282()
+
+
+    protection_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            protection.keys(),
+
+            "Value":
+
+            protection.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        protection_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# PROFIT PROTECTION MEMORY V282
+# ==========================================================
+
+if "real_profit_protection_memory_v282" not in st.session_state:
+
+    st.session_state.real_profit_protection_memory_v282 = []
+
+
+
+def save_real_profit_protection_memory_v282():
+
+    protection = real_profit_protection_engine_v282()
+
+
+    st.session_state.real_profit_protection_memory_v282.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            protection["Status"],
+
+            "Action":
+
+            protection["Action"],
+
+            "State":
+
+            protection["Current Profit State"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_profit_protection_memory_v282
+
+    ) > 5000:
+
+        st.session_state.real_profit_protection_memory_v282.pop(
+
+            0
+
+        )
+
+
+
+save_real_profit_protection_memory_v282()
+
+
+
+# ==========================================================
+# PROFIT PROTECTION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "💰 Real Profit Protection Memory V282"
+
+    )
+
+
+    profit_memory_df = pd.DataFrame(
+
+        st.session_state.real_profit_protection_memory_v282[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        profit_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL POSITION EXIT CONDITION ENGINE V282
+# ==========================================================
+
+def real_position_exit_condition_v282():
+
+    exit_signal = {
+
+        "Exit":
+
+        False,
+
+        "Reason":
+
+        "NO EXIT",
+
+        "Signal":
+
+        "HOLD"
+
+    }
+
+
+
+    protection = real_profit_protection_engine_v282()
+
+    risk = real_risk_management_engine_v271()
+
+
+
+    if protection["Current Profit State"] == "LOSS AREA":
+
+
+        exit_signal["Reason"] = (
+
+            "Position risk monitoring"
+
+        )
+
+
+
+    if risk["Status"] != "CALCULATED":
+
+
+        exit_signal["Exit"] = True
+
+        exit_signal["Signal"] = "STOP"
+
+        exit_signal["Reason"] = (
+
+            "Risk unavailable"
+
+        )
+
+
+
+    return exit_signal
+
+
+
+# ==========================================================
+# EXIT CONDITION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚪 Real Position Exit Condition Engine V282"
+
+    )
+
+
+    exit_condition = real_position_exit_condition_v282()
+
+
+    exit_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            exit_condition.keys(),
+
+            "Value":
+
+            exit_condition.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        exit_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 282
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 283
+# REAL EXIT MANAGEMENT MEMORY V283
+# ==========================================================
+
+
+# ==========================================================
+# EXIT CONDITION MEMORY
+# ==========================================================
+
+if "real_exit_condition_memory_v283" not in st.session_state:
+
+    st.session_state.real_exit_condition_memory_v283 = []
+
+
+
+def save_real_exit_condition_memory_v283():
+
+    exit_condition = real_position_exit_condition_v282()
+
+
+    st.session_state.real_exit_condition_memory_v283.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Exit":
+
+            exit_condition["Exit"],
+
+            "Signal":
+
+            exit_condition["Signal"],
+
+            "Reason":
+
+            exit_condition["Reason"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_exit_condition_memory_v283
+
+    ) > 5000:
+
+        st.session_state.real_exit_condition_memory_v283.pop(
+
+            0
+
+        )
+
+
+
+save_real_exit_condition_memory_v283()
+
+
+
+# ==========================================================
+# EXIT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🚪 Real Exit Condition Memory V283"
+
+    )
+
+
+    exit_memory_df = pd.DataFrame(
+
+        st.session_state.real_exit_condition_memory_v283[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        exit_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL TRADE LIFECYCLE ENGINE V283
+# ==========================================================
+
+def real_trade_lifecycle_engine_v283():
+
+    lifecycle = {
+
+        "Stage":
+
+        "WAIT",
+
+        "Status":
+
+        "INACTIVE",
+
+        "Action":
+
+        "NONE",
+
+        "Source":
+
+        "REAL TRADE FLOW"
+
+    }
+
+
+
+    precheck = real_entry_execution_precheck_v279()
+
+    position = real_position_management_foundation_v280()
+
+    exit_condition = real_position_exit_condition_v282()
+
+
+
+    if precheck["Status"] == "APPROVED":
+
+        lifecycle["Stage"] = (
+
+            "READY"
+
+        )
+
+        lifecycle["Status"] = (
+
+            "WAITING EXECUTION"
+
+        )
+
+        lifecycle["Action"] = (
+
+            "PREPARE"
+
+        )
+
+
+
+    if position["Status"] == "ACTIVE":
+
+        lifecycle["Stage"] = (
+
+            "RUNNING"
+
+        )
+
+        lifecycle["Status"] = (
+
+            "POSITION ACTIVE"
+
+        )
+
+        lifecycle["Action"] = (
+
+            "MANAGE"
+
+        )
+
+
+
+    if exit_condition["Exit"]:
+
+        lifecycle["Stage"] = (
+
+            "EXIT"
+
+        )
+
+        lifecycle["Status"] = (
+
+            "CLOSE REQUIRED"
+
+        )
+
+        lifecycle["Action"] = (
+
+            "STOP"
+
+        )
+
+
+
+    return lifecycle
+
+
+
+# ==========================================================
+# TRADE LIFECYCLE DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Real Trade Lifecycle Engine V283"
+
+    )
+
+
+    lifecycle = real_trade_lifecycle_engine_v283()
+
+
+    lifecycle_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            lifecycle.keys(),
+
+            "Value":
+
+            lifecycle.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        lifecycle_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# TRADE LIFECYCLE MEMORY V283
+# ==========================================================
+
+if "real_trade_lifecycle_memory_v283" not in st.session_state:
+
+    st.session_state.real_trade_lifecycle_memory_v283 = []
+
+
+
+def save_real_trade_lifecycle_memory_v283():
+
+    lifecycle = real_trade_lifecycle_engine_v283()
+
+
+    st.session_state.real_trade_lifecycle_memory_v283.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Stage":
+
+            lifecycle["Stage"],
+
+            "Status":
+
+            lifecycle["Status"],
+
+            "Action":
+
+            lifecycle["Action"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_trade_lifecycle_memory_v283
+
+    ) > 5000:
+
+        st.session_state.real_trade_lifecycle_memory_v283.pop(
+
+            0
+
+        )
+
+
+
+save_real_trade_lifecycle_memory_v283()
+
+
+
+# ==========================================================
+# TRADE LIFECYCLE MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔄 Real Trade Lifecycle Memory V283"
+
+    )
+
+
+    lifecycle_memory_df = pd.DataFrame(
+
+        st.session_state.real_trade_lifecycle_memory_v283[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        lifecycle_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL TRADE ALERT ENGINE V283
+# ==========================================================
+
+def real_trade_alert_engine_v283():
+
+    alert = {
+
+        "Level":
+
+        "NORMAL",
+
+        "Message":
+
+        "NO ALERT",
+
+        "Action":
+
+        "MONITOR"
+
+    }
+
+
+
+    lifecycle = real_trade_lifecycle_engine_v283()
+
+    protection = real_profit_protection_engine_v282()
+
+
+
+    if lifecycle["Action"] == "STOP":
+
+        alert["Level"] = (
+
+            "HIGH"
+
+        )
+
+        alert["Message"] = (
+
+            "EXIT CONDITION DETECTED"
+
+        )
+
+        alert["Action"] = (
+
+            "REVIEW EXIT"
+
+        )
+
+
+
+    elif protection["Action"] == "PROTECT":
+
+        alert["Level"] = (
+
+            "MEDIUM"
+
+        )
+
+        alert["Message"] = (
+
+            "PROFIT PROTECTION ACTIVE"
+
+        )
+
+        alert["Action"] = (
+
+            "MONITOR"
+
+        )
+
+
+
+    return alert
+
+
+
+# ==========================================================
+# ALERT DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔔 Real Trade Alert Engine V283"
+
+    )
+
+
+    alert = real_trade_alert_engine_v283()
+
+
+    alert_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            alert.keys(),
+
+            "Value":
+
+            alert.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        alert_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 283
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 284
+# REAL TRADE ALERT MEMORY + NOTIFICATION ENGINE V284
+# ==========================================================
+
+
+# ==========================================================
+# TRADE ALERT MEMORY
+# ==========================================================
+
+if "real_trade_alert_memory_v284" not in st.session_state:
+
+    st.session_state.real_trade_alert_memory_v284 = []
+
+
+
+def save_real_trade_alert_memory_v284():
+
+    alert = real_trade_alert_engine_v283()
+
+
+    st.session_state.real_trade_alert_memory_v284.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Level":
+
+            alert["Level"],
+
+            "Message":
+
+            alert["Message"],
+
+            "Action":
+
+            alert["Action"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_trade_alert_memory_v284
+
+    ) > 5000:
+
+        st.session_state.real_trade_alert_memory_v284.pop(
+
+            0
+
+        )
+
+
+
+save_real_trade_alert_memory_v284()
+
+
+
+# ==========================================================
+# ALERT MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔔 Real Trade Alert Memory V284"
+
+    )
+
+
+    alert_memory_df = pd.DataFrame(
+
+        st.session_state.real_trade_alert_memory_v284[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        alert_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL NOTIFICATION ENGINE V284
+# ==========================================================
+
+def real_notification_engine_v284():
+
+    notification = {
+
+        "Status":
+
+        "READY",
+
+        "Type":
+
+        "NONE",
+
+        "Message":
+
+        "",
+
+        "Priority":
+
+        "LOW"
+
+    }
+
+
+    alert = real_trade_alert_engine_v283()
+
+
+
+    if alert["Level"] == "HIGH":
+
+
+        notification["Type"] = (
+
+            "RISK ALERT"
+
+        )
+
+        notification["Message"] = (
+
+            alert["Message"]
+
+        )
+
+        notification["Priority"] = (
+
+            "HIGH"
+
+        )
+
+
+
+    elif alert["Level"] == "MEDIUM":
+
+
+        notification["Type"] = (
+
+            "POSITION ALERT"
+
+        )
+
+        notification["Message"] = (
+
+            alert["Message"]
+
+        )
+
+        notification["Priority"] = (
+
+            "MEDIUM"
+
+        )
+
+
+
+    else:
+
+
+        notification["Type"] = (
+
+            "SYSTEM"
+
+        )
+
+        notification["Message"] = (
+
+            "WEOS monitoring active"
+
+        )
+
+
+
+    return notification
+
+
+
+# ==========================================================
+# NOTIFICATION DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📢 Real Notification Engine V284"
+
+    )
+
+
+    notification = real_notification_engine_v284()
+
+
+    notification_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            notification.keys(),
+
+            "Value":
+
+            notification.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        notification_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# NOTIFICATION MEMORY
+# ==========================================================
+
+if "real_notification_memory_v284" not in st.session_state:
+
+    st.session_state.real_notification_memory_v284 = []
+
+
+
+def save_real_notification_memory_v284():
+
+    notification = real_notification_engine_v284()
+
+
+    st.session_state.real_notification_memory_v284.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Type":
+
+            notification["Type"],
+
+            "Priority":
+
+            notification["Priority"],
+
+            "Message":
+
+            notification["Message"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_notification_memory_v284
+
+    ) > 5000:
+
+        st.session_state.real_notification_memory_v284.pop(
+
+            0
+
+        )
+
+
+
+save_real_notification_memory_v284()
+
+
+
+# ==========================================================
+# NOTIFICATION MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📢 Real Notification Memory V284"
+
+    )
+
+
+    notification_memory_df = pd.DataFrame(
+
+        st.session_state.real_notification_memory_v284[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        notification_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL SYSTEM HEALTH MONITOR V284
+# ==========================================================
+
+def real_system_health_monitor_v284():
+
+    health = {
+
+        "System":
+
+        "WEOS",
+
+        "Data":
+
+        "CHECKING",
+
+        "Analysis":
+
+        "CHECKING",
+
+        "Memory":
+
+        "CHECKING",
+
+        "Status":
+
+        "ACTIVE"
+
+    }
+
+
+
+    data = real_data_validator_v263()
+
+    health["Data"] = data["Status"]
+
+
+
+    if len(
+
+        st.session_state.real_trade_results_v274
+
+    ) >= 0:
+
+        health["Memory"] = (
+
+            "AVAILABLE"
+
+        )
+
+
+
+    health["Analysis"] = (
+
+        "RUNNING"
+
+    )
+
+
+
+    return health
+
+
+
+# ==========================================================
+# SYSTEM HEALTH DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "❤️ Real System Health Monitor V284"
+
+    )
+
+
+    health = real_system_health_monitor_v284()
+
+
+    health_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            health.keys(),
+
+            "Value":
+
+            health.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        health_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 284
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 285
+# REAL SYSTEM HEALTH MEMORY + DATA QUALITY ENGINE V285
+# ==========================================================
+
+
+# ==========================================================
+# SYSTEM HEALTH MEMORY
+# ==========================================================
+
+if "real_system_health_memory_v285" not in st.session_state:
+
+    st.session_state.real_system_health_memory_v285 = []
+
+
+
+def save_real_system_health_memory_v285():
+
+    health = real_system_health_monitor_v284()
+
+
+    st.session_state.real_system_health_memory_v285.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Data":
+
+            health["Data"],
+
+            "Analysis":
+
+            health["Analysis"],
+
+            "Memory":
+
+            health["Memory"],
+
+            "Status":
+
+            health["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_system_health_memory_v285
+
+    ) > 5000:
+
+        st.session_state.real_system_health_memory_v285.pop(
+
+            0
+
+        )
+
+
+
+save_real_system_health_memory_v285()
+
+
+
+# ==========================================================
+# SYSTEM HEALTH MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "❤️ Real System Health Memory V285"
+
+    )
+
+
+    health_memory_df = pd.DataFrame(
+
+        st.session_state.real_system_health_memory_v285[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        health_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL DATA QUALITY ENGINE V285
+# ==========================================================
+
+def real_data_quality_engine_v285():
+
+    quality = {
+
+        "Quality":
+
+        "UNKNOWN",
+
+        "Completeness":
+
+        0,
+
+        "Freshness":
+
+        "UNKNOWN",
+
+        "Validation":
+
+        "FAILED",
+
+        "Source":
+
+        "REAL DATA"
+
+    }
+
+
+
+    data = real_data_validator_v263()
+
+    candles = get_real_candle_data_v264(
+
+        "M1"
+
+    )
+
+
+
+    score = 0
+
+
+
+    if data["Connected"]:
+
+        score += 40
+
+        quality["Freshness"] = "LIVE"
+
+
+
+    if len(candles["Data"]) > 0:
+
+        score += 40
+
+
+
+    quality["Completeness"] = score
+
+
+
+    if score >= 80:
+
+        quality["Quality"] = "HIGH"
+
+        quality["Validation"] = "PASSED"
+
+
+    elif score >= 40:
+
+        quality["Quality"] = "MEDIUM"
+
+        quality["Validation"] = "PARTIAL"
+
+
+    else:
+
+        quality["Quality"] = "LOW"
+
+
+
+    return quality
+
+
+
+# ==========================================================
+# DATA QUALITY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📡 Real Data Quality Engine V285"
+
+    )
+
+
+    quality = real_data_quality_engine_v285()
+
+
+    quality_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            quality.keys(),
+
+            "Value":
+
+            quality.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        quality_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# DATA QUALITY MEMORY
+# ==========================================================
+
+if "real_data_quality_memory_v285" not in st.session_state:
+
+    st.session_state.real_data_quality_memory_v285 = []
+
+
+
+def save_real_data_quality_memory_v285():
+
+    quality = real_data_quality_engine_v285()
+
+
+    st.session_state.real_data_quality_memory_v285.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Quality":
+
+            quality["Quality"],
+
+            "Completeness":
+
+            quality["Completeness"],
+
+            "Validation":
+
+            quality["Validation"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_data_quality_memory_v285
+
+    ) > 5000:
+
+        st.session_state.real_data_quality_memory_v285.pop(
+
+            0
+
+        )
+
+
+
+save_real_data_quality_memory_v285()
+
+
+
+# ==========================================================
+# DATA QUALITY MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "📊 Real Data Quality Memory V285"
+
+    )
+
+
+    quality_memory_df = pd.DataFrame(
+
+        st.session_state.real_data_quality_memory_v285[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        quality_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL ANALYSIS READINESS ENGINE V285
+# ==========================================================
+
+def real_analysis_readiness_engine_v285():
+
+    readiness = {
+
+        "Status":
+
+        "NOT READY",
+
+        "Data":
+
+        "CHECK",
+
+        "Quality":
+
+        "CHECK",
+
+        "Permission":
+
+        False
+
+    }
+
+
+
+    quality = real_data_quality_engine_v285()
+
+    health = real_system_health_monitor_v284()
+
+
+
+    readiness["Data"] = health["Data"]
+
+    readiness["Quality"] = quality["Quality"]
+
+
+
+    if (
+
+        quality["Validation"]
+
+        ==
+
+        "PASSED"
+
+    ):
+
+        readiness["Status"] = "READY"
+
+        readiness["Permission"] = True
+
+
+
+    return readiness
+
+
+
+# ==========================================================
+# ANALYSIS READINESS DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Real Analysis Readiness Engine V285"
+
+    )
+
+
+    readiness = real_analysis_readiness_engine_v285()
+
+
+    readiness_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            readiness.keys(),
+
+            "Value":
+
+            readiness.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        readiness_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 285
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 286
+# REAL ANALYSIS READINESS MEMORY + MARKET SCAN ENGINE V286
+# ==========================================================
+
+
+# ==========================================================
+# ANALYSIS READINESS MEMORY
+# ==========================================================
+
+if "real_analysis_readiness_memory_v286" not in st.session_state:
+
+    st.session_state.real_analysis_readiness_memory_v286 = []
+
+
+
+def save_real_analysis_readiness_memory_v286():
+
+    readiness = real_analysis_readiness_engine_v285()
+
+
+    st.session_state.real_analysis_readiness_memory_v286.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Status":
+
+            readiness["Status"],
+
+            "Quality":
+
+            readiness["Quality"],
+
+            "Permission":
+
+            readiness["Permission"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_analysis_readiness_memory_v286
+
+    ) > 5000:
+
+        st.session_state.real_analysis_readiness_memory_v286.pop(
+
+            0
+
+        )
+
+
+
+save_real_analysis_readiness_memory_v286()
+
+
+
+# ==========================================================
+# READINESS MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🧠 Real Analysis Readiness Memory V286"
+
+    )
+
+
+    readiness_memory_df = pd.DataFrame(
+
+        st.session_state.real_analysis_readiness_memory_v286[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        readiness_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL MARKET SCAN ENGINE V286
+# ==========================================================
+
+def real_market_scan_engine_v286():
+
+    scan = {
+
+        "Symbol":
+
+        "XAUUSD",
+
+        "Trend":
+
+        "UNKNOWN",
+
+        "Momentum":
+
+        "UNKNOWN",
+
+        "Volume":
+
+        "UNKNOWN",
+
+        "Structure":
+
+        "UNKNOWN",
+
+        "Status":
+
+        "WAIT"
+
+    }
+
+
+
+    readiness = real_analysis_readiness_engine_v285()
+
+
+
+    if not readiness["Permission"]:
+
+        scan["Status"] = (
+
+            "WAITING REAL DATA"
+
+        )
+
+        return scan
+
+
+
+    trend = real_trend_analysis_v265()
+
+    momentum = real_market_momentum_engine_v266()
+
+    volume = real_volume_engine_v267()
+
+    structure = real_market_structure_fusion_v268()
+
+
+
+    scan["Trend"] = trend["Trend"]
+
+
+    scan["Momentum"] = (
+
+        momentum["Momentum"]["Direction"]
+
+    )
+
+
+    scan["Volume"] = (
+
+        volume["Analysis"]["Pressure"]
+
+    )
+
+
+    scan["Structure"] = (
+
+        structure["Structure"]
+
+    )
+
+
+    scan["Status"] = (
+
+        "SCANNING"
+
+    )
+
+
+    return scan
+
+
+
+# ==========================================================
+# MARKET SCAN DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔍 Real Market Scan Engine V286"
+
+    )
+
+
+    scan = real_market_scan_engine_v286()
+
+
+    scan_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            scan.keys(),
+
+            "Value":
+
+            scan.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        scan_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# MARKET SCAN MEMORY
+# ==========================================================
+
+if "real_market_scan_memory_v286" not in st.session_state:
+
+    st.session_state.real_market_scan_memory_v286 = []
+
+
+
+def save_real_market_scan_memory_v286():
+
+    scan = real_market_scan_engine_v286()
+
+
+    st.session_state.real_market_scan_memory_v286.append(
+
+        {
+
+            "Time":
+
+            current_time(),
+
+            "Trend":
+
+            scan["Trend"],
+
+            "Momentum":
+
+            scan["Momentum"],
+
+            "Volume":
+
+            scan["Volume"],
+
+            "Structure":
+
+            scan["Structure"],
+
+            "Status":
+
+            scan["Status"]
+
+        }
+
+    )
+
+
+    if len(
+
+        st.session_state.real_market_scan_memory_v286
+
+    ) > 5000:
+
+        st.session_state.real_market_scan_memory_v286.pop(
+
+            0
+
+        )
+
+
+
+save_real_market_scan_memory_v286()
+
+
+
+# ==========================================================
+# MARKET SCAN MEMORY DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Dashboard":
+
+    st.divider()
+
+    st.subheader(
+
+        "🔍 Real Market Scan Memory V286"
+
+    )
+
+
+    scan_memory_df = pd.DataFrame(
+
+        st.session_state.real_market_scan_memory_v286[-30:]
+
+    )
+
+
+    st.dataframe(
+
+        scan_memory_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+
+# ==========================================================
+# REAL MARKET OPPORTUNITY FILTER V286
+# ==========================================================
+
+def real_market_opportunity_filter_v286():
+
+    opportunity = {
+
+        "Opportunity":
+
+        "NONE",
+
+        "Direction":
+
+        "NONE",
+
+        "Reason":
+
+        [],
+
+        "Status":
+
+        "WAIT"
+
+    }
+
+
+
+    scan = real_market_scan_engine_v286()
+
+
+
+    if scan["Status"] != "SCANNING":
+
+        opportunity["Reason"].append(
+
+            "Real data unavailable"
+
+        )
+
+        return opportunity
+
+
+
+    if (
+
+        scan["Trend"] == "BULLISH"
+
+        and
+
+        scan["Volume"] == "BUYING"
+
+    ):
+
+
+        opportunity["Opportunity"] = (
+
+            "LONG SETUP"
+
+        )
+
+        opportunity["Direction"] = (
+
+            "LONG"
+
+        )
+
+        opportunity["Status"] = (
+
+            "ACTIVE"
+
+        )
+
+        opportunity["Reason"].append(
+
+            "Bullish trend with buying pressure"
+
+        )
+
+
+
+    elif (
+
+        scan["Trend"] == "BEARISH"
+
+        and
+
+        scan["Volume"] == "SELLING"
+
+    ):
+
+
+        opportunity["Opportunity"] = (
+
+            "SHORT SETUP"
+
+        )
+
+        opportunity["Direction"] = (
+
+            "SHORT"
+
+        )
+
+        opportunity["Status"] = (
+
+            "ACTIVE"
+
+        )
+
+        opportunity["Reason"].append(
+
+            "Bearish trend with selling pressure"
+
+        )
+
+
+
+    return opportunity
+
+
+
+# ==========================================================
+# OPPORTUNITY FILTER DISPLAY
+# ==========================================================
+
+if st.session_state.page == "Gold":
+
+    st.divider()
+
+    st.subheader(
+
+        "🎯 Real Market Opportunity Filter V286"
+
+    )
+
+
+    opportunity = real_market_opportunity_filter_v286()
+
+
+    opportunity_df = pd.DataFrame(
+
+        {
+
+            "Metric":
+
+            opportunity.keys(),
+
+            "Value":
+
+            opportunity.values()
+
+        }
+
+    )
+
+
+    st.dataframe(
+
+        opportunity_df,
+
+        use_container_width=True,
+
+        hide_index=True
+
+    )
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 286
+# ==========================================================
