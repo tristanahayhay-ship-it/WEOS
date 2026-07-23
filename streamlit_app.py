@@ -32552,3 +32552,18243 @@ WEOS_NOTIFICATION_ENGINE.info(
 # VERSION 1.0.0
 # TOTAL SEGMENTS: 300
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 301
+# ==========================================================
+
+from datetime import datetime
+from typing import Dict, Any, Optional, List
+from enum import Enum
+import requests
+import time
+
+
+class DataProviderType(str, Enum):
+
+    MARKET = "MARKET"
+
+    ECONOMIC = "ECONOMIC"
+
+    NEWS = "NEWS"
+
+    BLOCKCHAIN = "BLOCKCHAIN"
+
+    GOVERNMENT = "GOVERNMENT"
+
+
+class DataProviderStatus(str, Enum):
+
+    ACTIVE = "ACTIVE"
+
+    ERROR = "ERROR"
+
+    DISCONNECTED = "DISCONNECTED"
+
+    WAITING = "WAITING"
+
+
+
+class DataProvider(BaseModel):
+
+    id: str
+
+    name: str
+
+    provider_type: DataProviderType
+
+    api_url: str = ""
+
+    api_key: str = ""
+
+    update_interval: int = 60
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+    last_update: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_PROVIDER_DATABASE: Dict[
+    str,
+    DataProvider,
+] = {}
+
+
+
+class DataProviderManager:
+
+
+    def register(
+        self,
+        provider: DataProvider,
+    ) -> None:
+
+        DATA_PROVIDER_DATABASE[
+            provider.id
+        ] = provider
+
+
+
+    def get(
+        self,
+        provider_id: str,
+    ) -> Optional[DataProvider]:
+
+        return DATA_PROVIDER_DATABASE.get(
+            provider_id
+        )
+
+
+
+    def update_status(
+        self,
+        provider_id: str,
+        status: DataProviderStatus,
+    ) -> None:
+
+        provider = self.get(
+            provider_id
+        )
+
+        if provider:
+
+            provider.status = status
+
+            provider.last_update = utc_now()
+
+
+
+    def all(
+        self,
+    ) -> List[DataProvider]:
+
+        return list(
+            DATA_PROVIDER_DATABASE.values()
+        )
+
+
+
+    def active(
+        self,
+    ) -> List[DataProvider]:
+
+        return [
+
+            provider
+
+            for provider
+
+            in DATA_PROVIDER_DATABASE.values()
+
+            if provider.status
+            ==
+            DataProviderStatus.ACTIVE
+
+        ]
+
+
+
+DATA_PROVIDER_MANAGER = (
+    DataProviderManager()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 301
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 302
+# ==========================================================
+
+class MarketDataRecord(BaseModel):
+
+    id: str
+
+    symbol: str
+
+    provider_id: str
+
+    price: float = 0.0
+
+    open_price: float = 0.0
+
+    high_price: float = 0.0
+
+    low_price: float = 0.0
+
+    close_price: float = 0.0
+
+    volume: float = 0.0
+
+    change_percent: float = 0.0
+
+    timeframe: str = ""
+
+    timestamp: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+
+
+MARKET_DATA_DATABASE: Dict[
+    str,
+    MarketDataRecord,
+] = {}
+
+
+
+class MarketDataManager:
+
+
+    def save(
+        self,
+        record: MarketDataRecord,
+    ) -> None:
+
+        record.timestamp = utc_now()
+
+        record.status = (
+            DataProviderStatus.ACTIVE
+        )
+
+        MARKET_DATA_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MarketDataRecord]:
+
+        return MARKET_DATA_DATABASE.get(
+            record_id
+        )
+
+
+
+    def latest_symbol(
+        self,
+        symbol: str,
+    ) -> List[MarketDataRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in MARKET_DATA_DATABASE.values()
+
+            if item.symbol
+            ==
+            symbol
+
+        ]
+
+
+
+    def latest_price(
+        self,
+        symbol: str,
+    ) -> Optional[float]:
+
+        data = self.latest_symbol(
+            symbol
+        )
+
+        if not data:
+
+            return None
+
+
+        return sorted(
+
+            data,
+
+            key=lambda x:
+            x.timestamp or utc_now(),
+
+            reverse=True,
+
+        )[0].close_price
+
+
+
+    def all(
+        self,
+    ) -> List[MarketDataRecord]:
+
+        return list(
+            MARKET_DATA_DATABASE.values()
+        )
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        MARKET_DATA_DATABASE.clear()
+
+
+
+MARKET_DATA_MANAGER = (
+    MarketDataManager()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 302
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 303
+# ==========================================================
+
+class EconomicDataRecord(BaseModel):
+
+    id: str
+
+    indicator_name: str
+
+    country: str
+
+    value: float = 0.0
+
+    previous_value: float = 0.0
+
+    forecast_value: float = 0.0
+
+    unit: str = ""
+
+    release_date: Optional[
+        datetime
+    ] = None
+
+    source_provider: str = ""
+
+    importance: str = ""
+
+    impact_direction: str = ""
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+
+
+ECONOMIC_DATA_DATABASE: Dict[
+    str,
+    EconomicDataRecord,
+] = {}
+
+
+
+class EconomicDataManager:
+
+
+    def register(
+        self,
+        record: EconomicDataRecord,
+    ) -> None:
+
+        record.status = (
+            DataProviderStatus.ACTIVE
+        )
+
+        ECONOMIC_DATA_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[EconomicDataRecord]:
+
+        return ECONOMIC_DATA_DATABASE.get(
+            record_id
+        )
+
+
+
+    def by_country(
+        self,
+        country: str,
+    ) -> List[EconomicDataRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in ECONOMIC_DATA_DATABASE.values()
+
+            if item.country
+            ==
+            country
+
+        ]
+
+
+
+    def by_indicator(
+        self,
+        indicator: str,
+    ) -> List[EconomicDataRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in ECONOMIC_DATA_DATABASE.values()
+
+            if item.indicator_name
+            ==
+            indicator
+
+        ]
+
+
+
+    def latest(
+        self,
+        limit: int = 50,
+    ) -> List[EconomicDataRecord]:
+
+        return sorted(
+
+            ECONOMIC_DATA_DATABASE.values(),
+
+            key=lambda x:
+            x.release_date
+            or
+            utc_now(),
+
+            reverse=True,
+
+        )[:limit]
+
+
+
+    def calculate_surprise(
+        self,
+        record_id: str,
+    ) -> float:
+
+        record = self.get(
+            record_id
+        )
+
+        if record is None:
+
+            return 0.0
+
+
+        if record.forecast_value == 0:
+
+            return 0.0
+
+
+        return (
+
+            (
+                record.value
+
+                -
+
+                record.forecast_value
+
+            )
+
+            /
+
+            abs(
+                record.forecast_value
+            )
+
+        ) * 100
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        ECONOMIC_DATA_DATABASE.clear()
+
+
+
+ECONOMIC_DATA_MANAGER = (
+    EconomicDataManager()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 303
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 304
+# ==========================================================
+
+class NewsDataRecord(BaseModel):
+
+    id: str
+
+    title: str
+
+    source: str
+
+    category: str = ""
+
+    country: str = ""
+
+    related_assets: List[str] = Field(
+        default_factory=list
+    )
+
+    sentiment_score: float = 0.0
+
+    impact_score: float = 0.0
+
+    importance_level: str = ""
+
+    published_time: Optional[
+        datetime
+    ] = None
+
+    content: str = ""
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+
+
+NEWS_DATA_DATABASE: Dict[
+    str,
+    NewsDataRecord,
+] = {}
+
+
+
+class NewsDataManager:
+
+
+    def register(
+        self,
+        record: NewsDataRecord,
+    ) -> None:
+
+        record.status = (
+            DataProviderStatus.ACTIVE
+        )
+
+        NEWS_DATA_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[NewsDataRecord]:
+
+        return NEWS_DATA_DATABASE.get(
+            record_id
+        )
+
+
+
+    def search(
+        self,
+        keyword: str,
+    ) -> List[NewsDataRecord]:
+
+        keyword = keyword.lower()
+
+        return [
+
+            item
+
+            for item
+
+            in NEWS_DATA_DATABASE.values()
+
+            if keyword
+            in
+            item.title.lower()
+
+        ]
+
+
+
+    def asset_news(
+        self,
+        symbol: str,
+    ) -> List[NewsDataRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in NEWS_DATA_DATABASE.values()
+
+            if symbol
+
+            in
+
+            item.related_assets
+
+        ]
+
+
+
+    def latest(
+        self,
+        limit: int = 100,
+    ) -> List[NewsDataRecord]:
+
+        return sorted(
+
+            NEWS_DATA_DATABASE.values(),
+
+            key=lambda x:
+
+            x.published_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )[:limit]
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        NEWS_DATA_DATABASE.clear()
+
+
+
+NEWS_DATA_MANAGER = (
+    NewsDataManager()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 304
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 305
+# ==========================================================
+
+class BlockchainDataRecord(BaseModel):
+
+    id: str
+
+    network: str
+
+    asset: str = ""
+
+    wallet_address: str = ""
+
+    transaction_hash: str = ""
+
+    amount: float = 0.0
+
+    usd_value: float = 0.0
+
+    transaction_type: str = ""
+
+    from_address: str = ""
+
+    to_address: str = ""
+
+    block_number: int = 0
+
+    timestamp: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+
+
+BLOCKCHAIN_DATA_DATABASE: Dict[
+    str,
+    BlockchainDataRecord,
+] = {}
+
+
+
+class BlockchainDataManager:
+
+
+    def register(
+        self,
+        record: BlockchainDataRecord,
+    ) -> None:
+
+        record.status = (
+            DataProviderStatus.ACTIVE
+        )
+
+        record.timestamp = utc_now()
+
+        BLOCKCHAIN_DATA_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[BlockchainDataRecord]:
+
+        return BLOCKCHAIN_DATA_DATABASE.get(
+            record_id
+        )
+
+
+
+    def transactions_by_asset(
+        self,
+        asset: str,
+    ) -> List[BlockchainDataRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in BLOCKCHAIN_DATA_DATABASE.values()
+
+            if item.asset
+            ==
+            asset
+
+        ]
+
+
+
+    def wallet_activity(
+        self,
+        wallet: str,
+    ) -> List[BlockchainDataRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in BLOCKCHAIN_DATA_DATABASE.values()
+
+            if (
+
+                item.wallet_address
+                ==
+                wallet
+
+                or
+
+                item.from_address
+                ==
+                wallet
+
+                or
+
+                item.to_address
+                ==
+                wallet
+
+            )
+
+        ]
+
+
+
+    def total_volume(
+        self,
+        asset: Optional[str] = None,
+    ) -> float:
+
+        total = 0.0
+
+
+        for item in BLOCKCHAIN_DATA_DATABASE.values():
+
+            if asset is None:
+
+                total += item.usd_value
+
+
+            elif item.asset == asset:
+
+                total += item.usd_value
+
+
+        return total
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        BLOCKCHAIN_DATA_DATABASE.clear()
+
+
+
+BLOCKCHAIN_DATA_MANAGER = (
+    BlockchainDataManager()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 305
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 306
+# ==========================================================
+
+class GovernmentDataRecord(BaseModel):
+
+    id: str
+
+    country: str
+
+    institution: str
+
+    data_type: str = ""
+
+    indicator_name: str = ""
+
+    value: float = 0.0
+
+    unit: str = ""
+
+    publication_date: Optional[
+        datetime
+    ] = None
+
+    source_url: str = ""
+
+    reliability_score: float = 0.0
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+
+
+GOVERNMENT_DATA_DATABASE: Dict[
+    str,
+    GovernmentDataRecord,
+] = {}
+
+
+
+class GovernmentDataManager:
+
+
+    def register(
+        self,
+        record: GovernmentDataRecord,
+    ) -> None:
+
+        record.status = (
+            DataProviderStatus.ACTIVE
+        )
+
+        GOVErNMENT_DATA_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GovernmentDataRecord]:
+
+        return GOVErNMENT_DATA_DATABASE.get(
+            record_id
+        )
+
+
+
+    def country_data(
+        self,
+        country: str,
+    ) -> List[GovernmentDataRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in GOVErNMENT_DATA_DATABASE.values()
+
+            if item.country
+            ==
+            country
+
+        ]
+
+
+
+    def indicator_data(
+        self,
+        indicator: str,
+    ) -> List[GovernmentDataRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in GOVErNMENT_DATA_DATABASE.values()
+
+            if item.indicator_name
+            ==
+            indicator
+
+        ]
+
+
+
+    def average_reliability(
+        self,
+    ) -> float:
+
+        records = list(
+            GOVErNMENT_DATA_DATABASE.values()
+        )
+
+        if not records:
+
+            return 0.0
+
+
+        return sum(
+
+            item.reliability_score
+
+            for item
+
+            in records
+
+        ) / len(records)
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        GOVErNMENT_DATA_DATABASE.clear()
+
+
+
+GOVERNMENT_DATA_MANAGER = (
+    GovernmentDataManager()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 306
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 307
+# ==========================================================
+
+class DataNormalizationRecord(BaseModel):
+
+    id: str
+
+    source_type: str
+
+    source_id: str
+
+    original_value: Any = None
+
+    normalized_value: Any = None
+
+    data_format: str = ""
+
+    unit_before: str = ""
+
+    unit_after: str = ""
+
+    conversion_factor: float = 1.0
+
+    quality_score: float = 0.0
+
+    processed_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_NORMALIZATION_DATABASE: Dict[
+    str,
+    DataNormalizationRecord,
+] = {}
+
+
+
+class DataNormalizationEngine:
+
+
+    def register(
+        self,
+        record: DataNormalizationRecord,
+    ) -> None:
+
+        record.processed_time = utc_now()
+
+        DATA_NORMALIZATION_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def normalize_price(
+        self,
+        value: float,
+        factor: float = 1.0,
+    ) -> float:
+
+        return value * factor
+
+
+
+    def normalize_percent(
+        self,
+        value: float,
+    ) -> float:
+
+        if value > 1:
+
+            return value / 100
+
+        return value
+
+
+
+    def normalize_currency(
+        self,
+        value: float,
+        exchange_rate: float,
+    ) -> float:
+
+        return (
+
+            value
+
+            *
+
+            exchange_rate
+
+        )
+
+
+
+    def quality_check(
+        self,
+        record_id: str,
+    ) -> float:
+
+        record = DATA_NORMALIZATION_DATABASE.get(
+            record_id
+        )
+
+        if record is None:
+
+            return 0.0
+
+
+        return record.quality_score
+
+
+
+    def all(
+        self,
+    ) -> List[DataNormalizationRecord]:
+
+        return list(
+            DATA_NORMALIZATION_DATABASE.values()
+        )
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_NORMALIZATION_DATABASE.clear()
+
+
+
+DATA_NORMALIZATION_ENGINE = (
+    DataNormalizationEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 307
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 308
+# ==========================================================
+
+class DataQualityRecord(BaseModel):
+
+    id: str
+
+    dataset_name: str
+
+    source_type: str = ""
+
+    completeness_score: float = 0.0
+
+    accuracy_score: float = 0.0
+
+    consistency_score: float = 0.0
+
+    freshness_score: float = 0.0
+
+    reliability_score: float = 0.0
+
+    total_quality_score: float = 0.0
+
+    quality_status: str = ""
+
+    checked_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_QUALITY_DATABASE: Dict[
+    str,
+    DataQualityRecord,
+] = {}
+
+
+
+class DataQualityEngine:
+
+
+    def register(
+        self,
+        record: DataQualityRecord,
+    ) -> None:
+
+        record.checked_time = utc_now()
+
+        DATA_QUALITY_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = DATA_QUALITY_DATABASE.get(
+            record_id
+        )
+
+        if record is None:
+
+            return
+
+
+        record.total_quality_score = (
+
+            record.completeness_score
+            *
+            0.20
+
+            +
+
+            record.accuracy_score
+            *
+            0.25
+
+            +
+
+            record.consistency_score
+            *
+            0.20
+
+            +
+
+            record.freshness_score
+            *
+            0.15
+
+            +
+
+            record.reliability_score
+            *
+            0.20
+
+        )
+
+
+        if record.total_quality_score >= 85:
+
+            record.quality_status = (
+                "EXCELLENT"
+            )
+
+
+        elif record.total_quality_score >= 70:
+
+            record.quality_status = (
+                "GOOD"
+            )
+
+
+        elif record.total_quality_score >= 50:
+
+            record.quality_status = (
+                "WARNING"
+            )
+
+
+        else:
+
+            record.quality_status = (
+                "POOR"
+            )
+
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[DataQualityRecord]:
+
+        return DATA_QUALITY_DATABASE.get(
+            record_id
+        )
+
+
+
+    def ranking(
+        self,
+    ) -> List[DataQualityRecord]:
+
+        return sorted(
+
+            DATA_QUALITY_DATABASE.values(),
+
+            key=lambda x:
+
+            x.total_quality_score,
+
+            reverse=True,
+
+        )
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_QUALITY_DATABASE.clear()
+
+
+
+DATA_QUALITY_ENGINE = (
+    DataQualityEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 308
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 309
+# ==========================================================
+
+class DataPipelineTask(BaseModel):
+
+    id: str
+
+    task_name: str
+
+    source_provider: str = ""
+
+    destination: str = ""
+
+    task_type: str = ""
+
+    priority: int = 0
+
+    execution_interval: int = 60
+
+    last_execution: Optional[
+        datetime
+    ] = None
+
+    next_execution: Optional[
+        datetime
+    ] = None
+
+    execution_count: int = 0
+
+    success_count: int = 0
+
+    failed_count: int = 0
+
+    status: str = "WAITING"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_PIPELINE_DATABASE: Dict[
+    str,
+    DataPipelineTask,
+] = {}
+
+
+
+class DataPipelineEngine:
+
+
+    def register(
+        self,
+        task: DataPipelineTask,
+    ) -> None:
+
+        DATA_PIPELINE_DATABASE[
+            task.id
+        ] = task
+
+
+
+    def execute(
+        self,
+        task_id: str,
+    ) -> bool:
+
+        task = DATA_PIPELINE_DATABASE.get(
+            task_id
+        )
+
+        if task is None:
+
+            return False
+
+
+        try:
+
+            task.last_execution = utc_now()
+
+            task.execution_count += 1
+
+            task.success_count += 1
+
+            task.status = (
+                "SUCCESS"
+            )
+
+            return True
+
+
+        except Exception:
+
+            task.failed_count += 1
+
+            task.status = (
+                "FAILED"
+            )
+
+            return False
+
+
+
+    def schedule(
+        self,
+    ) -> List[DataPipelineTask]:
+
+        now = utc_now()
+
+        result = []
+
+
+        for task in DATA_PIPELINE_DATABASE.values():
+
+            if (
+
+                task.next_execution
+
+                is None
+
+                or
+
+                task.next_execution <= now
+
+            ):
+
+                result.append(
+                    task
+                )
+
+
+        return result
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        total = len(
+            DATA_PIPELINE_DATABASE
+        )
+
+
+        success = sum(
+
+            item.success_count
+
+            for item
+
+            in DATA_PIPELINE_DATABASE.values()
+
+        )
+
+
+        failed = sum(
+
+            item.failed_count
+
+            for item
+
+            in DATA_PIPELINE_DATABASE.values()
+
+        )
+
+
+        return {
+
+            "tasks":
+
+                total,
+
+            "success":
+
+                success,
+
+            "failed":
+
+                failed,
+
+            "generated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_PIPELINE_DATABASE.clear()
+
+
+
+DATA_PIPELINE_ENGINE = (
+    DataPipelineEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 309
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 310
+# ==========================================================
+
+class DataStreamRecord(BaseModel):
+
+    id: str
+
+    stream_name: str
+
+    source_provider: str = ""
+
+    stream_type: str = ""
+
+    frequency: float = 0.0
+
+    current_status: str = "STOPPED"
+
+    message_count: int = 0
+
+    error_count: int = 0
+
+    last_message_time: Optional[
+        datetime
+    ] = None
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_STREAM_DATABASE: Dict[
+    str,
+    DataStreamRecord,
+] = {}
+
+
+
+class DataStreamEngine:
+
+
+    def register(
+        self,
+        stream: DataStreamRecord,
+    ) -> None:
+
+        stream.created_time = utc_now()
+
+        DATA_STREAM_DATABASE[
+            stream.id
+        ] = stream
+
+
+
+    def start(
+        self,
+        stream_id: str,
+    ) -> None:
+
+        stream = DATA_STREAM_DATABASE.get(
+            stream_id
+        )
+
+        if stream:
+
+            stream.current_status = (
+                "RUNNING"
+            )
+
+
+
+    def stop(
+        self,
+        stream_id: str,
+    ) -> None:
+
+        stream = DATA_STREAM_DATABASE.get(
+            stream_id
+        )
+
+        if stream:
+
+            stream.current_status = (
+                "STOPPED"
+            )
+
+
+
+    def push_message(
+        self,
+        stream_id: str,
+    ) -> None:
+
+        stream = DATA_STREAM_DATABASE.get(
+            stream_id
+        )
+
+        if stream:
+
+            stream.message_count += 1
+
+            stream.last_message_time = (
+                utc_now()
+            )
+
+
+
+    def error(
+        self,
+        stream_id: str,
+    ) -> None:
+
+        stream = DATA_STREAM_DATABASE.get(
+            stream_id
+        )
+
+        if stream:
+
+            stream.error_count += 1
+
+
+
+    def active_streams(
+        self,
+    ) -> List[DataStreamRecord]:
+
+        return [
+
+            stream
+
+            for stream
+
+            in DATA_STREAM_DATABASE.values()
+
+            if stream.current_status
+            ==
+            "RUNNING"
+
+        ]
+
+
+
+    def status(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "total":
+
+                len(
+                    DATA_STREAM_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_streams()
+                ),
+
+            "messages":
+
+                sum(
+
+                    item.message_count
+
+                    for item
+
+                    in DATA_STREAM_DATABASE.values()
+
+                ),
+
+            "errors":
+
+                sum(
+
+                    item.error_count
+
+                    for item
+
+                    in DATA_STREAM_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_STREAM_DATABASE.clear()
+
+
+
+DATA_STREAM_ENGINE = (
+    DataStreamEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 310
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 311
+# ==========================================================
+
+class DataCollectorConfig(BaseModel):
+
+    id: str
+
+    collector_name: str
+
+    provider_type: DataProviderType
+
+    endpoint: str = ""
+
+    authentication_type: str = ""
+
+    refresh_interval: int = 60
+
+    retry_limit: int = 3
+
+    timeout_seconds: int = 30
+
+    enabled: bool = True
+
+    last_collection: Optional[
+        datetime
+    ] = None
+
+    total_requests: int = 0
+
+    failed_requests: int = 0
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_COLLECTOR_DATABASE: Dict[
+    str,
+    DataCollectorConfig,
+] = {}
+
+
+
+class DataCollectorEngine:
+
+
+    def register(
+        self,
+        collector: DataCollectorConfig,
+    ) -> None:
+
+        DATA_COLLECTOR_DATABASE[
+            collector.id
+        ] = collector
+
+
+
+    def collect(
+        self,
+        collector_id: str,
+    ) -> Optional[Dict[str, Any]]:
+
+        collector = (
+            DATA_COLLECTOR_DATABASE.get(
+                collector_id
+            )
+        )
+
+        if collector is None:
+
+            return None
+
+
+        try:
+
+            collector.total_requests += 1
+
+            collector.last_collection = (
+                utc_now()
+            )
+
+
+            response = requests.get(
+
+                collector.endpoint,
+
+                timeout=
+                collector.timeout_seconds,
+
+            )
+
+
+            return {
+
+                "status":
+
+                    response.status_code,
+
+                "data":
+
+                    response.json()
+
+                    if response.headers.get(
+                        "content-type",
+                        "",
+                    ).startswith(
+                        "application/json"
+                    )
+
+                    else response.text,
+
+                "time":
+
+                    utc_now(),
+
+            }
+
+
+        except Exception:
+
+            collector.failed_requests += 1
+
+            return None
+
+
+
+    def active_collectors(
+        self,
+    ) -> List[DataCollectorConfig]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_COLLECTOR_DATABASE.values()
+
+            if item.enabled
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "collectors":
+
+                len(
+                    DATA_COLLECTOR_DATABASE
+                ),
+
+            "requests":
+
+                sum(
+
+                    item.total_requests
+
+                    for item
+
+                    in DATA_COLLECTOR_DATABASE.values()
+
+                ),
+
+            "failures":
+
+                sum(
+
+                    item.failed_requests
+
+                    for item
+
+                    in DATA_COLLECTOR_DATABASE.values()
+
+                ),
+
+            "time":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_COLLECTOR_DATABASE.clear()
+
+
+
+DATA_COLLECTOR_ENGINE = (
+    DataCollectorEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 311
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 312
+# ==========================================================
+
+class MarketAPIConnector(BaseModel):
+
+    id: str
+
+    provider_name: str
+
+    base_url: str = ""
+
+    api_key: str = ""
+
+    symbol_mapping: Dict[
+        str,
+        str,
+    ] = Field(
+        default_factory=dict
+    )
+
+    headers: Dict[
+        str,
+        str,
+    ] = Field(
+        default_factory=dict
+    )
+
+    request_limit: int = 100
+
+    requests_used: int = 0
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+    last_request: Optional[
+        datetime
+    ] = None
+
+
+
+MARKET_API_CONNECTOR_DATABASE: Dict[
+    str,
+    MarketAPIConnector,
+] = {}
+
+
+
+class MarketAPIConnectorEngine:
+
+
+    def register(
+        self,
+        connector: MarketAPIConnector,
+    ) -> None:
+
+        MARKET_API_CONNECTOR_DATABASE[
+            connector.id
+        ] = connector
+
+
+
+    def request(
+        self,
+        connector_id: str,
+        endpoint: str,
+        params: Optional[
+            Dict[str, Any]
+        ] = None,
+    ) -> Optional[Any]:
+
+        connector = (
+            MARKET_API_CONNECTOR_DATABASE.get(
+                connector_id
+            )
+        )
+
+
+        if connector is None:
+
+            return None
+
+
+        if connector.requests_used >= connector.request_limit:
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+            return None
+
+
+        try:
+
+            response = requests.get(
+
+                connector.base_url
+                +
+                endpoint,
+
+                headers=
+                connector.headers,
+
+                params=params,
+
+                timeout=30,
+
+            )
+
+
+            connector.requests_used += 1
+
+            connector.last_request = utc_now()
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+            return response.json()
+
+
+
+        except Exception:
+
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+
+            return None
+
+
+
+    def reset_limit(
+        self,
+    ) -> None:
+
+        for connector in (
+            MARKET_API_CONNECTOR_DATABASE.values()
+        ):
+
+            connector.requests_used = 0
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+
+    def all(
+        self,
+    ) -> List[MarketAPIConnector]:
+
+        return list(
+            MARKET_API_CONNECTOR_DATABASE.values()
+        )
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        MARKET_API_CONNECTOR_DATABASE.clear()
+
+
+
+MARKET_API_CONNECTOR_ENGINE = (
+    MarketAPIConnectorEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 312
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 313
+# ==========================================================
+
+class EconomicAPIConnector(BaseModel):
+
+    id: str
+
+    provider_name: str
+
+    base_url: str = ""
+
+    api_key: str = ""
+
+    indicator_mapping: Dict[
+        str,
+        str,
+    ] = Field(
+        default_factory=dict
+    )
+
+    country_mapping: Dict[
+        str,
+        str,
+    ] = Field(
+        default_factory=dict
+    )
+
+    request_limit: int = 100
+
+    requests_used: int = 0
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+    last_request: Optional[
+        datetime
+    ] = None
+
+
+
+ECONOMIC_API_CONNECTOR_DATABASE: Dict[
+    str,
+    EconomicAPIConnector,
+] = {}
+
+
+
+class EconomicAPIConnectorEngine:
+
+
+    def register(
+        self,
+        connector: EconomicAPIConnector,
+    ) -> None:
+
+        ECONOMIC_API_CONNECTOR_DATABASE[
+            connector.id
+        ] = connector
+
+
+
+    def request(
+        self,
+        connector_id: str,
+        endpoint: str,
+        params: Optional[
+            Dict[str, Any]
+        ] = None,
+    ) -> Optional[Any]:
+
+        connector = (
+            ECONOMIC_API_CONNECTOR_DATABASE.get(
+                connector_id
+            )
+        )
+
+
+        if connector is None:
+
+            return None
+
+
+        if connector.requests_used >= connector.request_limit:
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+            return None
+
+
+        try:
+
+            response = requests.get(
+
+                connector.base_url
+                +
+                endpoint,
+
+                headers={
+
+                    "Authorization":
+
+                    f"Bearer {connector.api_key}"
+
+                },
+
+                params=params,
+
+                timeout=30,
+
+            )
+
+
+            connector.requests_used += 1
+
+            connector.last_request = utc_now()
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+            return response.json()
+
+
+
+        except Exception:
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+            return None
+
+
+
+    def get_indicator(
+        self,
+        connector_id: str,
+        indicator: str,
+        country: str,
+    ) -> Optional[Any]:
+
+        connector = (
+            ECONOMIC_API_CONNECTOR_DATABASE.get(
+                connector_id
+            )
+        )
+
+
+        if connector is None:
+
+            return None
+
+
+        mapped_indicator = (
+
+            connector.indicator_mapping.get(
+
+                indicator,
+
+                indicator,
+
+            )
+
+        )
+
+
+        mapped_country = (
+
+            connector.country_mapping.get(
+
+                country,
+
+                country,
+
+            )
+
+        )
+
+
+        return self.request(
+
+            connector_id,
+
+            "/indicator",
+
+            {
+
+                "indicator":
+
+                    mapped_indicator,
+
+                "country":
+
+                    mapped_country,
+
+            },
+
+        )
+
+
+
+    def reset_limit(
+        self,
+    ) -> None:
+
+        for connector in (
+            ECONOMIC_API_CONNECTOR_DATABASE.values()
+        ):
+
+            connector.requests_used = 0
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+
+    def all(
+        self,
+    ) -> List[EconomicAPIConnector]:
+
+        return list(
+            ECONOMIC_API_CONNECTOR_DATABASE.values()
+        )
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        ECONOMIC_API_CONNECTOR_DATABASE.clear()
+
+
+
+ECONOMIC_API_CONNECTOR_ENGINE = (
+    EconomicAPIConnectorEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 313
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 314
+# ==========================================================
+
+class NewsAPIConnector(BaseModel):
+
+    id: str
+
+    provider_name: str
+
+    base_url: str = ""
+
+    api_key: str = ""
+
+    category_mapping: Dict[
+        str,
+        str,
+    ] = Field(
+        default_factory=dict
+    )
+
+    language: str = "en"
+
+    request_limit: int = 100
+
+    requests_used: int = 0
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+    last_request: Optional[
+        datetime
+    ] = None
+
+
+
+NEWS_API_CONNECTOR_DATABASE: Dict[
+    str,
+    NewsAPIConnector,
+] = {}
+
+
+
+class NewsAPIConnectorEngine:
+
+
+    def register(
+        self,
+        connector: NewsAPIConnector,
+    ) -> None:
+
+        NEWS_API_CONNECTOR_DATABASE[
+            connector.id
+        ] = connector
+
+
+
+    def request(
+        self,
+        connector_id: str,
+        endpoint: str,
+        params: Optional[
+            Dict[str, Any]
+        ] = None,
+    ) -> Optional[Any]:
+
+        connector = (
+            NEWS_API_CONNECTOR_DATABASE.get(
+                connector_id
+            )
+        )
+
+
+        if connector is None:
+
+            return None
+
+
+        if connector.requests_used >= connector.request_limit:
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+            return None
+
+
+        try:
+
+            request_params = {
+
+                "apiKey":
+
+                    connector.api_key,
+
+                "language":
+
+                    connector.language,
+
+            }
+
+
+            if params:
+
+                request_params.update(
+                    params
+                )
+
+
+            response = requests.get(
+
+                connector.base_url
+                +
+                endpoint,
+
+                params=request_params,
+
+                timeout=30,
+
+            )
+
+
+            connector.requests_used += 1
+
+            connector.last_request = utc_now()
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+            return response.json()
+
+
+
+        except Exception:
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+            return None
+
+
+
+    def search_news(
+        self,
+        connector_id: str,
+        keyword: str,
+    ) -> Optional[Any]:
+
+        return self.request(
+
+            connector_id,
+
+            "/search",
+
+            {
+
+                "q":
+
+                    keyword,
+
+            },
+
+        )
+
+
+
+    def category_news(
+        self,
+        connector_id: str,
+        category: str,
+    ) -> Optional[Any]:
+
+        connector = (
+            NEWS_API_CONNECTOR_DATABASE.get(
+                connector_id
+            )
+        )
+
+
+        if connector is None:
+
+            return None
+
+
+        mapped_category = (
+
+            connector.category_mapping.get(
+
+                category,
+
+                category,
+
+            )
+
+        )
+
+
+        return self.request(
+
+            connector_id,
+
+            "/top-headlines",
+
+            {
+
+                "category":
+
+                    mapped_category,
+
+            },
+
+        )
+
+
+
+    def reset_limit(
+        self,
+    ) -> None:
+
+        for connector in (
+            NEWS_API_CONNECTOR_DATABASE.values()
+        ):
+
+            connector.requests_used = 0
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+
+    def all(
+        self,
+    ) -> List[NewsAPIConnector]:
+
+        return list(
+            NEWS_API_CONNECTOR_DATABASE.values()
+        )
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        NEWS_API_CONNECTOR_DATABASE.clear()
+
+
+
+NEWS_API_CONNECTOR_ENGINE = (
+    NewsAPIConnectorEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 314
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 315
+# ==========================================================
+
+class BlockchainAPIConnector(BaseModel):
+
+    id: str
+
+    provider_name: str
+
+    base_url: str = ""
+
+    api_key: str = ""
+
+    network_mapping: Dict[
+        str,
+        str,
+    ] = Field(
+        default_factory=dict
+    )
+
+    request_limit: int = 100
+
+    requests_used: int = 0
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+    last_request: Optional[
+        datetime
+    ] = None
+
+
+
+BLOCKCHAIN_API_CONNECTOR_DATABASE: Dict[
+    str,
+    BlockchainAPIConnector,
+] = {}
+
+
+
+class BlockchainAPIConnectorEngine:
+
+
+    def register(
+        self,
+        connector: BlockchainAPIConnector,
+    ) -> None:
+
+        BLOCKCHAIN_API_CONNECTOR_DATABASE[
+            connector.id
+        ] = connector
+
+
+
+    def request(
+        self,
+        connector_id: str,
+        endpoint: str,
+        params: Optional[
+            Dict[str, Any]
+        ] = None,
+    ) -> Optional[Any]:
+
+        connector = (
+            BLOCKCHAIN_API_CONNECTOR_DATABASE.get(
+                connector_id
+            )
+        )
+
+
+        if connector is None:
+
+            return None
+
+
+        if connector.requests_used >= connector.request_limit:
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+            return None
+
+
+        try:
+
+            response = requests.get(
+
+                connector.base_url
+                +
+                endpoint,
+
+                params={
+
+                    "apikey":
+
+                        connector.api_key,
+
+                    **(
+                        params
+                        or
+                        {}
+                    ),
+
+                },
+
+                timeout=30,
+
+            )
+
+
+            connector.requests_used += 1
+
+            connector.last_request = utc_now()
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+            return response.json()
+
+
+
+        except Exception:
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+            return None
+
+
+
+    def wallet_transactions(
+        self,
+        connector_id: str,
+        wallet: str,
+        network: str,
+    ) -> Optional[Any]:
+
+        connector = (
+            BLOCKCHAIN_API_CONNECTOR_DATABASE.get(
+                connector_id
+            )
+        )
+
+
+        if connector is None:
+
+            return None
+
+
+        mapped_network = (
+
+            connector.network_mapping.get(
+
+                network,
+
+                network,
+
+            )
+
+        )
+
+
+        return self.request(
+
+            connector_id,
+
+            "/wallet/transactions",
+
+            {
+
+                "address":
+
+                    wallet,
+
+                "network":
+
+                    mapped_network,
+
+            },
+
+        )
+
+
+
+    def token_price(
+        self,
+        connector_id: str,
+        asset: str,
+    ) -> Optional[Any]:
+
+        return self.request(
+
+            connector_id,
+
+            "/token/price",
+
+            {
+
+                "symbol":
+
+                    asset,
+
+            },
+
+        )
+
+
+
+    def reset_limit(
+        self,
+    ) -> None:
+
+        for connector in (
+            BLOCKCHAIN_API_CONNECTOR_DATABASE.values()
+        ):
+
+            connector.requests_used = 0
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+
+    def all(
+        self,
+    ) -> List[BlockchainAPIConnector]:
+
+        return list(
+            BLOCKCHAIN_API_CONNECTOR_DATABASE.values()
+        )
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        BLOCKCHAIN_API_CONNECTOR_DATABASE.clear()
+
+
+
+BLOCKCHAIN_API_CONNECTOR_ENGINE = (
+    BlockchainAPIConnectorEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 315
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 316
+# ==========================================================
+
+class GovernmentAPIConnector(BaseModel):
+
+    id: str
+
+    provider_name: str
+
+    base_url: str = ""
+
+    api_key: str = ""
+
+    country_mapping: Dict[
+        str,
+        str,
+    ] = Field(
+        default_factory=dict
+    )
+
+    indicator_mapping: Dict[
+        str,
+        str,
+    ] = Field(
+        default_factory=dict
+    )
+
+    request_limit: int = 100
+
+    requests_used: int = 0
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+    last_request: Optional[
+        datetime
+    ] = None
+
+
+
+GOVERNMENT_API_CONNECTOR_DATABASE: Dict[
+    str,
+    GovernmentAPIConnector,
+] = {}
+
+
+
+class GovernmentAPIConnectorEngine:
+
+
+    def register(
+        self,
+        connector: GovernmentAPIConnector,
+    ) -> None:
+
+        GOVERNMENT_API_CONNECTOR_DATABASE[
+            connector.id
+        ] = connector
+
+
+
+    def request(
+        self,
+        connector_id: str,
+        endpoint: str,
+        params: Optional[
+            Dict[str, Any]
+        ] = None,
+    ) -> Optional[Any]:
+
+        connector = (
+            GOVERNMENT_API_CONNECTOR_DATABASE.get(
+                connector_id
+            )
+        )
+
+
+        if connector is None:
+
+            return None
+
+
+        if connector.requests_used >= connector.request_limit:
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+            return None
+
+
+        try:
+
+            response = requests.get(
+
+                connector.base_url
+                +
+                endpoint,
+
+                headers={
+
+                    "Authorization":
+
+                    f"Bearer {connector.api_key}"
+
+                },
+
+                params=params,
+
+                timeout=30,
+
+            )
+
+
+            connector.requests_used += 1
+
+            connector.last_request = utc_now()
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+            return response.json()
+
+
+
+        except Exception:
+
+            connector.status = (
+                DataProviderStatus.ERROR
+            )
+
+            return None
+
+
+
+    def country_indicator(
+        self,
+        connector_id: str,
+        country: str,
+        indicator: str,
+    ) -> Optional[Any]:
+
+        connector = (
+            GOVERNMENT_API_CONNECTOR_DATABASE.get(
+                connector_id
+            )
+        )
+
+
+        if connector is None:
+
+            return None
+
+
+        mapped_country = (
+
+            connector.country_mapping.get(
+
+                country,
+
+                country,
+
+            )
+
+        )
+
+
+        mapped_indicator = (
+
+            connector.indicator_mapping.get(
+
+                indicator,
+
+                indicator,
+
+            )
+
+        )
+
+
+        return self.request(
+
+            connector_id,
+
+            "/data",
+
+            {
+
+                "country":
+
+                    mapped_country,
+
+                "indicator":
+
+                    mapped_indicator,
+
+            },
+
+        )
+
+
+
+    def reset_limit(
+        self,
+    ) -> None:
+
+        for connector in (
+            GOVERNMENT_API_CONNECTOR_DATABASE.values()
+        ):
+
+            connector.requests_used = 0
+
+            connector.status = (
+                DataProviderStatus.ACTIVE
+            )
+
+
+
+    def all(
+        self,
+    ) -> List[GovernmentAPIConnector]:
+
+        return list(
+            GOVERNMENT_API_CONNECTOR_DATABASE.values()
+        )
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        GOVERNMENT_API_CONNECTOR_DATABASE.clear()
+
+
+
+GOVERNMENT_API_CONNECTOR_ENGINE = (
+    GovernmentAPIConnectorEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 316
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 317
+# ==========================================================
+
+class APIHealthMonitorRecord(BaseModel):
+
+    id: str
+
+    provider_id: str
+
+    provider_name: str = ""
+
+    response_time_ms: float = 0.0
+
+    success_rate: float = 0.0
+
+    total_requests: int = 0
+
+    successful_requests: int = 0
+
+    failed_requests: int = 0
+
+    last_check: Optional[
+        datetime
+    ] = None
+
+    status: DataProviderStatus = (
+        DataProviderStatus.WAITING
+    )
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+API_HEALTH_DATABASE: Dict[
+    str,
+    APIHealthMonitorRecord,
+] = {}
+
+
+
+class APIHealthMonitorEngine:
+
+
+    def register(
+        self,
+        record: APIHealthMonitorRecord,
+    ) -> None:
+
+        API_HEALTH_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def record_success(
+        self,
+        provider_id: str,
+        response_time: float,
+    ) -> None:
+
+        record = self.find(
+            provider_id
+        )
+
+
+        if record is None:
+
+            return
+
+
+        record.total_requests += 1
+
+        record.successful_requests += 1
+
+        record.response_time_ms = (
+            response_time
+        )
+
+        record.last_check = utc_now()
+
+        record.success_rate = (
+
+            record.successful_requests
+
+            /
+
+            record.total_requests
+
+            *
+
+            100
+
+        )
+
+        record.status = (
+            DataProviderStatus.ACTIVE
+        )
+
+
+
+    def record_failure(
+        self,
+        provider_id: str,
+    ) -> None:
+
+        record = self.find(
+            provider_id
+        )
+
+
+        if record is None:
+
+            return
+
+
+        record.total_requests += 1
+
+        record.failed_requests += 1
+
+        record.last_check = utc_now()
+
+        record.success_rate = (
+
+            record.successful_requests
+
+            /
+
+            max(
+                record.total_requests,
+                1,
+            )
+
+            *
+
+            100
+
+        )
+
+
+        if record.success_rate < 50:
+
+            record.status = (
+                DataProviderStatus.ERROR
+            )
+
+
+
+    def find(
+        self,
+        provider_id: str,
+    ) -> Optional[APIHealthMonitorRecord]:
+
+        for item in API_HEALTH_DATABASE.values():
+
+            if item.provider_id == provider_id:
+
+                return item
+
+
+        return None
+
+
+
+    def unhealthy(
+        self,
+    ) -> List[APIHealthMonitorRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in API_HEALTH_DATABASE.values()
+
+            if item.status
+            ==
+            DataProviderStatus.ERROR
+
+        ]
+
+
+
+    def report(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "providers":
+
+                len(
+                    API_HEALTH_DATABASE
+                ),
+
+            "errors":
+
+                len(
+                    self.unhealthy()
+                ),
+
+            "generated_at":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        API_HEALTH_DATABASE.clear()
+
+
+
+API_HEALTH_MONITOR_ENGINE = (
+    APIHealthMonitorEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 317
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 318
+# ==========================================================
+
+class APIRequestLog(BaseModel):
+
+    id: str
+
+    provider_id: str
+
+    endpoint: str = ""
+
+    method: str = "GET"
+
+    request_time: Optional[
+        datetime
+    ] = None
+
+    response_time_ms: float = 0.0
+
+    response_status: int = 0
+
+    success: bool = False
+
+    error_message: str = ""
+
+    request_params: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+API_REQUEST_LOG_DATABASE: Dict[
+    str,
+    APIRequestLog,
+] = {}
+
+
+
+class APIRequestLogEngine:
+
+
+    def create(
+        self,
+        log: APIRequestLog,
+    ) -> None:
+
+        log.request_time = utc_now()
+
+        API_REQUEST_LOG_DATABASE[
+            log.id
+        ] = log
+
+
+
+    def success(
+        self,
+        log_id: str,
+        response_time: float,
+        status_code: int,
+    ) -> None:
+
+        log = API_REQUEST_LOG_DATABASE.get(
+            log_id
+        )
+
+
+        if log is None:
+
+            return
+
+
+        log.response_time_ms = (
+            response_time
+        )
+
+        log.response_status = (
+            status_code
+        )
+
+        log.success = True
+
+
+
+    def failed(
+        self,
+        log_id: str,
+        error: str,
+    ) -> None:
+
+        log = API_REQUEST_LOG_DATABASE.get(
+            log_id
+        )
+
+
+        if log is None:
+
+            return
+
+
+        log.success = False
+
+        log.error_message = error
+
+
+
+    def by_provider(
+        self,
+        provider_id: str,
+    ) -> List[APIRequestLog]:
+
+        return [
+
+            item
+
+            for item
+
+            in API_REQUEST_LOG_DATABASE.values()
+
+            if item.provider_id
+            ==
+            provider_id
+
+        ]
+
+
+
+    def recent(
+        self,
+        limit: int = 100,
+    ) -> List[APIRequestLog]:
+
+        return sorted(
+
+            API_REQUEST_LOG_DATABASE.values(),
+
+            key=lambda x:
+
+            x.request_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )[:limit]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        logs = list(
+            API_REQUEST_LOG_DATABASE.values()
+        )
+
+
+        return {
+
+            "total":
+
+                len(logs),
+
+            "successful":
+
+                sum(
+
+                    1
+
+                    for item
+
+                    in logs
+
+                    if item.success
+
+                ),
+
+            "failed":
+
+                sum(
+
+                    1
+
+                    for item
+
+                    in logs
+
+                    if not item.success
+
+                ),
+
+            "generated_at":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        API_REQUEST_LOG_DATABASE.clear()
+
+
+
+API_REQUEST_LOG_ENGINE = (
+    APIRequestLogEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 318
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 319
+# ==========================================================
+
+class DataCacheRecord(BaseModel):
+
+    id: str
+
+    cache_key: str
+
+    data_type: str = ""
+
+    value: Any = None
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    expired_time: Optional[
+        datetime
+    ] = None
+
+    hit_count: int = 0
+
+    size_bytes: int = 0
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_CACHE_DATABASE: Dict[
+    str,
+    DataCacheRecord,
+] = {}
+
+
+
+class DataCacheEngine:
+
+
+    def set(
+        self,
+        record: DataCacheRecord,
+    ) -> None:
+
+        record.created_time = utc_now()
+
+        DATA_CACHE_DATABASE[
+            record.cache_key
+        ] = record
+
+
+
+    def get(
+        self,
+        cache_key: str,
+    ) -> Optional[Any]:
+
+        record = DATA_CACHE_DATABASE.get(
+            cache_key
+        )
+
+
+        if record is None:
+
+            return None
+
+
+        if (
+
+            record.expired_time
+
+            and
+
+            record.expired_time
+            <
+
+            utc_now()
+
+        ):
+
+            record.status = (
+                "EXPIRED"
+            )
+
+            return None
+
+
+        record.hit_count += 1
+
+        return record.value
+
+
+
+    def exists(
+        self,
+        cache_key: str,
+    ) -> bool:
+
+        return cache_key in DATA_CACHE_DATABASE
+
+
+
+    def remove(
+        self,
+        cache_key: str,
+    ) -> None:
+
+        DATA_CACHE_DATABASE.pop(
+            cache_key,
+            None,
+        )
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_CACHE_DATABASE.clear()
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "total_cache":
+
+                len(
+                    DATA_CACHE_DATABASE
+                ),
+
+            "hits":
+
+                sum(
+
+                    item.hit_count
+
+                    for item
+
+                    in DATA_CACHE_DATABASE.values()
+
+                ),
+
+            "size":
+
+                sum(
+
+                    item.size_bytes
+
+                    for item
+
+                    in DATA_CACHE_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+DATA_CACHE_ENGINE = (
+    DataCacheEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 319
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 320
+# ==========================================================
+
+class DataQueueMessage(BaseModel):
+
+    id: str
+
+    queue_name: str
+
+    message_type: str = ""
+
+    payload: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    priority: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    processed_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "WAITING"
+
+    retry_count: int = 0
+
+    max_retry: int = 3
+
+    error_message: str = ""
+
+
+
+DATA_QUEUE_DATABASE: Dict[
+    str,
+    DataQueueMessage,
+] = {}
+
+
+
+class DataQueueEngine:
+
+
+    def push(
+        self,
+        message: DataQueueMessage,
+    ) -> None:
+
+        message.created_time = utc_now()
+
+        DATA_QUEUE_DATABASE[
+            message.id
+        ] = message
+
+
+
+    def get_pending(
+        self,
+        queue_name: str,
+    ) -> List[DataQueueMessage]:
+
+        messages = [
+
+            item
+
+            for item
+
+            in DATA_QUEUE_DATABASE.values()
+
+            if (
+
+                item.queue_name
+                ==
+                queue_name
+
+                and
+
+                item.status
+                ==
+                "WAITING"
+
+            )
+
+        ]
+
+
+        return sorted(
+
+            messages,
+
+            key=lambda x:
+
+            x.priority,
+
+            reverse=True,
+
+        )
+
+
+
+    def process(
+        self,
+        message_id: str,
+    ) -> bool:
+
+        message = DATA_QUEUE_DATABASE.get(
+            message_id
+        )
+
+
+        if message is None:
+
+            return False
+
+
+        try:
+
+            message.status = (
+                "PROCESSING"
+            )
+
+
+            message.processed_time = (
+                utc_now()
+            )
+
+
+            message.status = (
+                "COMPLETED"
+            )
+
+
+            return True
+
+
+
+        except Exception as error:
+
+            message.retry_count += 1
+
+            message.error_message = (
+                str(error)
+            )
+
+
+            if message.retry_count >= message.max_retry:
+
+                message.status = (
+                    "FAILED"
+                )
+
+
+            return False
+
+
+
+    def failed_messages(
+        self,
+    ) -> List[DataQueueMessage]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUEUE_DATABASE.values()
+
+            if item.status
+            ==
+            "FAILED"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "total":
+
+                len(
+                    DATA_QUEUE_DATABASE
+                ),
+
+            "waiting":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in DATA_QUEUE_DATABASE.values()
+
+                        if x.status
+                        ==
+                        "WAITING"
+
+                    ]
+
+                ),
+
+            "completed":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in DATA_QUEUE_DATABASE.values()
+
+                        if x.status
+                        ==
+                        "COMPLETED"
+
+                    ]
+
+                ),
+
+            "failed":
+
+                len(
+                    self.failed_messages()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_QUEUE_DATABASE.clear()
+
+
+
+DATA_QUEUE_ENGINE = (
+    DataQueueEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 320
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 321
+# ==========================================================
+
+class DataSchedulerTask(BaseModel):
+
+    id: str
+
+    task_name: str
+
+    task_type: str = ""
+
+    interval_seconds: int = 60
+
+    enabled: bool = True
+
+    last_run: Optional[
+        datetime
+    ] = None
+
+    next_run: Optional[
+        datetime
+    ] = None
+
+    run_count: int = 0
+
+    success_count: int = 0
+
+    failed_count: int = 0
+
+    status: str = "WAITING"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_SCHEDULER_DATABASE: Dict[
+    str,
+    DataSchedulerTask,
+] = {}
+
+
+
+class DataSchedulerEngine:
+
+
+    def register(
+        self,
+        task: DataSchedulerTask,
+    ) -> None:
+
+        task.next_run = utc_now()
+
+        DATA_SCHEDULER_DATABASE[
+            task.id
+        ] = task
+
+
+
+    def due_tasks(
+        self,
+    ) -> List[DataSchedulerTask]:
+
+        now = utc_now()
+
+        return [
+
+            task
+
+            for task
+
+            in DATA_SCHEDULER_DATABASE.values()
+
+            if (
+
+                task.enabled
+
+                and
+
+                (
+
+                    task.next_run is None
+
+                    or
+
+                    task.next_run <= now
+
+                )
+
+            )
+
+        ]
+
+
+
+    def execute(
+        self,
+        task_id: str,
+    ) -> bool:
+
+        task = DATA_SCHEDULER_DATABASE.get(
+            task_id
+        )
+
+
+        if task is None:
+
+            return False
+
+
+        try:
+
+            task.last_run = utc_now()
+
+            task.next_run = (
+
+                utc_now()
+
+                +
+
+                timedelta(
+
+                    seconds=
+
+                    task.interval_seconds
+
+                )
+
+            )
+
+            task.run_count += 1
+
+            task.success_count += 1
+
+            task.status = (
+                "SUCCESS"
+            )
+
+
+            return True
+
+
+
+        except Exception:
+
+            task.failed_count += 1
+
+            task.status = (
+                "FAILED"
+            )
+
+            return False
+
+
+
+    def disable(
+        self,
+        task_id: str,
+    ) -> None:
+
+        task = DATA_SCHEDULER_DATABASE.get(
+            task_id
+        )
+
+        if task:
+
+            task.enabled = False
+
+
+
+    def enable(
+        self,
+        task_id: str,
+    ) -> None:
+
+        task = DATA_SCHEDULER_DATABASE.get(
+            task_id
+        )
+
+        if task:
+
+            task.enabled = True
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "tasks":
+
+                len(
+                    DATA_SCHEDULER_DATABASE
+                ),
+
+            "running":
+
+                len(
+                    self.due_tasks()
+                ),
+
+            "executions":
+
+                sum(
+
+                    x.run_count
+
+                    for x
+
+                    in DATA_SCHEDULER_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_SCHEDULER_DATABASE.clear()
+
+
+
+DATA_SCHEDULER_ENGINE = (
+    DataSchedulerEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 321
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 322
+# ==========================================================
+
+class DataEventRecord(BaseModel):
+
+    id: str
+
+    event_name: str
+
+    event_type: str = ""
+
+    source: str = ""
+
+    payload: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    priority: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    processed_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "NEW"
+
+    listeners: List[str] = Field(
+        default_factory=list
+    )
+
+
+
+DATA_EVENT_DATABASE: Dict[
+    str,
+    DataEventRecord,
+] = {}
+
+
+
+class DataEventEngine:
+
+
+    def create(
+        self,
+        event: DataEventRecord,
+    ) -> None:
+
+        event.created_time = utc_now()
+
+        DATA_EVENT_DATABASE[
+            event.id
+        ] = event
+
+
+
+    def emit(
+        self,
+        event_id: str,
+    ) -> bool:
+
+        event = DATA_EVENT_DATABASE.get(
+            event_id
+        )
+
+
+        if event is None:
+
+            return False
+
+
+        event.status = (
+            "EMITTED"
+        )
+
+        event.processed_time = (
+            utc_now()
+        )
+
+
+        return True
+
+
+
+    def subscribe(
+        self,
+        event_id: str,
+        listener: str,
+    ) -> None:
+
+        event = DATA_EVENT_DATABASE.get(
+            event_id
+        )
+
+
+        if event is None:
+
+            return
+
+
+        if listener not in event.listeners:
+
+            event.listeners.append(
+                listener
+            )
+
+
+
+    def pending(
+        self,
+    ) -> List[DataEventRecord]:
+
+        return [
+
+            event
+
+            for event
+
+            in DATA_EVENT_DATABASE.values()
+
+            if event.status
+            ==
+            "NEW"
+
+        ]
+
+
+
+    def by_type(
+        self,
+        event_type: str,
+    ) -> List[DataEventRecord]:
+
+        return [
+
+            event
+
+            for event
+
+            in DATA_EVENT_DATABASE.values()
+
+            if event.event_type
+            ==
+            event_type
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "events":
+
+                len(
+                    DATA_EVENT_DATABASE
+                ),
+
+            "pending":
+
+                len(
+                    self.pending()
+                ),
+
+            "processed":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in DATA_EVENT_DATABASE.values()
+
+                        if x.status
+                        ==
+                        "EMITTED"
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_EVENT_DATABASE.clear()
+
+
+
+DATA_EVENT_ENGINE = (
+    DataEventEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 322
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 323
+# ==========================================================
+
+class DataTransformationRule(BaseModel):
+
+    id: str
+
+    rule_name: str
+
+    source_field: str = ""
+
+    target_field: str = ""
+
+    transformation_type: str = ""
+
+    parameters: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    enabled: bool = True
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_TRANSFORMATION_RULE_DATABASE: Dict[
+    str,
+    DataTransformationRule,
+] = {}
+
+
+
+class DataTransformationEngine:
+
+
+    def register(
+        self,
+        rule: DataTransformationRule,
+    ) -> None:
+
+        rule.created_time = utc_now()
+
+        rule.updated_time = utc_now()
+
+        DATA_TRANSFORMATION_RULE_DATABASE[
+            rule.id
+        ] = rule
+
+
+
+    def apply(
+        self,
+        rule_id: str,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
+
+        rule = (
+            DATA_TRANSFORMATION_RULE_DATABASE.get(
+                rule_id
+            )
+        )
+
+
+        if rule is None:
+
+            return data
+
+
+        if not rule.enabled:
+
+            return data
+
+
+
+        result = dict(
+            data
+        )
+
+
+        value = data.get(
+            rule.source_field
+        )
+
+
+        if rule.transformation_type == "MULTIPLY":
+
+            factor = rule.parameters.get(
+                "factor",
+                1,
+            )
+
+            result[
+                rule.target_field
+            ] = (
+
+                value
+
+                *
+
+                factor
+
+            )
+
+
+
+        elif rule.transformation_type == "ROUND":
+
+            digits = rule.parameters.get(
+                "digits",
+                2,
+            )
+
+            result[
+                rule.target_field
+            ] = round(
+
+                value,
+
+                digits,
+
+            )
+
+
+
+        elif rule.transformation_type == "RENAME":
+
+            result[
+                rule.target_field
+            ] = value
+
+
+            if rule.source_field != rule.target_field:
+
+                result.pop(
+                    rule.source_field,
+                    None,
+                )
+
+
+
+        elif rule.transformation_type == "COPY":
+
+            result[
+                rule.target_field
+            ] = value
+
+
+
+        rule.updated_time = utc_now()
+
+
+        return result
+
+
+
+    def active_rules(
+        self,
+    ) -> List[DataTransformationRule]:
+
+        return [
+
+            rule
+
+            for rule
+
+            in DATA_TRANSFORMATION_RULE_DATABASE.values()
+
+            if rule.enabled
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "rules":
+
+                len(
+                    DATA_TRANSFORMATION_RULE_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_rules()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_TRANSFORMATION_RULE_DATABASE.clear()
+
+
+
+DATA_TRANSFORMATION_ENGINE = (
+    DataTransformationEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 323
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 324
+# ==========================================================
+
+class DataValidationRule(BaseModel):
+
+    id: str
+
+    rule_name: str
+
+    field_name: str = ""
+
+    validation_type: str = ""
+
+    expected_type: str = ""
+
+    min_value: Optional[
+        float
+    ] = None
+
+    max_value: Optional[
+        float
+    ] = None
+
+    allowed_values: List[Any] = Field(
+        default_factory=list
+    )
+
+    error_message: str = ""
+
+    enabled: bool = True
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_VALIDATION_RULE_DATABASE: Dict[
+    str,
+    DataValidationRule,
+] = {}
+
+
+
+class DataValidationEngine:
+
+
+    def register(
+        self,
+        rule: DataValidationRule,
+    ) -> None:
+
+        rule.created_time = utc_now()
+
+        DATA_VALIDATION_RULE_DATABASE[
+            rule.id
+        ] = rule
+
+
+
+    def validate(
+        self,
+        rule_id: str,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
+
+        rule = (
+            DATA_VALIDATION_RULE_DATABASE.get(
+                rule_id
+            )
+        )
+
+
+        if rule is None:
+
+            return {
+
+                "valid":
+
+                    True,
+
+                "message":
+
+                    "Rule not found",
+
+            }
+
+
+
+        if not rule.enabled:
+
+            return {
+
+                "valid":
+
+                    True,
+
+                "message":
+
+                    "Rule disabled",
+
+            }
+
+
+
+        value = data.get(
+            rule.field_name
+        )
+
+
+        result = {
+
+            "valid":
+
+                True,
+
+            "message":
+
+                "",
+
+        }
+
+
+
+        if rule.validation_type == "TYPE":
+
+            if rule.expected_type == "NUMBER":
+
+                if not isinstance(
+                    value,
+                    (int, float),
+                ):
+
+                    result["valid"] = False
+
+                    result["message"] = (
+                        rule.error_message
+                    )
+
+
+
+        elif rule.validation_type == "RANGE":
+
+            if value is None:
+
+                result["valid"] = False
+
+            else:
+
+                if (
+
+                    rule.min_value is not None
+
+                    and
+
+                    value < rule.min_value
+
+                ):
+
+                    result["valid"] = False
+
+
+                if (
+
+                    rule.max_value is not None
+
+                    and
+
+                    value > rule.max_value
+
+                ):
+
+                    result["valid"] = False
+
+
+
+            if not result["valid"]:
+
+                result["message"] = (
+                    rule.error_message
+                )
+
+
+
+        elif rule.validation_type == "ENUM":
+
+            if value not in rule.allowed_values:
+
+                result["valid"] = False
+
+                result["message"] = (
+                    rule.error_message
+                )
+
+
+
+        return result
+
+
+
+    def validate_all(
+        self,
+        data: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+
+        results = []
+
+        for rule in (
+            DATA_VALIDATION_RULE_DATABASE.values()
+        ):
+
+            results.append(
+
+                self.validate(
+
+                    rule.id,
+
+                    data,
+
+                )
+
+            )
+
+        return results
+
+
+
+    def active_rules(
+        self,
+    ) -> List[DataValidationRule]:
+
+        return [
+
+            rule
+
+            for rule
+
+            in DATA_VALIDATION_RULE_DATABASE.values()
+
+            if rule.enabled
+
+        ]
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_VALIDATION_RULE_DATABASE.clear()
+
+
+
+DATA_VALIDATION_ENGINE = (
+    DataValidationEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 324
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 325
+# ==========================================================
+
+class DataLineageRecord(BaseModel):
+
+    id: str
+
+    dataset_name: str
+
+    source_system: str = ""
+
+    source_table: str = ""
+
+    destination_system: str = ""
+
+    destination_table: str = ""
+
+    transformation_steps: List[str] = Field(
+        default_factory=list
+    )
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    owner: str = ""
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_LINEAGE_DATABASE: Dict[
+    str,
+    DataLineageRecord,
+] = {}
+
+
+
+class DataLineageEngine:
+
+
+    def register(
+        self,
+        record: DataLineageRecord,
+    ) -> None:
+
+        record.created_time = utc_now()
+
+        record.updated_time = utc_now()
+
+        DATA_LINEAGE_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def add_step(
+        self,
+        record_id: str,
+        step: str,
+    ) -> None:
+
+        record = DATA_LINEAGE_DATABASE.get(
+            record_id
+        )
+
+
+        if record is None:
+
+            return
+
+
+        record.transformation_steps.append(
+            step
+        )
+
+        record.updated_time = utc_now()
+
+
+
+    def trace_source(
+        self,
+        dataset_name: str,
+    ) -> List[DataLineageRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_LINEAGE_DATABASE.values()
+
+            if item.dataset_name
+            ==
+            dataset_name
+
+        ]
+
+
+
+    def trace_destination(
+        self,
+        destination: str,
+    ) -> List[DataLineageRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_LINEAGE_DATABASE.values()
+
+            if item.destination_system
+            ==
+            destination
+
+        ]
+
+
+
+    def full_graph(
+        self,
+    ) -> Dict[str, Any]:
+
+        nodes = []
+
+        edges = []
+
+
+        for item in DATA_LINEAGE_DATABASE.values():
+
+            nodes.append(
+
+                {
+
+                    "source":
+
+                        item.source_system,
+
+                    "destination":
+
+                        item.destination_system,
+
+                    "dataset":
+
+                        item.dataset_name,
+
+                }
+
+            )
+
+
+            for step in item.transformation_steps:
+
+                edges.append(
+
+                    {
+
+                        "from":
+
+                            item.source_system,
+
+                        "to":
+
+                            step,
+
+                    }
+
+                )
+
+
+        return {
+
+            "nodes":
+
+                nodes,
+
+            "edges":
+
+                edges,
+
+            "generated":
+
+                utc_now(),
+
+        }
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "datasets":
+
+                len(
+                    DATA_LINEAGE_DATABASE
+                ),
+
+            "steps":
+
+                sum(
+
+                    len(
+                        item.transformation_steps
+                    )
+
+                    for item
+
+                    in DATA_LINEAGE_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_LINEAGE_DATABASE.clear()
+
+
+
+DATA_LINEAGE_ENGINE = (
+    DataLineageEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 325
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 326
+# ==========================================================
+
+class DataCatalogRecord(BaseModel):
+
+    id: str
+
+    dataset_name: str
+
+    description: str = ""
+
+    category: str = ""
+
+    owner: str = ""
+
+    source: str = ""
+
+    schema_definition: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    tags: List[str] = Field(
+        default_factory=list
+    )
+
+    access_level: str = "PUBLIC"
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_CATALOG_DATABASE: Dict[
+    str,
+    DataCatalogRecord,
+] = {}
+
+
+
+class DataCatalogEngine:
+
+
+    def register(
+        self,
+        record: DataCatalogRecord,
+    ) -> None:
+
+        record.created_time = utc_now()
+
+        record.updated_time = utc_now()
+
+        DATA_CATALOG_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def get(
+        self,
+        dataset_id: str,
+    ) -> Optional[DataCatalogRecord]:
+
+        return DATA_CATALOG_DATABASE.get(
+            dataset_id
+        )
+
+
+
+    def search(
+        self,
+        keyword: str,
+    ) -> List[DataCatalogRecord]:
+
+        keyword = keyword.lower()
+
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_CATALOG_DATABASE.values()
+
+            if (
+
+                keyword
+
+                in
+
+                item.dataset_name.lower()
+
+                or
+
+                keyword
+
+                in
+
+                item.description.lower()
+
+                or
+
+                keyword
+
+                in
+
+                item.tags
+
+            )
+
+        ]
+
+
+
+    def by_category(
+        self,
+        category: str,
+    ) -> List[DataCatalogRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_CATALOG_DATABASE.values()
+
+            if item.category
+            ==
+            category
+
+        ]
+
+
+
+    def add_tag(
+        self,
+        dataset_id: str,
+        tag: str,
+    ) -> None:
+
+        dataset = self.get(
+            dataset_id
+        )
+
+
+        if dataset is None:
+
+            return
+
+
+        if tag not in dataset.tags:
+
+            dataset.tags.append(
+                tag
+            )
+
+
+        dataset.updated_time = utc_now()
+
+
+
+    def schema(
+        self,
+        dataset_id: str,
+    ) -> Dict[str, Any]:
+
+        dataset = self.get(
+            dataset_id
+        )
+
+
+        if dataset is None:
+
+            return {}
+
+
+        return dataset.schema_definition
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "datasets":
+
+                len(
+                    DATA_CATALOG_DATABASE
+                ),
+
+            "categories":
+
+                len(
+
+                    set(
+
+                        item.category
+
+                        for item
+
+                        in DATA_CATALOG_DATABASE.values()
+
+                    )
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_CATALOG_DATABASE.clear()
+
+
+
+DATA_CATALOG_ENGINE = (
+    DataCatalogEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 326
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 327
+# ==========================================================
+
+class DataAccessPolicy(BaseModel):
+
+    id: str
+
+    policy_name: str
+
+    dataset_id: str = ""
+
+    access_type: str = ""
+
+    allowed_roles: List[str] = Field(
+        default_factory=list
+    )
+
+    denied_roles: List[str] = Field(
+        default_factory=list
+    )
+
+    require_authentication: bool = True
+
+    require_logging: bool = True
+
+    enabled: bool = True
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_ACCESS_POLICY_DATABASE: Dict[
+    str,
+    DataAccessPolicy,
+] = {}
+
+
+
+class DataAccessControlEngine:
+
+
+    def register(
+        self,
+        policy: DataAccessPolicy,
+    ) -> None:
+
+        policy.created_time = utc_now()
+
+        policy.updated_time = utc_now()
+
+        DATA_ACCESS_POLICY_DATABASE[
+            policy.id
+        ] = policy
+
+
+
+    def check_access(
+        self,
+        policy_id: str,
+        role: str,
+    ) -> bool:
+
+        policy = DATA_ACCESS_POLICY_DATABASE.get(
+            policy_id
+        )
+
+
+        if policy is None:
+
+            return False
+
+
+        if not policy.enabled:
+
+            return False
+
+
+        if role in policy.denied_roles:
+
+            return False
+
+
+        if (
+
+            policy.allowed_roles
+
+            and
+
+            role not in policy.allowed_roles
+
+        ):
+
+            return False
+
+
+        return True
+
+
+
+    def enable(
+        self,
+        policy_id: str,
+    ) -> None:
+
+        policy = DATA_ACCESS_POLICY_DATABASE.get(
+            policy_id
+        )
+
+
+        if policy:
+
+            policy.enabled = True
+
+            policy.updated_time = utc_now()
+
+
+
+    def disable(
+        self,
+        policy_id: str,
+    ) -> None:
+
+        policy = DATA_ACCESS_POLICY_DATABASE.get(
+            policy_id
+        )
+
+
+        if policy:
+
+            policy.enabled = False
+
+            policy.updated_time = utc_now()
+
+
+
+    def policies_for_dataset(
+        self,
+        dataset_id: str,
+    ) -> List[DataAccessPolicy]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_ACCESS_POLICY_DATABASE.values()
+
+            if item.dataset_id
+            ==
+            dataset_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "policies":
+
+                len(
+                    DATA_ACCESS_POLICY_DATABASE
+                ),
+
+            "enabled":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in DATA_ACCESS_POLICY_DATABASE.values()
+
+                        if x.enabled
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_ACCESS_POLICY_DATABASE.clear()
+
+
+
+DATA_ACCESS_CONTROL_ENGINE = (
+    DataAccessControlEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 327
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 328
+# ==========================================================
+
+class DataSecurityAuditRecord(BaseModel):
+
+    id: str
+
+    user_id: str = ""
+
+    action: str = ""
+
+    resource: str = ""
+
+    resource_id: str = ""
+
+    ip_address: str = ""
+
+    user_agent: str = ""
+
+    success: bool = False
+
+    risk_score: float = 0.0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_SECURITY_AUDIT_DATABASE: Dict[
+    str,
+    DataSecurityAuditRecord,
+] = {}
+
+
+
+class DataSecurityAuditEngine:
+
+
+    def record(
+        self,
+        audit: DataSecurityAuditRecord,
+    ) -> None:
+
+        audit.created_time = utc_now()
+
+        DATA_SECURITY_AUDIT_DATABASE[
+            audit.id
+        ] = audit
+
+
+
+    def successful_actions(
+        self,
+    ) -> List[DataSecurityAuditRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_SECURITY_AUDIT_DATABASE.values()
+
+            if item.success
+
+        ]
+
+
+
+    def failed_actions(
+        self,
+    ) -> List[DataSecurityAuditRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_SECURITY_AUDIT_DATABASE.values()
+
+            if not item.success
+
+        ]
+
+
+
+    def high_risk_events(
+        self,
+        threshold: float = 70.0,
+    ) -> List[DataSecurityAuditRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_SECURITY_AUDIT_DATABASE.values()
+
+            if item.risk_score >= threshold
+
+        ]
+
+
+
+    def user_activity(
+        self,
+        user_id: str,
+    ) -> List[DataSecurityAuditRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_SECURITY_AUDIT_DATABASE.values()
+
+            if item.user_id
+            ==
+            user_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        records = list(
+            DATA_SECURITY_AUDIT_DATABASE.values()
+        )
+
+
+        return {
+
+            "events":
+
+                len(records),
+
+            "success":
+
+                len(
+                    self.successful_actions()
+                ),
+
+            "failed":
+
+                len(
+                    self.failed_actions()
+                ),
+
+            "high_risk":
+
+                len(
+                    self.high_risk_events()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_SECURITY_AUDIT_DATABASE.clear()
+
+
+
+DATA_SECURITY_AUDIT_ENGINE = (
+    DataSecurityAuditEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 328
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 329
+# ==========================================================
+
+class DataEncryptionRecord(BaseModel):
+
+    id: str
+
+    data_id: str
+
+    encryption_type: str = ""
+
+    algorithm: str = ""
+
+    key_reference: str = ""
+
+    encrypted_size: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    rotated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_ENCRYPTION_DATABASE: Dict[
+    str,
+    DataEncryptionRecord,
+] = {}
+
+
+
+class DataEncryptionEngine:
+
+
+    def register(
+        self,
+        record: DataEncryptionRecord,
+    ) -> None:
+
+        record.created_time = utc_now()
+
+        DATA_ENCRYPTION_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def encrypt_reference(
+        self,
+        data_id: str,
+        algorithm: str = "AES256",
+    ) -> DataEncryptionRecord:
+
+        record = DataEncryptionRecord(
+
+            id=f"ENC_{data_id}",
+
+            data_id=data_id,
+
+            encryption_type="SYMMETRIC",
+
+            algorithm=algorithm,
+
+            key_reference=f"KEY_{data_id}",
+
+            status="ACTIVE",
+
+        )
+
+
+        self.register(
+            record
+        )
+
+
+        return record
+
+
+
+    def rotate_key(
+        self,
+        encryption_id: str,
+    ) -> None:
+
+        record = DATA_ENCRYPTION_DATABASE.get(
+            encryption_id
+        )
+
+
+        if record is None:
+
+            return
+
+
+        record.key_reference = (
+
+            f"KEY_ROTATED_"
+
+            f"{int(time.time())}"
+
+        )
+
+
+        record.rotated_time = utc_now()
+
+
+
+    def get(
+        self,
+        encryption_id: str,
+    ) -> Optional[DataEncryptionRecord]:
+
+        return DATA_ENCRYPTION_DATABASE.get(
+            encryption_id
+        )
+
+
+
+    def active_records(
+        self,
+    ) -> List[DataEncryptionRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_ENCRYPTION_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "encrypted_records":
+
+                len(
+                    DATA_ENCRYPTION_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_records()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_ENCRYPTION_DATABASE.clear()
+
+
+
+DATA_ENCRYPTION_ENGINE = (
+    DataEncryptionEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 329
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 330
+# ==========================================================
+
+class DataBackupRecord(BaseModel):
+
+    id: str
+
+    backup_name: str
+
+    source_database: str = ""
+
+    backup_type: str = ""
+
+    file_path: str = ""
+
+    file_size: int = 0
+
+    compression: str = ""
+
+    encryption_enabled: bool = False
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    completed_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "CREATED"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_BACKUP_DATABASE: Dict[
+    str,
+    DataBackupRecord,
+] = {}
+
+
+
+class DataBackupEngine:
+
+
+    def create(
+        self,
+        backup: DataBackupRecord,
+    ) -> None:
+
+        backup.created_time = utc_now()
+
+        DATA_BACKUP_DATABASE[
+            backup.id
+        ] = backup
+
+
+
+    def start_backup(
+        self,
+        backup_id: str,
+    ) -> bool:
+
+        backup = DATA_BACKUP_DATABASE.get(
+            backup_id
+        )
+
+
+        if backup is None:
+
+            return False
+
+
+        backup.status = (
+            "RUNNING"
+        )
+
+
+        return True
+
+
+
+    def complete_backup(
+        self,
+        backup_id: str,
+        file_size: int,
+    ) -> None:
+
+        backup = DATA_BACKUP_DATABASE.get(
+            backup_id
+        )
+
+
+        if backup is None:
+
+            return
+
+
+        backup.file_size = file_size
+
+        backup.completed_time = utc_now()
+
+        backup.status = (
+            "COMPLETED"
+        )
+
+
+
+    def failed_backup(
+        self,
+        backup_id: str,
+    ) -> None:
+
+        backup = DATA_BACKUP_DATABASE.get(
+            backup_id
+        )
+
+
+        if backup:
+
+            backup.status = (
+                "FAILED"
+            )
+
+
+
+    def latest(
+        self,
+        limit: int = 20,
+    ) -> List[DataBackupRecord]:
+
+        return sorted(
+
+            DATA_BACKUP_DATABASE.values(),
+
+            key=lambda x:
+
+            x.created_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )[:limit]
+
+
+
+    def completed(
+        self,
+    ) -> List[DataBackupRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_BACKUP_DATABASE.values()
+
+            if item.status
+            ==
+            "COMPLETED"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "backups":
+
+                len(
+                    DATA_BACKUP_DATABASE
+                ),
+
+            "completed":
+
+                len(
+                    self.completed()
+                ),
+
+            "size":
+
+                sum(
+
+                    item.file_size
+
+                    for item
+
+                    in DATA_BACKUP_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_BACKUP_DATABASE.clear()
+
+
+
+DATA_BACKUP_ENGINE = (
+    DataBackupEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 330
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 331
+# ==========================================================
+
+class DataRestorePoint(BaseModel):
+
+    id: str
+
+    backup_id: str
+
+    restore_name: str = ""
+
+    target_environment: str = ""
+
+    restore_type: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    started_time: Optional[
+        datetime
+    ] = None
+
+    completed_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "WAITING"
+
+    restored_objects: int = 0
+
+    error_message: str = ""
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_RESTORE_DATABASE: Dict[
+    str,
+    DataRestorePoint,
+] = {}
+
+
+
+class DataRestoreEngine:
+
+
+    def create(
+        self,
+        restore_point: DataRestorePoint,
+    ) -> None:
+
+        restore_point.created_time = utc_now()
+
+        DATA_RESTORE_DATABASE[
+            restore_point.id
+        ] = restore_point
+
+
+
+    def start(
+        self,
+        restore_id: str,
+    ) -> bool:
+
+        restore = DATA_RESTORE_DATABASE.get(
+            restore_id
+        )
+
+
+        if restore is None:
+
+            return False
+
+
+        restore.started_time = utc_now()
+
+        restore.status = (
+            "RUNNING"
+        )
+
+
+        return True
+
+
+
+    def complete(
+        self,
+        restore_id: str,
+        restored_objects: int,
+    ) -> None:
+
+        restore = DATA_RESTORE_DATABASE.get(
+            restore_id
+        )
+
+
+        if restore is None:
+
+            return
+
+
+        restore.restored_objects = (
+            restored_objects
+        )
+
+        restore.completed_time = (
+            utc_now()
+        )
+
+        restore.status = (
+            "COMPLETED"
+        )
+
+
+
+    def fail(
+        self,
+        restore_id: str,
+        error: str,
+    ) -> None:
+
+        restore = DATA_RESTORE_DATABASE.get(
+            restore_id
+        )
+
+
+        if restore:
+
+            restore.status = (
+                "FAILED"
+            )
+
+            restore.error_message = error
+
+
+
+    def history(
+        self,
+    ) -> List[DataRestorePoint]:
+
+        return sorted(
+
+            DATA_RESTORE_DATABASE.values(),
+
+            key=lambda x:
+
+            x.created_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )
+
+
+
+    def successful(
+        self,
+    ) -> List[DataRestorePoint]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_RESTORE_DATABASE.values()
+
+            if item.status
+            ==
+            "COMPLETED"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "restore_points":
+
+                len(
+                    DATA_RESTORE_DATABASE
+                ),
+
+            "successful":
+
+                len(
+                    self.successful()
+                ),
+
+            "objects":
+
+                sum(
+
+                    item.restored_objects
+
+                    for item
+
+                    in DATA_RESTORE_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_RESTORE_DATABASE.clear()
+
+
+
+DATA_RESTORE_ENGINE = (
+    DataRestoreEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 331
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 332
+# ==========================================================
+
+class DataReplicationNode(BaseModel):
+
+    id: str
+
+    node_name: str
+
+    location: str = ""
+
+    database_type: str = ""
+
+    endpoint: str = ""
+
+    priority: int = 0
+
+    replication_status: str = "OFFLINE"
+
+    last_sync: Optional[
+        datetime
+    ] = None
+
+    sync_count: int = 0
+
+    failed_sync_count: int = 0
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_REPLICATION_NODE_DATABASE: Dict[
+    str,
+    DataReplicationNode,
+] = {}
+
+
+
+class DataReplicationEngine:
+
+
+    def register(
+        self,
+        node: DataReplicationNode,
+    ) -> None:
+
+        DATA_REPLICATION_NODE_DATABASE[
+            node.id
+        ] = node
+
+
+
+    def start(
+        self,
+        node_id: str,
+    ) -> None:
+
+        node = DATA_REPLICATION_NODE_DATABASE.get(
+            node_id
+        )
+
+
+        if node:
+
+            node.replication_status = (
+                "ACTIVE"
+            )
+
+
+
+    def sync(
+        self,
+        node_id: str,
+    ) -> bool:
+
+        node = DATA_REPLICATION_NODE_DATABASE.get(
+            node_id
+        )
+
+
+        if node is None:
+
+            return False
+
+
+        try:
+
+            node.last_sync = utc_now()
+
+            node.sync_count += 1
+
+            node.replication_status = (
+                "ACTIVE"
+            )
+
+
+            return True
+
+
+
+        except Exception:
+
+            node.failed_sync_count += 1
+
+            node.replication_status = (
+                "ERROR"
+            )
+
+
+            return False
+
+
+
+    def stop(
+        self,
+        node_id: str,
+    ) -> None:
+
+        node = DATA_REPLICATION_NODE_DATABASE.get(
+            node_id
+        )
+
+
+        if node:
+
+            node.replication_status = (
+                "STOPPED"
+            )
+
+
+
+    def active_nodes(
+        self,
+    ) -> List[DataReplicationNode]:
+
+        return [
+
+            node
+
+            for node
+
+            in DATA_REPLICATION_NODE_DATABASE.values()
+
+            if node.replication_status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "nodes":
+
+                len(
+                    DATA_REPLICATION_NODE_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_nodes()
+                ),
+
+            "sync":
+
+                sum(
+
+                    item.sync_count
+
+                    for item
+
+                    in DATA_REPLICATION_NODE_DATABASE.values()
+
+                ),
+
+            "failed":
+
+                sum(
+
+                    item.failed_sync_count
+
+                    for item
+
+                    in DATA_REPLICATION_NODE_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_REPLICATION_NODE_DATABASE.clear()
+
+
+
+DATA_REPLICATION_ENGINE = (
+    DataReplicationEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 332
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 333
+# ==========================================================
+
+class DataSynchronizationJob(BaseModel):
+
+    id: str
+
+    job_name: str
+
+    source_system: str = ""
+
+    target_system: str = ""
+
+    sync_type: str = ""
+
+    batch_size: int = 1000
+
+    total_records: int = 0
+
+    processed_records: int = 0
+
+    failed_records: int = 0
+
+    started_time: Optional[
+        datetime
+    ] = None
+
+    completed_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "WAITING"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_SYNC_JOB_DATABASE: Dict[
+    str,
+    DataSynchronizationJob,
+] = {}
+
+
+
+class DataSynchronizationEngine:
+
+
+    def register(
+        self,
+        job: DataSynchronizationJob,
+    ) -> None:
+
+        DATA_SYNC_JOB_DATABASE[
+            job.id
+        ] = job
+
+
+
+    def start(
+        self,
+        job_id: str,
+    ) -> bool:
+
+        job = DATA_SYNC_JOB_DATABASE.get(
+            job_id
+        )
+
+
+        if job is None:
+
+            return False
+
+
+        job.started_time = utc_now()
+
+        job.status = (
+            "RUNNING"
+        )
+
+
+        return True
+
+
+
+    def process_batch(
+        self,
+        job_id: str,
+        records: int,
+    ) -> None:
+
+        job = DATA_SYNC_JOB_DATABASE.get(
+            job_id
+        )
+
+
+        if job is None:
+
+            return
+
+
+        job.processed_records += records
+
+
+        if (
+
+            job.processed_records
+
+            >=
+
+            job.total_records
+
+        ):
+
+            job.status = (
+                "COMPLETED"
+            )
+
+            job.completed_time = utc_now()
+
+
+
+    def fail(
+        self,
+        job_id: str,
+        records: int,
+    ) -> None:
+
+        job = DATA_SYNC_JOB_DATABASE.get(
+            job_id
+        )
+
+
+        if job:
+
+            job.failed_records += records
+
+
+
+    def running_jobs(
+        self,
+    ) -> List[DataSynchronizationJob]:
+
+        return [
+
+            job
+
+            for job
+
+            in DATA_SYNC_JOB_DATABASE.values()
+
+            if job.status
+            ==
+            "RUNNING"
+
+        ]
+
+
+
+    def completed_jobs(
+        self,
+    ) -> List[DataSynchronizationJob]:
+
+        return [
+
+            job
+
+            for job
+
+            in DATA_SYNC_JOB_DATABASE.values()
+
+            if job.status
+            ==
+            "COMPLETED"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "jobs":
+
+                len(
+                    DATA_SYNC_JOB_DATABASE
+                ),
+
+            "running":
+
+                len(
+                    self.running_jobs()
+                ),
+
+            "completed":
+
+                len(
+                    self.completed_jobs()
+                ),
+
+            "processed":
+
+                sum(
+
+                    item.processed_records
+
+                    for item
+
+                    in DATA_SYNC_JOB_DATABASE.values()
+
+                ),
+
+            "failed":
+
+                sum(
+
+                    item.failed_records
+
+                    for item
+
+                    in DATA_SYNC_JOB_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_SYNC_JOB_DATABASE.clear()
+
+
+
+DATA_SYNCHRONIZATION_ENGINE = (
+    DataSynchronizationEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 333
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 334
+# ==========================================================
+
+class DataMigrationTask(BaseModel):
+
+    id: str
+
+    migration_name: str
+
+    source_database: str = ""
+
+    target_database: str = ""
+
+    migration_type: str = ""
+
+    total_objects: int = 0
+
+    migrated_objects: int = 0
+
+    skipped_objects: int = 0
+
+    failed_objects: int = 0
+
+    started_time: Optional[
+        datetime
+    ] = None
+
+    completed_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "PENDING"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_MIGRATION_DATABASE: Dict[
+    str,
+    DataMigrationTask,
+] = {}
+
+
+
+class DataMigrationEngine:
+
+
+    def register(
+        self,
+        task: DataMigrationTask,
+    ) -> None:
+
+        DATA_MIGRATION_DATABASE[
+            task.id
+        ] = task
+
+
+
+    def start(
+        self,
+        task_id: str,
+    ) -> bool:
+
+        task = DATA_MIGRATION_DATABASE.get(
+            task_id
+        )
+
+
+        if task is None:
+
+            return False
+
+
+        task.started_time = utc_now()
+
+        task.status = (
+            "RUNNING"
+        )
+
+
+        return True
+
+
+
+    def migrate_objects(
+        self,
+        task_id: str,
+        count: int,
+    ) -> None:
+
+        task = DATA_MIGRATION_DATABASE.get(
+            task_id
+        )
+
+
+        if task is None:
+
+            return
+
+
+        task.migrated_objects += count
+
+
+        if (
+
+            task.migrated_objects
+
+            >=
+
+            task.total_objects
+
+        ):
+
+            task.completed_time = utc_now()
+
+            task.status = (
+                "COMPLETED"
+            )
+
+
+
+    def skip_objects(
+        self,
+        task_id: str,
+        count: int,
+    ) -> None:
+
+        task = DATA_MIGRATION_DATABASE.get(
+            task_id
+        )
+
+
+        if task:
+
+            task.skipped_objects += count
+
+
+
+    def fail_objects(
+        self,
+        task_id: str,
+        count: int,
+    ) -> None:
+
+        task = DATA_MIGRATION_DATABASE.get(
+            task_id
+        )
+
+
+        if task:
+
+            task.failed_objects += count
+
+
+
+    def cancel(
+        self,
+        task_id: str,
+    ) -> None:
+
+        task = DATA_MIGRATION_DATABASE.get(
+            task_id
+        )
+
+
+        if task:
+
+            task.status = (
+                "CANCELLED"
+            )
+
+
+
+    def active_tasks(
+        self,
+    ) -> List[DataMigrationTask]:
+
+        return [
+
+            task
+
+            for task
+
+            in DATA_MIGRATION_DATABASE.values()
+
+            if task.status
+            ==
+            "RUNNING"
+
+        ]
+
+
+
+    def history(
+        self,
+    ) -> List[DataMigrationTask]:
+
+        return sorted(
+
+            DATA_MIGRATION_DATABASE.values(),
+
+            key=lambda x:
+
+            x.started_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "tasks":
+
+                len(
+                    DATA_MIGRATION_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_tasks()
+                ),
+
+            "migrated":
+
+                sum(
+
+                    item.migrated_objects
+
+                    for item
+
+                    in DATA_MIGRATION_DATABASE.values()
+
+                ),
+
+            "failed":
+
+                sum(
+
+                    item.failed_objects
+
+                    for item
+
+                    in DATA_MIGRATION_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_MIGRATION_DATABASE.clear()
+
+
+
+DATA_MIGRATION_ENGINE = (
+    DataMigrationEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 334
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 335
+# ==========================================================
+
+class DataSchemaVersion(BaseModel):
+
+    id: str
+
+    dataset_name: str
+
+    version: str = ""
+
+    schema_definition: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    change_type: str = ""
+
+    change_description: str = ""
+
+    created_by: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    active: bool = True
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_SCHEMA_VERSION_DATABASE: Dict[
+    str,
+    DataSchemaVersion,
+] = {}
+
+
+
+class DataSchemaRegistryEngine:
+
+
+    def register(
+        self,
+        schema: DataSchemaVersion,
+    ) -> None:
+
+        schema.created_time = utc_now()
+
+        DATA_SCHEMA_VERSION_DATABASE[
+            schema.id
+        ] = schema
+
+
+
+    def get_latest(
+        self,
+        dataset_name: str,
+    ) -> Optional[DataSchemaVersion]:
+
+        schemas = [
+
+            item
+
+            for item
+
+            in DATA_SCHEMA_VERSION_DATABASE.values()
+
+            if item.dataset_name
+            ==
+            dataset_name
+
+        ]
+
+
+        if not schemas:
+
+            return None
+
+
+        return sorted(
+
+            schemas,
+
+            key=lambda x:
+
+            x.created_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )[0]
+
+
+
+    def compare(
+        self,
+        old_version: str,
+        new_version: str,
+    ) -> Dict[str, Any]:
+
+        old_schema = (
+
+            DATA_SCHEMA_VERSION_DATABASE.get(
+                old_version
+            )
+
+        )
+
+        new_schema = (
+
+            DATA_SCHEMA_VERSION_DATABASE.get(
+                new_version
+            )
+
+        )
+
+
+        if (
+
+            old_schema is None
+
+            or
+
+            new_schema is None
+
+        ):
+
+            return {
+
+                "changed":
+
+                    False,
+
+                "message":
+
+                    "Schema not found",
+
+            }
+
+
+
+        old_fields = set(
+
+            old_schema.schema_definition.keys()
+
+        )
+
+
+        new_fields = set(
+
+            new_schema.schema_definition.keys()
+
+        )
+
+
+        return {
+
+            "added":
+
+                list(
+
+                    new_fields
+                    -
+                    old_fields
+
+                ),
+
+            "removed":
+
+                list(
+
+                    old_fields
+                    -
+                    new_fields
+
+                ),
+
+            "changed":
+
+                old_fields != new_fields,
+
+            "time":
+
+                utc_now(),
+
+        }
+
+
+
+    def active_schemas(
+        self,
+    ) -> List[DataSchemaVersion]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_SCHEMA_VERSION_DATABASE.values()
+
+            if item.active
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "versions":
+
+                len(
+                    DATA_SCHEMA_VERSION_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_schemas()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_SCHEMA_VERSION_DATABASE.clear()
+
+
+
+DATA_SCHEMA_REGISTRY_ENGINE = (
+    DataSchemaRegistryEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 335
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 336
+# ==========================================================
+
+class DataMetadataRecord(BaseModel):
+
+    id: str
+
+    object_id: str
+
+    object_type: str = ""
+
+    metadata_key: str = ""
+
+    metadata_value: Any = None
+
+    data_type: str = ""
+
+    description: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    source: str = ""
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_METADATA_DATABASE: Dict[
+    str,
+    DataMetadataRecord,
+] = {}
+
+
+
+class DataMetadataEngine:
+
+
+    def register(
+        self,
+        record: DataMetadataRecord,
+    ) -> None:
+
+        record.created_time = utc_now()
+
+        record.updated_time = utc_now()
+
+        DATA_METADATA_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def set_value(
+        self,
+        object_id: str,
+        key: str,
+        value: Any,
+    ) -> None:
+
+        record_id = (
+
+            f"{object_id}_"
+
+            f"{key}"
+
+        )
+
+
+        existing = DATA_METADATA_DATABASE.get(
+            record_id
+        )
+
+
+        if existing:
+
+            existing.metadata_value = value
+
+            existing.updated_time = utc_now()
+
+            return
+
+
+
+        self.register(
+
+            DataMetadataRecord(
+
+                id=record_id,
+
+                object_id=object_id,
+
+                metadata_key=key,
+
+                metadata_value=value,
+
+                data_type=type(value).__name__,
+
+            )
+
+        )
+
+
+
+    def get_value(
+        self,
+        object_id: str,
+        key: str,
+    ) -> Any:
+
+        record = DATA_METADATA_DATABASE.get(
+
+            f"{object_id}_{key}"
+
+        )
+
+
+        if record is None:
+
+            return None
+
+
+        return record.metadata_value
+
+
+
+    def object_metadata(
+        self,
+        object_id: str,
+    ) -> Dict[str, Any]:
+
+        result = {}
+
+
+        for item in DATA_METADATA_DATABASE.values():
+
+            if item.object_id == object_id:
+
+                result[
+                    item.metadata_key
+                ] = item.metadata_value
+
+
+        return result
+
+
+
+    def search(
+        self,
+        keyword: str,
+    ) -> List[DataMetadataRecord]:
+
+        keyword = keyword.lower()
+
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_METADATA_DATABASE.values()
+
+            if (
+
+                keyword
+
+                in
+
+                item.metadata_key.lower()
+
+                or
+
+                keyword
+
+                in
+
+                item.description.lower()
+
+            )
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "metadata_records":
+
+                len(
+                    DATA_METADATA_DATABASE
+                ),
+
+            "objects":
+
+                len(
+
+                    set(
+
+                        item.object_id
+
+                        for item
+
+                        in DATA_METADATA_DATABASE.values()
+
+                    )
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_METADATA_DATABASE.clear()
+
+
+
+DATA_METADATA_ENGINE = (
+    DataMetadataEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 336
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 337
+# ==========================================================
+
+class DataOwnershipRecord(BaseModel):
+
+    id: str
+
+    object_id: str
+
+    object_type: str = ""
+
+    owner_id: str = ""
+
+    owner_role: str = ""
+
+    organization: str = ""
+
+    permission_level: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_OWNERSHIP_DATABASE: Dict[
+    str,
+    DataOwnershipRecord,
+] = {}
+
+
+
+class DataOwnershipEngine:
+
+
+    def register(
+        self,
+        record: DataOwnershipRecord,
+    ) -> None:
+
+        record.created_time = utc_now()
+
+        record.updated_time = utc_now()
+
+        DATA_OWNERSHIP_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def assign_owner(
+        self,
+        object_id: str,
+        owner_id: str,
+        role: str,
+    ) -> None:
+
+        record_id = (
+
+            f"OWNER_"
+
+            f"{object_id}"
+
+        )
+
+
+        existing = DATA_OWNERSHIP_DATABASE.get(
+            record_id
+        )
+
+
+        if existing:
+
+            existing.owner_id = owner_id
+
+            existing.owner_role = role
+
+            existing.updated_time = utc_now()
+
+            return
+
+
+
+        self.register(
+
+            DataOwnershipRecord(
+
+                id=record_id,
+
+                object_id=object_id,
+
+                owner_id=owner_id,
+
+                owner_role=role,
+
+            )
+
+        )
+
+
+
+    def get_owner(
+        self,
+        object_id: str,
+    ) -> Optional[DataOwnershipRecord]:
+
+        return DATA_OWNERSHIP_DATABASE.get(
+
+            f"OWNER_{object_id}"
+
+        )
+
+
+
+    def transfer(
+        self,
+        object_id: str,
+        new_owner: str,
+    ) -> None:
+
+        record = self.get_owner(
+            object_id
+        )
+
+
+        if record:
+
+            record.owner_id = new_owner
+
+            record.updated_time = utc_now()
+
+
+
+    def objects_by_owner(
+        self,
+        owner_id: str,
+    ) -> List[DataOwnershipRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_OWNERSHIP_DATABASE.values()
+
+            if item.owner_id
+            ==
+            owner_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "ownership_records":
+
+                len(
+                    DATA_OWNERSHIP_DATABASE
+                ),
+
+            "owners":
+
+                len(
+
+                    set(
+
+                        item.owner_id
+
+                        for item
+
+                        in DATA_OWNERSHIP_DATABASE.values()
+
+                    )
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_OWNERSHIP_DATABASE.clear()
+
+
+
+DATA_OWNERSHIP_ENGINE = (
+    DataOwnershipEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 337
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 338
+# ==========================================================
+
+class DataClassificationRecord(BaseModel):
+
+    id: str
+
+    object_id: str
+
+    object_type: str = ""
+
+    classification: str = ""
+
+    sensitivity_level: str = ""
+
+    security_label: str = ""
+
+    business_category: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    active: bool = True
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_CLASSIFICATION_DATABASE: Dict[
+    str,
+    DataClassificationRecord,
+] = {}
+
+
+
+class DataClassificationEngine:
+
+
+    def register(
+        self,
+        record: DataClassificationRecord,
+    ) -> None:
+
+        record.created_time = utc_now()
+
+        record.updated_time = utc_now()
+
+        DATA_CLASSIFICATION_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def classify(
+        self,
+        object_id: str,
+        classification: str,
+        sensitivity: str,
+    ) -> None:
+
+        record_id = (
+
+            f"CLASS_"
+
+            f"{object_id}"
+
+        )
+
+
+        existing = DATA_CLASSIFICATION_DATABASE.get(
+            record_id
+        )
+
+
+        if existing:
+
+            existing.classification = classification
+
+            existing.sensitivity_level = sensitivity
+
+            existing.updated_time = utc_now()
+
+            return
+
+
+
+        self.register(
+
+            DataClassificationRecord(
+
+                id=record_id,
+
+                object_id=object_id,
+
+                classification=classification,
+
+                sensitivity_level=sensitivity,
+
+            )
+
+        )
+
+
+
+    def get(
+        self,
+        object_id: str,
+    ) -> Optional[DataClassificationRecord]:
+
+        return DATA_CLASSIFICATION_DATABASE.get(
+
+            f"CLASS_{object_id}"
+
+        )
+
+
+
+    def by_level(
+        self,
+        level: str,
+    ) -> List[DataClassificationRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_CLASSIFICATION_DATABASE.values()
+
+            if item.sensitivity_level
+            ==
+            level
+
+        ]
+
+
+
+    def by_category(
+        self,
+        category: str,
+    ) -> List[DataClassificationRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_CLASSIFICATION_DATABASE.values()
+
+            if item.business_category
+            ==
+            category
+
+        ]
+
+
+
+    def remove(
+        self,
+        object_id: str,
+    ) -> None:
+
+        DATA_CLASSIFICATION_DATABASE.pop(
+
+            f"CLASS_{object_id}",
+
+            None,
+
+        )
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "classified_objects":
+
+                len(
+                    DATA_CLASSIFICATION_DATABASE
+                ),
+
+            "sensitive":
+
+                len(
+
+                    [
+
+                        item
+
+                        for item
+
+                        in DATA_CLASSIFICATION_DATABASE.values()
+
+                        if item.sensitivity_level
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_CLASSIFICATION_DATABASE.clear()
+
+
+
+DATA_CLASSIFICATION_ENGINE = (
+    DataClassificationEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 338
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 339
+# ==========================================================
+
+class DataRetentionPolicy(BaseModel):
+
+    id: str
+
+    dataset_id: str
+
+    policy_name: str = ""
+
+    retention_days: int = 0
+
+    archive_enabled: bool = True
+
+    delete_enabled: bool = False
+
+    archive_location: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_RETENTION_POLICY_DATABASE: Dict[
+    str,
+    DataRetentionPolicy,
+] = {}
+
+
+
+class DataRetentionEngine:
+
+
+    def register(
+        self,
+        policy: DataRetentionPolicy,
+    ) -> None:
+
+        policy.created_time = utc_now()
+
+        policy.updated_time = utc_now()
+
+        DATA_RETENTION_POLICY_DATABASE[
+            policy.id
+        ] = policy
+
+
+
+    def get(
+        self,
+        policy_id: str,
+    ) -> Optional[DataRetentionPolicy]:
+
+        return DATA_RETENTION_POLICY_DATABASE.get(
+            policy_id
+        )
+
+
+
+    def update(
+        self,
+        policy_id: str,
+        days: int,
+    ) -> None:
+
+        policy = self.get(
+            policy_id
+        )
+
+
+        if policy:
+
+            policy.retention_days = days
+
+            policy.updated_time = utc_now()
+
+
+
+    def expired_check(
+        self,
+        created_time: datetime,
+        retention_days: int,
+    ) -> bool:
+
+        expire_time = (
+
+            created_time
+
+            +
+
+            timedelta(
+
+                days=retention_days
+
+            )
+
+        )
+
+
+        return utc_now() >= expire_time
+
+
+
+    def active_policies(
+        self,
+    ) -> List[DataRetentionPolicy]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_RETENTION_POLICY_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def archive_targets(
+        self,
+    ) -> List[DataRetentionPolicy]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_RETENTION_POLICY_DATABASE.values()
+
+            if item.archive_enabled
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "policies":
+
+                len(
+                    DATA_RETENTION_POLICY_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_policies()
+                ),
+
+            "archive":
+
+                len(
+                    self.archive_targets()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_RETENTION_POLICY_DATABASE.clear()
+
+
+
+DATA_RETENTION_ENGINE = (
+    DataRetentionEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 339
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 340
+# ==========================================================
+
+class DataArchiveRecord(BaseModel):
+
+    id: str
+
+    dataset_id: str
+
+    archive_name: str = ""
+
+    archive_location: str = ""
+
+    archive_format: str = ""
+
+    original_size: int = 0
+
+    compressed_size: int = 0
+
+    compression_ratio: float = 0.0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    restored_count: int = 0
+
+    status: str = "CREATED"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_ARCHIVE_DATABASE: Dict[
+    str,
+    DataArchiveRecord,
+] = {}
+
+
+
+class DataArchiveEngine:
+
+
+    def create(
+        self,
+        archive: DataArchiveRecord,
+    ) -> None:
+
+        archive.created_time = utc_now()
+
+        DATA_ARCHIVE_DATABASE[
+            archive.id
+        ] = archive
+
+
+
+    def compress(
+        self,
+        archive_id: str,
+        original_size: int,
+        compressed_size: int,
+    ) -> None:
+
+        archive = DATA_ARCHIVE_DATABASE.get(
+            archive_id
+        )
+
+
+        if archive is None:
+
+            return
+
+
+        archive.original_size = (
+            original_size
+        )
+
+        archive.compressed_size = (
+            compressed_size
+        )
+
+
+        if original_size > 0:
+
+            archive.compression_ratio = (
+
+                compressed_size
+
+                /
+
+                original_size
+
+            )
+
+
+
+        archive.status = (
+            "COMPRESSED"
+        )
+
+
+
+    def restore(
+        self,
+        archive_id: str,
+    ) -> bool:
+
+        archive = DATA_ARCHIVE_DATABASE.get(
+            archive_id
+        )
+
+
+        if archive is None:
+
+            return False
+
+
+        archive.restored_count += 1
+
+        archive.status = (
+            "RESTORED"
+        )
+
+
+        return True
+
+
+
+    def get(
+        self,
+        archive_id: str,
+    ) -> Optional[DataArchiveRecord]:
+
+        return DATA_ARCHIVE_DATABASE.get(
+            archive_id
+        )
+
+
+
+    def by_dataset(
+        self,
+        dataset_id: str,
+    ) -> List[DataArchiveRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_ARCHIVE_DATABASE.values()
+
+            if item.dataset_id
+            ==
+            dataset_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "archives":
+
+                len(
+                    DATA_ARCHIVE_DATABASE
+                ),
+
+            "size":
+
+                sum(
+
+                    item.compressed_size
+
+                    for item
+
+                    in DATA_ARCHIVE_DATABASE.values()
+
+                ),
+
+            "restores":
+
+                sum(
+
+                    item.restored_count
+
+                    for item
+
+                    in DATA_ARCHIVE_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_ARCHIVE_DATABASE.clear()
+
+
+
+DATA_ARCHIVE_ENGINE = (
+    DataArchiveEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 340
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 341
+# ==========================================================
+
+class DataPartitionRecord(BaseModel):
+
+    id: str
+
+    dataset_id: str
+
+    partition_name: str = ""
+
+    partition_key: str = ""
+
+    partition_value: str = ""
+
+    record_count: int = 0
+
+    storage_location: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_PARTITION_DATABASE: Dict[
+    str,
+    DataPartitionRecord,
+] = {}
+
+
+
+class DataPartitionEngine:
+
+
+    def create(
+        self,
+        partition: DataPartitionRecord,
+    ) -> None:
+
+        partition.created_time = utc_now()
+
+        partition.updated_time = utc_now()
+
+        DATA_PARTITION_DATABASE[
+            partition.id
+        ] = partition
+
+
+
+    def update_count(
+        self,
+        partition_id: str,
+        count: int,
+    ) -> None:
+
+        partition = DATA_PARTITION_DATABASE.get(
+            partition_id
+        )
+
+
+        if partition:
+
+            partition.record_count = count
+
+            partition.updated_time = utc_now()
+
+
+
+    def get(
+        self,
+        partition_id: str,
+    ) -> Optional[DataPartitionRecord]:
+
+        return DATA_PARTITION_DATABASE.get(
+            partition_id
+        )
+
+
+
+    def dataset_partitions(
+        self,
+        dataset_id: str,
+    ) -> List[DataPartitionRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_PARTITION_DATABASE.values()
+
+            if item.dataset_id
+            ==
+            dataset_id
+
+        ]
+
+
+
+    def active_partitions(
+        self,
+    ) -> List[DataPartitionRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_PARTITION_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def total_records(
+        self,
+    ) -> int:
+
+        return sum(
+
+            item.record_count
+
+            for item
+
+            in DATA_PARTITION_DATABASE.values()
+
+        )
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "partitions":
+
+                len(
+                    DATA_PARTITION_DATABASE
+                ),
+
+            "records":
+
+                self.total_records(),
+
+            "active":
+
+                len(
+                    self.active_partitions()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_PARTITION_DATABASE.clear()
+
+
+
+DATA_PARTITION_ENGINE = (
+    DataPartitionEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 341
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 342
+# ==========================================================
+
+class DataIndexRecord(BaseModel):
+
+    id: str
+
+    dataset_id: str
+
+    index_name: str = ""
+
+    index_type: str = ""
+
+    indexed_fields: List[str] = Field(
+        default_factory=list
+    )
+
+    record_count: int = 0
+
+    build_time: Optional[
+        datetime
+    ] = None
+
+    last_update: Optional[
+        datetime
+    ] = None
+
+    status: str = "CREATED"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_INDEX_DATABASE: Dict[
+    str,
+    DataIndexRecord,
+] = {}
+
+
+
+class DataIndexEngine:
+
+
+    def create(
+        self,
+        index: DataIndexRecord,
+    ) -> None:
+
+        index.build_time = utc_now()
+
+        index.last_update = utc_now()
+
+        DATA_INDEX_DATABASE[
+            index.id
+        ] = index
+
+
+
+    def update(
+        self,
+        index_id: str,
+        count: int,
+    ) -> None:
+
+        index = DATA_INDEX_DATABASE.get(
+            index_id
+        )
+
+
+        if index:
+
+            index.record_count = count
+
+            index.last_update = utc_now()
+
+            index.status = (
+                "UPDATED"
+            )
+
+
+
+    def activate(
+        self,
+        index_id: str,
+    ) -> None:
+
+        index = DATA_INDEX_DATABASE.get(
+            index_id
+        )
+
+
+        if index:
+
+            index.status = (
+                "ACTIVE"
+            )
+
+
+
+    def search_indexes(
+        self,
+        field: str,
+    ) -> List[DataIndexRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_INDEX_DATABASE.values()
+
+            if field in item.indexed_fields
+
+        ]
+
+
+
+    def dataset_indexes(
+        self,
+        dataset_id: str,
+    ) -> List[DataIndexRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_INDEX_DATABASE.values()
+
+            if item.dataset_id
+            ==
+            dataset_id
+
+        ]
+
+
+
+    def active_indexes(
+        self,
+    ) -> List[DataIndexRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_INDEX_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "indexes":
+
+                len(
+                    DATA_INDEX_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_indexes()
+                ),
+
+            "records":
+
+                sum(
+
+                    item.record_count
+
+                    for item
+
+                    in DATA_INDEX_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_INDEX_DATABASE.clear()
+
+
+
+DATA_INDEX_ENGINE = (
+    DataIndexEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 342
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 343
+# ==========================================================
+
+class DataQueryRequest(BaseModel):
+
+    id: str
+
+    query_type: str = ""
+
+    dataset_id: str = ""
+
+    filters: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    fields: List[str] = Field(
+        default_factory=list
+    )
+
+    limit: int = 100
+
+    offset: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "CREATED"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_QUERY_DATABASE: Dict[
+    str,
+    DataQueryRequest,
+] = {}
+
+
+
+class DataQueryEngine:
+
+
+    def create(
+        self,
+        request: DataQueryRequest,
+    ) -> None:
+
+        request.created_time = utc_now()
+
+        DATA_QUERY_DATABASE[
+            request.id
+        ] = request
+
+
+
+    def execute(
+        self,
+        request_id: str,
+    ) -> Dict[str, Any]:
+
+        request = DATA_QUERY_DATABASE.get(
+            request_id
+        )
+
+
+        if request is None:
+
+            return {
+
+                "success":
+
+                    False,
+
+                "data":
+
+                    [],
+
+            }
+
+
+
+        request.status = (
+            "EXECUTING"
+        )
+
+
+        result = []
+
+
+        if request.dataset_id == "MARKET":
+
+            result = (
+
+                MARKET_DATA_MANAGER.all()
+
+            )
+
+
+        elif request.dataset_id == "ECONOMIC":
+
+            result = (
+
+                ECONOMIC_DATA_MANAGER.latest()
+
+            )
+
+
+        elif request.dataset_id == "NEWS":
+
+            result = (
+
+                NEWS_DATA_MANAGER.latest()
+
+            )
+
+
+        request.status = (
+            "COMPLETED"
+        )
+
+
+        return {
+
+            "success":
+
+                True,
+
+            "count":
+
+                len(result),
+
+            "data":
+
+                result[:request.limit],
+
+            "time":
+
+                utc_now(),
+
+        }
+
+
+
+    def pending(
+        self,
+    ) -> List[DataQueryRequest]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUERY_DATABASE.values()
+
+            if item.status
+            ==
+            "CREATED"
+
+        ]
+
+
+
+    def history(
+        self,
+    ) -> List[DataQueryRequest]:
+
+        return sorted(
+
+            DATA_QUERY_DATABASE.values(),
+
+            key=lambda x:
+
+            x.created_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "queries":
+
+                len(
+                    DATA_QUERY_DATABASE
+                ),
+
+            "completed":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in DATA_QUERY_DATABASE.values()
+
+                        if x.status
+                        ==
+                        "COMPLETED"
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_QUERY_DATABASE.clear()
+
+
+
+DATA_QUERY_ENGINE = (
+    DataQueryEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 343
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 344
+# ==========================================================
+
+class DataQueryOptimizerRecord(BaseModel):
+
+    id: str
+
+    query_id: str
+
+    optimization_type: str = ""
+
+    original_cost: float = 0.0
+
+    optimized_cost: float = 0.0
+
+    execution_time_before: float = 0.0
+
+    execution_time_after: float = 0.0
+
+    index_used: List[str] = Field(
+        default_factory=list
+    )
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "CREATED"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_QUERY_OPTIMIZER_DATABASE: Dict[
+    str,
+    DataQueryOptimizerRecord,
+] = {}
+
+
+
+class DataQueryOptimizerEngine:
+
+
+    def register(
+        self,
+        record: DataQueryOptimizerRecord,
+    ) -> None:
+
+        record.created_time = utc_now()
+
+        DATA_QUERY_OPTIMIZER_DATABASE[
+            record.id
+        ] = record
+
+
+
+    def optimize(
+        self,
+        query_id: str,
+    ) -> Optional[DataQueryOptimizerRecord]:
+
+        optimizer = None
+
+
+        for item in (
+            DATA_QUERY_OPTIMIZER_DATABASE.values()
+        ):
+
+            if item.query_id == query_id:
+
+                optimizer = item
+
+                break
+
+
+
+        if optimizer is None:
+
+            optimizer = DataQueryOptimizerRecord(
+
+                id=f"OPT_{query_id}",
+
+                query_id=query_id,
+
+                optimization_type="AUTO",
+
+            )
+
+            self.register(
+                optimizer
+            )
+
+
+
+        optimizer.optimization_type = (
+            "INDEX_AND_CACHE"
+        )
+
+
+        optimizer.optimized_cost = (
+
+            optimizer.original_cost
+            *
+            0.5
+
+            if optimizer.original_cost > 0
+
+            else 0
+
+        )
+
+
+        optimizer.status = (
+            "OPTIMIZED"
+        )
+
+
+        return optimizer
+
+
+
+    def add_index(
+        self,
+        optimizer_id: str,
+        index_name: str,
+    ) -> None:
+
+        optimizer = DATA_QUERY_OPTIMIZER_DATABASE.get(
+            optimizer_id
+        )
+
+
+        if optimizer is None:
+
+            return
+
+
+        if index_name not in optimizer.index_used:
+
+            optimizer.index_used.append(
+                index_name
+            )
+
+
+
+    def compare(
+        self,
+        optimizer_id: str,
+    ) -> Dict[str, float]:
+
+        optimizer = DATA_QUERY_OPTIMIZER_DATABASE.get(
+            optimizer_id
+        )
+
+
+        if optimizer is None:
+
+            return {}
+
+
+        return {
+
+            "before":
+
+                optimizer.execution_time_before,
+
+            "after":
+
+                optimizer.execution_time_after,
+
+            "improvement":
+
+                (
+
+                    optimizer.execution_time_before
+
+                    -
+
+                    optimizer.execution_time_after
+
+                ),
+
+        }
+
+
+
+    def optimized_queries(
+        self,
+    ) -> List[DataQueryOptimizerRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUERY_OPTIMIZER_DATABASE.values()
+
+            if item.status
+            ==
+            "OPTIMIZED"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "optimizations":
+
+                len(
+                    DATA_QUERY_OPTIMIZER_DATABASE
+                ),
+
+            "optimized":
+
+                len(
+                    self.optimized_queries()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_QUERY_OPTIMIZER_DATABASE.clear()
+
+
+
+DATA_QUERY_OPTIMIZER_ENGINE = (
+    DataQueryOptimizerEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 344
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 345
+# ==========================================================
+
+class DataQueryCacheRule(BaseModel):
+
+    id: str
+
+    query_pattern: str
+
+    dataset_id: str = ""
+
+    cache_duration_seconds: int = 300
+
+    max_results: int = 100
+
+    enabled: bool = True
+
+    hit_count: int = 0
+
+    miss_count: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_QUERY_CACHE_RULE_DATABASE: Dict[
+    str,
+    DataQueryCacheRule,
+] = {}
+
+
+
+class DataQueryCacheEngine:
+
+
+    def register(
+        self,
+        rule: DataQueryCacheRule,
+    ) -> None:
+
+        rule.created_time = utc_now()
+
+        rule.updated_time = utc_now()
+
+        DATA_QUERY_CACHE_RULE_DATABASE[
+            rule.id
+        ] = rule
+
+
+
+    def match(
+        self,
+        query: str,
+        dataset_id: str,
+    ) -> Optional[DataQueryCacheRule]:
+
+        for rule in (
+            DATA_QUERY_CACHE_RULE_DATABASE.values()
+        ):
+
+            if (
+
+                rule.enabled
+
+                and
+
+                rule.dataset_id
+                ==
+                dataset_id
+
+                and
+
+                rule.query_pattern
+                in
+                query
+
+            ):
+
+                return rule
+
+
+        return None
+
+
+
+    def hit(
+        self,
+        rule_id: str,
+    ) -> None:
+
+        rule = DATA_QUERY_CACHE_RULE_DATABASE.get(
+            rule_id
+        )
+
+
+        if rule:
+
+            rule.hit_count += 1
+
+            rule.updated_time = utc_now()
+
+
+
+    def miss(
+        self,
+        rule_id: str,
+    ) -> None:
+
+        rule = DATA_QUERY_CACHE_RULE_DATABASE.get(
+            rule_id
+        )
+
+
+        if rule:
+
+            rule.miss_count += 1
+
+            rule.updated_time = utc_now()
+
+
+
+    def disable(
+        self,
+        rule_id: str,
+    ) -> None:
+
+        rule = DATA_QUERY_CACHE_RULE_DATABASE.get(
+            rule_id
+        )
+
+
+        if rule:
+
+            rule.enabled = False
+
+            rule.updated_time = utc_now()
+
+
+
+    def active_rules(
+        self,
+    ) -> List[DataQueryCacheRule]:
+
+        return [
+
+            rule
+
+            for rule
+
+            in DATA_QUERY_CACHE_RULE_DATABASE.values()
+
+            if rule.enabled
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "rules":
+
+                len(
+                    DATA_QUERY_CACHE_RULE_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_rules()
+                ),
+
+            "hits":
+
+                sum(
+
+                    item.hit_count
+
+                    for item
+
+                    in DATA_QUERY_CACHE_RULE_DATABASE.values()
+
+                ),
+
+            "misses":
+
+                sum(
+
+                    item.miss_count
+
+                    for item
+
+                    in DATA_QUERY_CACHE_RULE_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_QUERY_CACHE_RULE_DATABASE.clear()
+
+
+
+DATA_QUERY_CACHE_ENGINE = (
+    DataQueryCacheEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 345
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 346
+# ==========================================================
+
+class DataQueryExecutionLog(BaseModel):
+
+    id: str
+
+    query_id: str
+
+    dataset_id: str = ""
+
+    execution_engine: str = ""
+
+    start_time: Optional[
+        datetime
+    ] = None
+
+    end_time: Optional[
+        datetime
+    ] = None
+
+    execution_time_ms: float = 0.0
+
+    records_scanned: int = 0
+
+    records_returned: int = 0
+
+    cache_used: bool = False
+
+    success: bool = False
+
+    error_message: str = ""
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_QUERY_EXECUTION_LOG_DATABASE: Dict[
+    str,
+    DataQueryExecutionLog,
+] = {}
+
+
+
+class DataQueryExecutionEngine:
+
+
+    def start(
+        self,
+        log: DataQueryExecutionLog,
+    ) -> None:
+
+        log.start_time = utc_now()
+
+        DATA_QUERY_EXECUTION_LOG_DATABASE[
+            log.id
+        ] = log
+
+
+
+    def complete(
+        self,
+        log_id: str,
+        scanned: int,
+        returned: int,
+    ) -> None:
+
+        log = DATA_QUERY_EXECUTION_LOG_DATABASE.get(
+            log_id
+        )
+
+
+        if log is None:
+
+            return
+
+
+        log.end_time = utc_now()
+
+        log.records_scanned = scanned
+
+        log.records_returned = returned
+
+        log.success = True
+
+
+        if log.start_time:
+
+            log.execution_time_ms = (
+
+                (
+
+                    log.end_time
+
+                    -
+
+                    log.start_time
+
+                ).total_seconds()
+
+                *
+
+                1000
+
+            )
+
+
+
+    def fail(
+        self,
+        log_id: str,
+        error: str,
+    ) -> None:
+
+        log = DATA_QUERY_EXECUTION_LOG_DATABASE.get(
+            log_id
+        )
+
+
+        if log:
+
+            log.end_time = utc_now()
+
+            log.success = False
+
+            log.error_message = error
+
+
+
+    def by_query(
+        self,
+        query_id: str,
+    ) -> List[DataQueryExecutionLog]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUERY_EXECUTION_LOG_DATABASE.values()
+
+            if item.query_id
+            ==
+            query_id
+
+        ]
+
+
+
+    def slow_queries(
+        self,
+        threshold_ms: float = 1000,
+    ) -> List[DataQueryExecutionLog]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUERY_EXECUTION_LOG_DATABASE.values()
+
+            if item.execution_time_ms
+            >
+            threshold_ms
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        logs = list(
+            DATA_QUERY_EXECUTION_LOG_DATABASE.values()
+        )
+
+
+        return {
+
+            "executions":
+
+                len(logs),
+
+            "success":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in logs
+
+                        if x.success
+
+                    ]
+
+                ),
+
+            "failed":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in logs
+
+                        if not x.success
+
+                    ]
+
+                ),
+
+            "slow":
+
+                len(
+                    self.slow_queries()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_QUERY_EXECUTION_LOG_DATABASE.clear()
+
+
+
+DATA_QUERY_EXECUTION_ENGINE = (
+    DataQueryExecutionEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 346
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 347
+# ==========================================================
+
+class DataQueryPermissionRecord(BaseModel):
+
+    id: str
+
+    query_id: str
+
+    user_id: str = ""
+
+    role: str = ""
+
+    permission_type: str = ""
+
+    allowed_fields: List[str] = Field(
+        default_factory=list
+    )
+
+    denied_fields: List[str] = Field(
+        default_factory=list
+    )
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_QUERY_PERMISSION_DATABASE: Dict[
+    str,
+    DataQueryPermissionRecord,
+] = {}
+
+
+
+class DataQueryPermissionEngine:
+
+
+    def register(
+        self,
+        permission: DataQueryPermissionRecord,
+    ) -> None:
+
+        permission.created_time = utc_now()
+
+        permission.updated_time = utc_now()
+
+        DATA_QUERY_PERMISSION_DATABASE[
+            permission.id
+        ] = permission
+
+
+
+    def check(
+        self,
+        query_id: str,
+        user_id: str,
+        field: str,
+    ) -> bool:
+
+        permissions = [
+
+            item
+
+            for item
+
+            in DATA_QUERY_PERMISSION_DATABASE.values()
+
+            if (
+
+                item.query_id
+                ==
+                query_id
+
+                and
+
+                item.user_id
+                ==
+                user_id
+
+            )
+
+        ]
+
+
+        if not permissions:
+
+            return False
+
+
+        permission = permissions[0]
+
+
+        if field in permission.denied_fields:
+
+            return False
+
+
+        if (
+
+            permission.allowed_fields
+
+            and
+
+            field
+
+            not
+
+            in
+
+            permission.allowed_fields
+
+        ):
+
+            return False
+
+
+        return True
+
+
+
+    def grant_field(
+        self,
+        permission_id: str,
+        field: str,
+    ) -> None:
+
+        permission = DATA_QUERY_PERMISSION_DATABASE.get(
+            permission_id
+        )
+
+
+        if permission is None:
+
+            return
+
+
+        if field not in permission.allowed_fields:
+
+            permission.allowed_fields.append(
+                field
+            )
+
+
+        permission.updated_time = utc_now()
+
+
+
+    def revoke_field(
+        self,
+        permission_id: str,
+        field: str,
+    ) -> None:
+
+        permission = DATA_QUERY_PERMISSION_DATABASE.get(
+            permission_id
+        )
+
+
+        if permission is None:
+
+            return
+
+
+        if field not in permission.denied_fields:
+
+            permission.denied_fields.append(
+                field
+            )
+
+
+        permission.updated_time = utc_now()
+
+
+
+    def user_permissions(
+        self,
+        user_id: str,
+    ) -> List[DataQueryPermissionRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUERY_PERMISSION_DATABASE.values()
+
+            if item.user_id
+            ==
+            user_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "permissions":
+
+                len(
+                    DATA_QUERY_PERMISSION_DATABASE
+                ),
+
+            "users":
+
+                len(
+
+                    set(
+
+                        item.user_id
+
+                        for item
+
+                        in DATA_QUERY_PERMISSION_DATABASE.values()
+
+                    )
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_QUERY_PERMISSION_DATABASE.clear()
+
+
+
+DATA_QUERY_PERMISSION_ENGINE = (
+    DataQueryPermissionEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 347
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 348
+# ==========================================================
+
+class DataQueryResultRecord(BaseModel):
+
+    id: str
+
+    query_id: str
+
+    dataset_id: str = ""
+
+    result_count: int = 0
+
+    result_hash: str = ""
+
+    storage_location: str = ""
+
+    generated_time: Optional[
+        datetime
+    ] = None
+
+    expiration_time: Optional[
+        datetime
+    ] = None
+
+    download_count: int = 0
+
+    status: str = "CREATED"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_QUERY_RESULT_DATABASE: Dict[
+    str,
+    DataQueryResultRecord,
+] = {}
+
+
+
+class DataQueryResultEngine:
+
+
+    def register(
+        self,
+        result: DataQueryResultRecord,
+    ) -> None:
+
+        result.generated_time = utc_now()
+
+        DATA_QUERY_RESULT_DATABASE[
+            result.id
+        ] = result
+
+
+
+    def create_result(
+        self,
+        query_id: str,
+        dataset_id: str,
+        count: int,
+        result_hash: str,
+    ) -> DataQueryResultRecord:
+
+        result = DataQueryResultRecord(
+
+            id=f"RESULT_{query_id}",
+
+            query_id=query_id,
+
+            dataset_id=dataset_id,
+
+            result_count=count,
+
+            result_hash=result_hash,
+
+            status="READY",
+
+        )
+
+
+        self.register(
+            result
+        )
+
+
+        return result
+
+
+
+    def download(
+        self,
+        result_id: str,
+    ) -> Optional[DataQueryResultRecord]:
+
+        result = DATA_QUERY_RESULT_DATABASE.get(
+            result_id
+        )
+
+
+        if result is None:
+
+            return None
+
+
+        result.download_count += 1
+
+        return result
+
+
+
+    def expire(
+        self,
+        result_id: str,
+    ) -> None:
+
+        result = DATA_QUERY_RESULT_DATABASE.get(
+            result_id
+        )
+
+
+        if result:
+
+            result.status = (
+                "EXPIRED"
+            )
+
+
+
+    def by_query(
+        self,
+        query_id: str,
+    ) -> List[DataQueryResultRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUERY_RESULT_DATABASE.values()
+
+            if item.query_id
+            ==
+            query_id
+
+        ]
+
+
+
+    def active_results(
+        self,
+    ) -> List[DataQueryResultRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUERY_RESULT_DATABASE.values()
+
+            if item.status
+            ==
+            "READY"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "results":
+
+                len(
+                    DATA_QUERY_RESULT_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_results()
+                ),
+
+            "downloads":
+
+                sum(
+
+                    item.download_count
+
+                    for item
+
+                    in DATA_QUERY_RESULT_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_QUERY_RESULT_DATABASE.clear()
+
+
+
+DATA_QUERY_RESULT_ENGINE = (
+    DataQueryResultEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 348
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 349
+# ==========================================================
+
+class DataQueryExportRecord(BaseModel):
+
+    id: str
+
+    query_id: str
+
+    export_format: str = ""
+
+    file_name: str = ""
+
+    file_path: str = ""
+
+    file_size: int = 0
+
+    exported_records: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    completed_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "WAITING"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_QUERY_EXPORT_DATABASE: Dict[
+    str,
+    DataQueryExportRecord,
+] = {}
+
+
+
+class DataQueryExportEngine:
+
+
+    def register(
+        self,
+        export: DataQueryExportRecord,
+    ) -> None:
+
+        export.created_time = utc_now()
+
+        DATA_QUERY_EXPORT_DATABASE[
+            export.id
+        ] = export
+
+
+
+    def start(
+        self,
+        export_id: str,
+    ) -> bool:
+
+        export = DATA_QUERY_EXPORT_DATABASE.get(
+            export_id
+        )
+
+
+        if export is None:
+
+            return False
+
+
+        export.status = (
+            "PROCESSING"
+        )
+
+
+        return True
+
+
+
+    def complete(
+        self,
+        export_id: str,
+        path: str,
+        size: int,
+        records: int,
+    ) -> None:
+
+        export = DATA_QUERY_EXPORT_DATABASE.get(
+            export_id
+        )
+
+
+        if export is None:
+
+            return
+
+
+        export.file_path = path
+
+        export.file_size = size
+
+        export.exported_records = records
+
+        export.completed_time = utc_now()
+
+        export.status = (
+            "COMPLETED"
+        )
+
+
+
+    def fail(
+        self,
+        export_id: str,
+    ) -> None:
+
+        export = DATA_QUERY_EXPORT_DATABASE.get(
+            export_id
+        )
+
+
+        if export:
+
+            export.status = (
+                "FAILED"
+            )
+
+
+
+    def by_query(
+        self,
+        query_id: str,
+    ) -> List[DataQueryExportRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUERY_EXPORT_DATABASE.values()
+
+            if item.query_id
+            ==
+            query_id
+
+        ]
+
+
+
+    def completed_exports(
+        self,
+    ) -> List[DataQueryExportRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_QUERY_EXPORT_DATABASE.values()
+
+            if item.status
+            ==
+            "COMPLETED"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "exports":
+
+                len(
+                    DATA_QUERY_EXPORT_DATABASE
+                ),
+
+            "completed":
+
+                len(
+                    self.completed_exports()
+                ),
+
+            "records":
+
+                sum(
+
+                    item.exported_records
+
+                    for item
+
+                    in DATA_QUERY_EXPORT_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_QUERY_EXPORT_DATABASE.clear()
+
+
+
+DATA_QUERY_EXPORT_ENGINE = (
+    DataQueryExportEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 349
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 350
+# ==========================================================
+
+class DataReportRecord(BaseModel):
+
+    id: str
+
+    report_name: str
+
+    report_type: str = ""
+
+    dataset_sources: List[str] = Field(
+        default_factory=list
+    )
+
+    parameters: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    generated_by: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    completed_time: Optional[
+        datetime
+    ] = None
+
+    execution_time_ms: float = 0.0
+
+    status: str = "CREATED"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_REPORT_DATABASE: Dict[
+    str,
+    DataReportRecord,
+] = {}
+
+
+
+class DataReportEngine:
+
+
+    def register(
+        self,
+        report: DataReportRecord,
+    ) -> None:
+
+        report.created_time = utc_now()
+
+        DATA_REPORT_DATABASE[
+            report.id
+        ] = report
+
+
+
+    def generate(
+        self,
+        report_id: str,
+    ) -> bool:
+
+        report = DATA_REPORT_DATABASE.get(
+            report_id
+        )
+
+
+        if report is None:
+
+            return False
+
+
+        start = utc_now()
+
+
+        report.status = (
+            "GENERATING"
+        )
+
+
+        try:
+
+            report.completed_time = utc_now()
+
+            report.execution_time_ms = (
+
+                (
+
+                    report.completed_time
+
+                    -
+
+                    start
+
+                ).total_seconds()
+
+                *
+
+                1000
+
+            )
+
+
+            report.status = (
+                "COMPLETED"
+            )
+
+
+            return True
+
+
+
+        except Exception:
+
+            report.status = (
+                "FAILED"
+            )
+
+            return False
+
+
+
+    def get(
+        self,
+        report_id: str,
+    ) -> Optional[DataReportRecord]:
+
+        return DATA_REPORT_DATABASE.get(
+            report_id
+        )
+
+
+
+    def by_type(
+        self,
+        report_type: str,
+    ) -> List[DataReportRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_REPORT_DATABASE.values()
+
+            if item.report_type
+            ==
+            report_type
+
+        ]
+
+
+
+    def completed(
+        self,
+    ) -> List[DataReportRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_REPORT_DATABASE.values()
+
+            if item.status
+            ==
+            "COMPLETED"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "reports":
+
+                len(
+                    DATA_REPORT_DATABASE
+                ),
+
+            "completed":
+
+                len(
+                    self.completed()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_REPORT_DATABASE.clear()
+
+
+
+DATA_REPORT_ENGINE = (
+    DataReportEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 350
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 351
+# ==========================================================
+
+class DataReportTemplate(BaseModel):
+
+    id: str
+
+    template_name: str
+
+    report_type: str = ""
+
+    layout_definition: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    data_sources: List[str] = Field(
+        default_factory=list
+    )
+
+    visualization_types: List[str] = Field(
+        default_factory=list
+    )
+
+    created_by: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_REPORT_TEMPLATE_DATABASE: Dict[
+    str,
+    DataReportTemplate,
+] = {}
+
+
+
+class DataReportTemplateEngine:
+
+
+    def register(
+        self,
+        template: DataReportTemplate,
+    ) -> None:
+
+        template.created_time = utc_now()
+
+        template.updated_time = utc_now()
+
+        DATA_REPORT_TEMPLATE_DATABASE[
+            template.id
+        ] = template
+
+
+
+    def get(
+        self,
+        template_id: str,
+    ) -> Optional[DataReportTemplate]:
+
+        return DATA_REPORT_TEMPLATE_DATABASE.get(
+            template_id
+        )
+
+
+
+    def create_report_config(
+        self,
+        template_id: str,
+        parameters: Dict[str, Any],
+    ) -> Dict[str, Any]:
+
+        template = self.get(
+            template_id
+        )
+
+
+        if template is None:
+
+            return {}
+
+
+        return {
+
+            "template":
+
+                template.template_name,
+
+            "type":
+
+                template.report_type,
+
+            "sources":
+
+                template.data_sources,
+
+            "visualizations":
+
+                template.visualization_types,
+
+            "parameters":
+
+                parameters,
+
+            "created":
+
+                utc_now(),
+
+        }
+
+
+
+    def activate(
+        self,
+        template_id: str,
+    ) -> None:
+
+        template = self.get(
+            template_id
+        )
+
+
+        if template:
+
+            template.status = (
+                "ACTIVE"
+            )
+
+            template.updated_time = utc_now()
+
+
+
+    def disable(
+        self,
+        template_id: str,
+    ) -> None:
+
+        template = self.get(
+            template_id
+        )
+
+
+        if template:
+
+            template.status = (
+                "DISABLED"
+            )
+
+            template.updated_time = utc_now()
+
+
+
+    def active_templates(
+        self,
+    ) -> List[DataReportTemplate]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_REPORT_TEMPLATE_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "templates":
+
+                len(
+                    DATA_REPORT_TEMPLATE_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_templates()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_REPORT_TEMPLATE_DATABASE.clear()
+
+
+
+DATA_REPORT_TEMPLATE_ENGINE = (
+    DataReportTemplateEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 351
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 352
+# ==========================================================
+
+class DataReportSchedule(BaseModel):
+
+    id: str
+
+    report_id: str
+
+    schedule_type: str = ""
+
+    interval_seconds: int = 3600
+
+    next_run: Optional[
+        datetime
+    ] = None
+
+    last_run: Optional[
+        datetime
+    ] = None
+
+    run_count: int = 0
+
+    success_count: int = 0
+
+    failed_count: int = 0
+
+    enabled: bool = True
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_REPORT_SCHEDULE_DATABASE: Dict[
+    str,
+    DataReportSchedule,
+] = {}
+
+
+
+class DataReportSchedulerEngine:
+
+
+    def register(
+        self,
+        schedule: DataReportSchedule,
+    ) -> None:
+
+        schedule.created_time = utc_now()
+
+        schedule.next_run = utc_now()
+
+        DATA_REPORT_SCHEDULE_DATABASE[
+            schedule.id
+        ] = schedule
+
+
+
+    def due_reports(
+        self,
+    ) -> List[DataReportSchedule]:
+
+        now = utc_now()
+
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_REPORT_SCHEDULE_DATABASE.values()
+
+            if (
+
+                item.enabled
+
+                and
+
+                item.next_run
+
+                <=
+
+                now
+
+            )
+
+        ]
+
+
+
+    def execute(
+        self,
+        schedule_id: str,
+    ) -> bool:
+
+        schedule = DATA_REPORT_SCHEDULE_DATABASE.get(
+            schedule_id
+        )
+
+
+        if schedule is None:
+
+            return False
+
+
+        try:
+
+            DataReportEngine().generate(
+
+                schedule.report_id
+
+            )
+
+
+            schedule.last_run = utc_now()
+
+            schedule.next_run = (
+
+                utc_now()
+
+                +
+
+                timedelta(
+
+                    seconds=
+
+                    schedule.interval_seconds
+
+                )
+
+            )
+
+
+            schedule.run_count += 1
+
+            schedule.success_count += 1
+
+
+            return True
+
+
+
+        except Exception:
+
+            schedule.failed_count += 1
+
+            return False
+
+
+
+    def disable(
+        self,
+        schedule_id: str,
+    ) -> None:
+
+        schedule = DATA_REPORT_SCHEDULE_DATABASE.get(
+            schedule_id
+        )
+
+
+        if schedule:
+
+            schedule.enabled = False
+
+
+
+    def enable(
+        self,
+        schedule_id: str,
+    ) -> None:
+
+        schedule = DATA_REPORT_SCHEDULE_DATABASE.get(
+            schedule_id
+        )
+
+
+        if schedule:
+
+            schedule.enabled = True
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "schedules":
+
+                len(
+                    DATA_REPORT_SCHEDULE_DATABASE
+                ),
+
+            "active":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in DATA_REPORT_SCHEDULE_DATABASE.values()
+
+                        if x.enabled
+
+                    ]
+
+                ),
+
+            "executions":
+
+                sum(
+
+                    x.run_count
+
+                    for x
+
+                    in DATA_REPORT_SCHEDULE_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_REPORT_SCHEDULE_DATABASE.clear()
+
+
+
+DATA_REPORT_SCHEDULER_ENGINE = (
+    DataReportSchedulerEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 352
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 353
+# ==========================================================
+
+class DataReportVersion(BaseModel):
+
+    id: str
+
+    report_id: str
+
+    version_number: str = ""
+
+    change_log: str = ""
+
+    template_snapshot: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    created_by: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    active: bool = True
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_REPORT_VERSION_DATABASE: Dict[
+    str,
+    DataReportVersion,
+] = {}
+
+
+
+class DataReportVersionEngine:
+
+
+    def create(
+        self,
+        version: DataReportVersion,
+    ) -> None:
+
+        version.created_time = utc_now()
+
+        DATA_REPORT_VERSION_DATABASE[
+            version.id
+        ] = version
+
+
+
+    def latest(
+        self,
+        report_id: str,
+    ) -> Optional[DataReportVersion]:
+
+        versions = [
+
+            item
+
+            for item
+
+            in DATA_REPORT_VERSION_DATABASE.values()
+
+            if item.report_id
+            ==
+            report_id
+
+        ]
+
+
+        if not versions:
+
+            return None
+
+
+        return sorted(
+
+            versions,
+
+            key=lambda x:
+
+            x.created_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )[0]
+
+
+
+    def activate(
+        self,
+        version_id: str,
+    ) -> None:
+
+        version = DATA_REPORT_VERSION_DATABASE.get(
+            version_id
+        )
+
+
+        if version:
+
+            version.active = True
+
+
+
+    def deactivate(
+        self,
+        version_id: str,
+    ) -> None:
+
+        version = DATA_REPORT_VERSION_DATABASE.get(
+            version_id
+        )
+
+
+        if version:
+
+            version.active = False
+
+
+
+    def history(
+        self,
+        report_id: str,
+    ) -> List[DataReportVersion]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_REPORT_VERSION_DATABASE.values()
+
+            if item.report_id
+            ==
+            report_id
+
+        ]
+
+
+
+    def compare(
+        self,
+        first_id: str,
+        second_id: str,
+    ) -> Dict[str, Any]:
+
+        first = DATA_REPORT_VERSION_DATABASE.get(
+            first_id
+        )
+
+        second = DATA_REPORT_VERSION_DATABASE.get(
+            second_id
+        )
+
+
+        if (
+
+            first is None
+
+            or
+
+            second is None
+
+        ):
+
+            return {}
+
+
+        return {
+
+            "first":
+
+                first.version_number,
+
+            "second":
+
+                second.version_number,
+
+            "changed":
+
+                first.template_snapshot
+                !=
+                second.template_snapshot,
+
+            "time":
+
+                utc_now(),
+
+        }
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "versions":
+
+                len(
+                    DATA_REPORT_VERSION_DATABASE
+                ),
+
+            "active":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in DATA_REPORT_VERSION_DATABASE.values()
+
+                        if x.active
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_REPORT_VERSION_DATABASE.clear()
+
+
+
+DATA_REPORT_VERSION_ENGINE = (
+    DataReportVersionEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 353
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 354
+# ==========================================================
+
+class DataReportDistribution(BaseModel):
+
+    id: str
+
+    report_id: str
+
+    distribution_type: str = ""
+
+    target_users: List[str] = Field(
+        default_factory=list
+    )
+
+    target_groups: List[str] = Field(
+        default_factory=list
+    )
+
+    delivery_channel: str = ""
+
+    destination: str = ""
+
+    schedule_enabled: bool = False
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    last_delivery: Optional[
+        datetime
+    ] = None
+
+    delivery_count: int = 0
+
+    failed_count: int = 0
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_REPORT_DISTRIBUTION_DATABASE: Dict[
+    str,
+    DataReportDistribution,
+] = {}
+
+
+
+class DataReportDistributionEngine:
+
+
+    def register(
+        self,
+        distribution: DataReportDistribution,
+    ) -> None:
+
+        distribution.created_time = utc_now()
+
+        DATA_REPORT_DISTRIBUTION_DATABASE[
+            distribution.id
+        ] = distribution
+
+
+
+    def send(
+        self,
+        distribution_id: str,
+    ) -> bool:
+
+        distribution = (
+            DATA_REPORT_DISTRIBUTION_DATABASE.get(
+                distribution_id
+            )
+        )
+
+
+        if distribution is None:
+
+            return False
+
+
+        try:
+
+            distribution.last_delivery = (
+                utc_now()
+            )
+
+            distribution.delivery_count += 1
+
+            distribution.status = (
+                "DELIVERED"
+            )
+
+
+            return True
+
+
+
+        except Exception:
+
+            distribution.failed_count += 1
+
+            distribution.status = (
+                "FAILED"
+            )
+
+
+            return False
+
+
+
+    def add_user(
+        self,
+        distribution_id: str,
+        user_id: str,
+    ) -> None:
+
+        distribution = (
+            DATA_REPORT_DISTRIBUTION_DATABASE.get(
+                distribution_id
+            )
+        )
+
+
+        if distribution is None:
+
+            return
+
+
+        if user_id not in distribution.target_users:
+
+            distribution.target_users.append(
+                user_id
+            )
+
+
+
+    def add_group(
+        self,
+        distribution_id: str,
+        group_id: str,
+    ) -> None:
+
+        distribution = (
+            DATA_REPORT_DISTRIBUTION_DATABASE.get(
+                distribution_id
+            )
+        )
+
+
+        if distribution is None:
+
+            return
+
+
+        if group_id not in distribution.target_groups:
+
+            distribution.target_groups.append(
+                group_id
+            )
+
+
+
+    def disable(
+        self,
+        distribution_id: str,
+    ) -> None:
+
+        distribution = (
+            DATA_REPORT_DISTRIBUTION_DATABASE.get(
+                distribution_id
+            )
+        )
+
+
+        if distribution:
+
+            distribution.status = (
+                "DISABLED"
+            )
+
+
+
+    def active(
+        self,
+    ) -> List[DataReportDistribution]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_REPORT_DISTRIBUTION_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def delivery_history(
+        self,
+    ) -> List[DataReportDistribution]:
+
+        return sorted(
+
+            DATA_REPORT_DISTRIBUTION_DATABASE.values(),
+
+            key=lambda x:
+
+            x.last_delivery
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "distributions":
+
+                len(
+                    DATA_REPORT_DISTRIBUTION_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active()
+                ),
+
+            "deliveries":
+
+                sum(
+
+                    x.delivery_count
+
+                    for x
+
+                    in DATA_REPORT_DISTRIBUTION_DATABASE.values()
+
+                ),
+
+            "failures":
+
+                sum(
+
+                    x.failed_count
+
+                    for x
+
+                    in DATA_REPORT_DISTRIBUTION_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_REPORT_DISTRIBUTION_DATABASE.clear()
+
+
+
+DATA_REPORT_DISTRIBUTION_ENGINE = (
+    DataReportDistributionEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 354
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 355
+# ==========================================================
+
+class DataNotificationRecord(BaseModel):
+
+    id: str
+
+    user_id: str
+
+    notification_type: str = ""
+
+    title: str = ""
+
+    message: str = ""
+
+    priority: int = 0
+
+    channel: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    sent_time: Optional[
+        datetime
+    ] = None
+
+    read_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "CREATED"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_NOTIFICATION_DATABASE: Dict[
+    str,
+    DataNotificationRecord,
+] = {}
+
+
+
+class DataNotificationEngine:
+
+
+    def create(
+        self,
+        notification: DataNotificationRecord,
+    ) -> None:
+
+        notification.created_time = utc_now()
+
+        DATA_NOTIFICATION_DATABASE[
+            notification.id
+        ] = notification
+
+
+
+    def send(
+        self,
+        notification_id: str,
+    ) -> bool:
+
+        notification = (
+            DATA_NOTIFICATION_DATABASE.get(
+                notification_id
+            )
+        )
+
+
+        if notification is None:
+
+            return False
+
+
+        notification.sent_time = (
+            utc_now()
+        )
+
+        notification.status = (
+            "SENT"
+        )
+
+
+        return True
+
+
+
+    def mark_read(
+        self,
+        notification_id: str,
+    ) -> None:
+
+        notification = (
+            DATA_NOTIFICATION_DATABASE.get(
+                notification_id
+            )
+        )
+
+
+        if notification:
+
+            notification.read_time = (
+                utc_now()
+            )
+
+            notification.status = (
+                "READ"
+            )
+
+
+
+    def unread(
+        self,
+        user_id: str,
+    ) -> List[DataNotificationRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_NOTIFICATION_DATABASE.values()
+
+            if (
+
+                item.user_id
+                ==
+                user_id
+
+                and
+
+                item.status
+                !=
+                "READ"
+
+            )
+
+        ]
+
+
+
+    def by_user(
+        self,
+        user_id: str,
+    ) -> List[DataNotificationRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_NOTIFICATION_DATABASE.values()
+
+            if item.user_id
+            ==
+            user_id
+
+        ]
+
+
+
+    def high_priority(
+        self,
+        level: int = 8,
+    ) -> List[DataNotificationRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_NOTIFICATION_DATABASE.values()
+
+            if item.priority >= level
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        notifications = list(
+            DATA_NOTIFICATION_DATABASE.values()
+        )
+
+
+        return {
+
+            "notifications":
+
+                len(notifications),
+
+            "sent":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in notifications
+
+                        if x.status
+                        ==
+                        "SENT"
+
+                    ]
+
+                ),
+
+            "read":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in notifications
+
+                        if x.status
+                        ==
+                        "READ"
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_NOTIFICATION_DATABASE.clear()
+
+
+
+DATA_NOTIFICATION_ENGINE = (
+    DataNotificationEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 355
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 356
+# ==========================================================
+
+class DataAlertRule(BaseModel):
+
+    id: str
+
+    rule_name: str
+
+    dataset_id: str = ""
+
+    metric_name: str = ""
+
+    condition_operator: str = ""
+
+    threshold_value: float = 0.0
+
+    severity: str = "LOW"
+
+    notification_channels: List[str] = Field(
+        default_factory=list
+    )
+
+    enabled: bool = True
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    trigger_count: int = 0
+
+    last_trigger: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_ALERT_RULE_DATABASE: Dict[
+    str,
+    DataAlertRule,
+] = {}
+
+
+
+class DataAlertEngine:
+
+
+    def register(
+        self,
+        rule: DataAlertRule,
+    ) -> None:
+
+        rule.created_time = utc_now()
+
+        rule.updated_time = utc_now()
+
+        DATA_ALERT_RULE_DATABASE[
+            rule.id
+        ] = rule
+
+
+
+    def evaluate(
+        self,
+        rule_id: str,
+        value: float,
+    ) -> bool:
+
+        rule = (
+            DATA_ALERT_RULE_DATABASE.get(
+                rule_id
+            )
+        )
+
+
+        if rule is None:
+
+            return False
+
+
+        if not rule.enabled:
+
+            return False
+
+
+        triggered = False
+
+
+        if rule.condition_operator == ">":
+
+            triggered = (
+
+                value
+
+                >
+
+                rule.threshold_value
+
+            )
+
+
+        elif rule.condition_operator == "<":
+
+            triggered = (
+
+                value
+
+                <
+
+                rule.threshold_value
+
+            )
+
+
+        elif rule.condition_operator == ">=":
+
+            triggered = (
+
+                value
+
+                >=
+
+                rule.threshold_value
+
+            )
+
+
+        elif rule.condition_operator == "<=":
+
+            triggered = (
+
+                value
+
+                <=
+
+                rule.threshold_value
+
+            )
+
+
+        elif rule.condition_operator == "==":
+
+            triggered = (
+
+                value
+
+                ==
+
+                rule.threshold_value
+
+            )
+
+
+
+        if triggered:
+
+            rule.trigger_count += 1
+
+            rule.last_trigger = utc_now()
+
+
+
+        return triggered
+
+
+
+    def enable(
+        self,
+        rule_id: str,
+    ) -> None:
+
+        rule = DATA_ALERT_RULE_DATABASE.get(
+            rule_id
+        )
+
+
+        if rule:
+
+            rule.enabled = True
+
+            rule.updated_time = utc_now()
+
+
+
+    def disable(
+        self,
+        rule_id: str,
+    ) -> None:
+
+        rule = DATA_ALERT_RULE_DATABASE.get(
+            rule_id
+        )
+
+
+        if rule:
+
+            rule.enabled = False
+
+            rule.updated_time = utc_now()
+
+
+
+    def active_rules(
+        self,
+    ) -> List[DataAlertRule]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_ALERT_RULE_DATABASE.values()
+
+            if item.enabled
+
+        ]
+
+
+
+    def triggered_rules(
+        self,
+    ) -> List[DataAlertRule]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_ALERT_RULE_DATABASE.values()
+
+            if item.trigger_count > 0
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "rules":
+
+                len(
+                    DATA_ALERT_RULE_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_rules()
+                ),
+
+            "triggered":
+
+                len(
+                    self.triggered_rules()
+                ),
+
+            "events":
+
+                sum(
+
+                    item.trigger_count
+
+                    for item
+
+                    in DATA_ALERT_RULE_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_ALERT_RULE_DATABASE.clear()
+
+
+
+DATA_ALERT_ENGINE = (
+    DataAlertEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 356
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 357
+# ==========================================================
+
+class DataEventTrigger(BaseModel):
+
+    id: str
+
+    trigger_name: str
+
+    event_source: str = ""
+
+    event_type: str = ""
+
+    condition: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    action_type: str = ""
+
+    action_target: str = ""
+
+    enabled: bool = True
+
+    trigger_count: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    last_trigger: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_EVENT_TRIGGER_DATABASE: Dict[
+    str,
+    DataEventTrigger,
+] = {}
+
+
+
+class DataEventTriggerEngine:
+
+
+    def register(
+        self,
+        trigger: DataEventTrigger,
+    ) -> None:
+
+        trigger.created_time = utc_now()
+
+        DATA_EVENT_TRIGGER_DATABASE[
+            trigger.id
+        ] = trigger
+
+
+
+    def evaluate(
+        self,
+        event_type: str,
+        payload: Dict[str, Any],
+    ) -> List[DataEventTrigger]:
+
+        matched = []
+
+
+        for trigger in (
+            DATA_EVENT_TRIGGER_DATABASE.values()
+        ):
+
+            if not trigger.enabled:
+
+                continue
+
+
+            if trigger.event_type != event_type:
+
+                continue
+
+
+            valid = True
+
+
+            for key, value in trigger.condition.items():
+
+                if payload.get(key) != value:
+
+                    valid = False
+
+                    break
+
+
+
+            if valid:
+
+                trigger.trigger_count += 1
+
+                trigger.last_trigger = utc_now()
+
+                matched.append(
+                    trigger
+                )
+
+
+        return matched
+
+
+
+    def execute_action(
+        self,
+        trigger_id: str,
+    ) -> bool:
+
+        trigger = DATA_EVENT_TRIGGER_DATABASE.get(
+            trigger_id
+        )
+
+
+        if trigger is None:
+
+            return False
+
+
+        if not trigger.enabled:
+
+            return False
+
+
+        return True
+
+
+
+    def disable(
+        self,
+        trigger_id: str,
+    ) -> None:
+
+        trigger = DATA_EVENT_TRIGGER_DATABASE.get(
+            trigger_id
+        )
+
+
+        if trigger:
+
+            trigger.enabled = False
+
+
+
+    def enable(
+        self,
+        trigger_id: str,
+    ) -> None:
+
+        trigger = DATA_EVENT_TRIGGER_DATABASE.get(
+            trigger_id
+        )
+
+
+        if trigger:
+
+            trigger.enabled = True
+
+
+
+    def active(
+        self,
+    ) -> List[DataEventTrigger]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_EVENT_TRIGGER_DATABASE.values()
+
+            if item.enabled
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "triggers":
+
+                len(
+                    DATA_EVENT_TRIGGER_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active()
+                ),
+
+            "executions":
+
+                sum(
+
+                    item.trigger_count
+
+                    for item
+
+                    in DATA_EVENT_TRIGGER_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_EVENT_TRIGGER_DATABASE.clear()
+
+
+
+DATA_EVENT_TRIGGER_ENGINE = (
+    DataEventTriggerEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 357
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 358
+# ==========================================================
+
+class DataWorkflowDefinition(BaseModel):
+
+    id: str
+
+    workflow_name: str
+
+    workflow_type: str = ""
+
+    description: str = ""
+
+    steps: List[Dict[str, Any]] = Field(
+        default_factory=list
+    )
+
+    input_sources: List[str] = Field(
+        default_factory=list
+    )
+
+    output_targets: List[str] = Field(
+        default_factory=list
+    )
+
+    version: str = "1.0"
+
+    enabled: bool = True
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    execution_count: int = 0
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_DATABASE: Dict[
+    str,
+    DataWorkflowDefinition,
+] = {}
+
+
+
+class DataWorkflowEngine:
+
+
+    def register(
+        self,
+        workflow: DataWorkflowDefinition,
+    ) -> None:
+
+        workflow.created_time = utc_now()
+
+        workflow.updated_time = utc_now()
+
+        DATA_WORKFLOW_DATABASE[
+            workflow.id
+        ] = workflow
+
+
+
+    def add_step(
+        self,
+        workflow_id: str,
+        step: Dict[str, Any],
+    ) -> None:
+
+        workflow = DATA_WORKFLOW_DATABASE.get(
+            workflow_id
+        )
+
+
+        if workflow is None:
+
+            return
+
+
+        workflow.steps.append(
+            step
+        )
+
+        workflow.updated_time = utc_now()
+
+
+
+    def execute(
+        self,
+        workflow_id: str,
+        payload: Dict[str, Any],
+    ) -> Dict[str, Any]:
+
+        workflow = DATA_WORKFLOW_DATABASE.get(
+            workflow_id
+        )
+
+
+        if workflow is None:
+
+            return {
+
+                "success":
+
+                    False,
+
+                "error":
+
+                    "Workflow not found",
+
+            }
+
+
+
+        if not workflow.enabled:
+
+            return {
+
+                "success":
+
+                    False,
+
+                "error":
+
+                    "Workflow disabled",
+
+            }
+
+
+
+        result = payload.copy()
+
+
+        for step in workflow.steps:
+
+            action = step.get(
+                "action"
+            )
+
+
+            field = step.get(
+                "field"
+            )
+
+
+            if action == "COPY":
+
+                result[field] = (
+
+                    payload.get(
+                        field
+                    )
+
+                )
+
+
+            elif action == "REMOVE":
+
+                result.pop(
+                    field,
+                    None,
+                )
+
+
+            elif action == "SET":
+
+                result[field] = step.get(
+                    "value"
+                )
+
+
+        workflow.execution_count += 1
+
+        workflow.updated_time = utc_now()
+
+
+        return {
+
+            "success":
+
+                True,
+
+            "workflow":
+
+                workflow.workflow_name,
+
+            "result":
+
+                result,
+
+            "time":
+
+                utc_now(),
+
+        }
+
+
+
+    def get(
+        self,
+        workflow_id: str,
+    ) -> Optional[DataWorkflowDefinition]:
+
+        return DATA_WORKFLOW_DATABASE.get(
+            workflow_id
+        )
+
+
+
+    def active_workflows(
+        self,
+    ) -> List[DataWorkflowDefinition]:
+
+        return [
+
+            workflow
+
+            for workflow
+
+            in DATA_WORKFLOW_DATABASE.values()
+
+            if workflow.enabled
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "workflows":
+
+                len(
+                    DATA_WORKFLOW_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_workflows()
+                ),
+
+            "executions":
+
+                sum(
+
+                    item.execution_count
+
+                    for item
+
+                    in DATA_WORKFLOW_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_ENGINE = (
+    DataWorkflowEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 358
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 359
+# ==========================================================
+
+class DataWorkflowExecution(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    execution_id: str = ""
+
+    input_payload: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    output_payload: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    current_step: int = 0
+
+    total_steps: int = 0
+
+    started_time: Optional[
+        datetime
+    ] = None
+
+    completed_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "STARTED"
+
+    error_message: str = ""
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_EXECUTION_DATABASE: Dict[
+    str,
+    DataWorkflowExecution,
+] = {}
+
+
+
+class DataWorkflowExecutionEngine:
+
+
+    def create(
+        self,
+        execution: DataWorkflowExecution,
+    ) -> None:
+
+        execution.started_time = utc_now()
+
+        DATA_WORKFLOW_EXECUTION_DATABASE[
+            execution.id
+        ] = execution
+
+
+
+    def update_step(
+        self,
+        execution_id: str,
+        step: int,
+    ) -> None:
+
+        execution = (
+            DATA_WORKFLOW_EXECUTION_DATABASE.get(
+                execution_id
+            )
+        )
+
+
+        if execution is None:
+
+            return
+
+
+        execution.current_step = step
+
+
+
+    def complete(
+        self,
+        execution_id: str,
+        output: Dict[str, Any],
+    ) -> None:
+
+        execution = (
+            DATA_WORKFLOW_EXECUTION_DATABASE.get(
+                execution_id
+            )
+        )
+
+
+        if execution is None:
+
+            return
+
+
+        execution.output_payload = output
+
+        execution.completed_time = utc_now()
+
+        execution.status = (
+            "COMPLETED"
+        )
+
+
+
+    def fail(
+        self,
+        execution_id: str,
+        error: str,
+    ) -> None:
+
+        execution = (
+            DATA_WORKFLOW_EXECUTION_DATABASE.get(
+                execution_id
+            )
+        )
+
+
+        if execution:
+
+            execution.error_message = error
+
+            execution.status = (
+                "FAILED"
+            )
+
+            execution.completed_time = utc_now()
+
+
+
+    def running(
+        self,
+    ) -> List[DataWorkflowExecution]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_EXECUTION_DATABASE.values()
+
+            if item.status
+            ==
+            "STARTED"
+
+        ]
+
+
+
+    def history(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowExecution]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_EXECUTION_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        executions = list(
+            DATA_WORKFLOW_EXECUTION_DATABASE.values()
+        )
+
+
+        return {
+
+            "executions":
+
+                len(executions),
+
+            "completed":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in executions
+
+                        if x.status
+                        ==
+                        "COMPLETED"
+
+                    ]
+
+                ),
+
+            "failed":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in executions
+
+                        if x.status
+                        ==
+                        "FAILED"
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_EXECUTION_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_EXECUTION_ENGINE = (
+    DataWorkflowExecutionEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 359
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 360
+# ==========================================================
+
+class DataWorkflowDependency(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    dependency_type: str = ""
+
+    source_component: str = ""
+
+    target_component: str = ""
+
+    dependency_order: int = 0
+
+    required: bool = True
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_DEPENDENCY_DATABASE: Dict[
+    str,
+    DataWorkflowDependency,
+] = {}
+
+
+
+class DataWorkflowDependencyEngine:
+
+
+    def register(
+        self,
+        dependency: DataWorkflowDependency,
+    ) -> None:
+
+        dependency.created_time = utc_now()
+
+        dependency.updated_time = utc_now()
+
+        DATA_WORKFLOW_DEPENDENCY_DATABASE[
+            dependency.id
+        ] = dependency
+
+
+
+    def dependencies(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowDependency]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_DEPENDENCY_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def execution_order(
+        self,
+        workflow_id: str,
+    ) -> List[str]:
+
+        deps = self.dependencies(
+            workflow_id
+        )
+
+
+        ordered = sorted(
+
+            deps,
+
+            key=lambda x:
+
+            x.dependency_order,
+
+        )
+
+
+        return [
+
+            item.target_component
+
+            for item
+
+            in ordered
+
+        ]
+
+
+
+    def check_ready(
+        self,
+        workflow_id: str,
+        completed_components: List[str],
+    ) -> bool:
+
+        dependencies = self.dependencies(
+            workflow_id
+        )
+
+
+        for dependency in dependencies:
+
+            if (
+
+                dependency.required
+
+                and
+
+                dependency.source_component
+
+                not
+
+                in
+
+                completed_components
+
+            ):
+
+                return False
+
+
+        return True
+
+
+
+    def disable(
+        self,
+        dependency_id: str,
+    ) -> None:
+
+        dependency = (
+            DATA_WORKFLOW_DEPENDENCY_DATABASE.get(
+                dependency_id
+            )
+        )
+
+
+        if dependency:
+
+            dependency.status = (
+                "DISABLED"
+            )
+
+            dependency.updated_time = utc_now()
+
+
+
+    def active(
+        self,
+    ) -> List[DataWorkflowDependency]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_DEPENDENCY_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "dependencies":
+
+                len(
+                    DATA_WORKFLOW_DEPENDENCY_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_DEPENDENCY_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_DEPENDENCY_ENGINE = (
+    DataWorkflowDependencyEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 360
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 361
+# ==========================================================
+
+class DataWorkflowState(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    component_id: str = ""
+
+    state_name: str = ""
+
+    state_value: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    version: int = 1
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_STATE_DATABASE: Dict[
+    str,
+    DataWorkflowState,
+] = {}
+
+
+
+class DataWorkflowStateEngine:
+
+
+    def create(
+        self,
+        state: DataWorkflowState,
+    ) -> None:
+
+        state.created_time = utc_now()
+
+        state.updated_time = utc_now()
+
+        DATA_WORKFLOW_STATE_DATABASE[
+            state.id
+        ] = state
+
+
+
+    def update(
+        self,
+        state_id: str,
+        values: Dict[str, Any],
+    ) -> None:
+
+        state = (
+            DATA_WORKFLOW_STATE_DATABASE.get(
+                state_id
+            )
+        )
+
+
+        if state is None:
+
+            return
+
+
+        state.state_value.update(
+            values
+        )
+
+        state.version += 1
+
+        state.updated_time = utc_now()
+
+
+
+    def get(
+        self,
+        state_id: str,
+    ) -> Optional[DataWorkflowState]:
+
+        return DATA_WORKFLOW_STATE_DATABASE.get(
+            state_id
+        )
+
+
+
+    def workflow_states(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowState]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_STATE_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def rollback(
+        self,
+        state_id: str,
+        version: int,
+    ) -> None:
+
+        state = (
+            DATA_WORKFLOW_STATE_DATABASE.get(
+                state_id
+            )
+        )
+
+
+        if state is None:
+
+            return
+
+
+        state.version = version
+
+        state.updated_time = utc_now()
+
+
+
+    def disable(
+        self,
+        state_id: str,
+    ) -> None:
+
+        state = (
+            DATA_WORKFLOW_STATE_DATABASE.get(
+                state_id
+            )
+        )
+
+
+        if state:
+
+            state.status = (
+                "DISABLED"
+            )
+
+
+
+    def active_states(
+        self,
+    ) -> List[DataWorkflowState]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_STATE_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "states":
+
+                len(
+                    DATA_WORKFLOW_STATE_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active_states()
+                ),
+
+            "versions":
+
+                sum(
+
+                    item.version
+
+                    for item
+
+                    in DATA_WORKFLOW_STATE_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_STATE_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_STATE_ENGINE = (
+    DataWorkflowStateEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 361
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 362
+# ==========================================================
+
+class DataWorkflowMonitor(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    monitor_name: str = ""
+
+    metric_type: str = ""
+
+    threshold: float = 0.0
+
+    current_value: float = 0.0
+
+    warning_level: str = "NORMAL"
+
+    last_check: Optional[
+        datetime
+    ] = None
+
+    check_count: int = 0
+
+    alert_count: int = 0
+
+    enabled: bool = True
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_MONITOR_DATABASE: Dict[
+    str,
+    DataWorkflowMonitor,
+] = {}
+
+
+
+class DataWorkflowMonitorEngine:
+
+
+    def register(
+        self,
+        monitor: DataWorkflowMonitor,
+    ) -> None:
+
+        DATA_WORKFLOW_MONITOR_DATABASE[
+            monitor.id
+        ] = monitor
+
+
+
+    def check(
+        self,
+        monitor_id: str,
+        value: float,
+    ) -> str:
+
+        monitor = (
+            DATA_WORKFLOW_MONITOR_DATABASE.get(
+                monitor_id
+            )
+        )
+
+
+        if monitor is None:
+
+            return "NOT_FOUND"
+
+
+        if not monitor.enabled:
+
+            return "DISABLED"
+
+
+        monitor.current_value = value
+
+        monitor.last_check = utc_now()
+
+        monitor.check_count += 1
+
+
+        if value >= monitor.threshold:
+
+            monitor.warning_level = (
+                "WARNING"
+            )
+
+            monitor.alert_count += 1
+
+
+        else:
+
+            monitor.warning_level = (
+                "NORMAL"
+            )
+
+
+        return monitor.warning_level
+
+
+
+    def enable(
+        self,
+        monitor_id: str,
+    ) -> None:
+
+        monitor = (
+            DATA_WORKFLOW_MONITOR_DATABASE.get(
+                monitor_id
+            )
+        )
+
+
+        if monitor:
+
+            monitor.enabled = True
+
+
+
+    def disable(
+        self,
+        monitor_id: str,
+    ) -> None:
+
+        monitor = (
+            DATA_WORKFLOW_MONITOR_DATABASE.get(
+                monitor_id
+            )
+        )
+
+
+        if monitor:
+
+            monitor.enabled = False
+
+
+
+    def workflow_monitors(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowMonitor]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_MONITOR_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def alerts(
+        self,
+    ) -> List[DataWorkflowMonitor]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_MONITOR_DATABASE.values()
+
+            if item.warning_level
+            ==
+            "WARNING"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "monitors":
+
+                len(
+                    DATA_WORKFLOW_MONITOR_DATABASE
+                ),
+
+            "active":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in DATA_WORKFLOW_MONITOR_DATABASE.values()
+
+                        if x.enabled
+
+                    ]
+
+                ),
+
+            "alerts":
+
+                len(
+                    self.alerts()
+                ),
+
+            "checks":
+
+                sum(
+
+                    item.check_count
+
+                    for item
+
+                    in DATA_WORKFLOW_MONITOR_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_MONITOR_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_MONITOR_ENGINE = (
+    DataWorkflowMonitorEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 362
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 363
+# ==========================================================
+
+class DataWorkflowMetrics(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    metric_name: str = ""
+
+    metric_type: str = ""
+
+    value: float = 0.0
+
+    unit: str = ""
+
+    collection_time: Optional[
+        datetime
+    ] = None
+
+    aggregation_type: str = ""
+
+    sample_count: int = 0
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_METRICS_DATABASE: Dict[
+    str,
+    DataWorkflowMetrics,
+] = {}
+
+
+
+class DataWorkflowMetricsEngine:
+
+
+    def record(
+        self,
+        metric: DataWorkflowMetrics,
+    ) -> None:
+
+        metric.collection_time = utc_now()
+
+        DATA_WORKFLOW_METRICS_DATABASE[
+            metric.id
+        ] = metric
+
+
+
+    def update(
+        self,
+        metric_id: str,
+        value: float,
+    ) -> None:
+
+        metric = (
+            DATA_WORKFLOW_METRICS_DATABASE.get(
+                metric_id
+            )
+        )
+
+
+        if metric is None:
+
+            return
+
+
+        metric.value = value
+
+        metric.sample_count += 1
+
+        metric.collection_time = utc_now()
+
+
+
+    def increment(
+        self,
+        metric_id: str,
+        amount: float = 1,
+    ) -> None:
+
+        metric = (
+            DATA_WORKFLOW_METRICS_DATABASE.get(
+                metric_id
+            )
+        )
+
+
+        if metric:
+
+            metric.value += amount
+
+            metric.sample_count += 1
+
+            metric.collection_time = utc_now()
+
+
+
+    def get(
+        self,
+        metric_id: str,
+    ) -> Optional[DataWorkflowMetrics]:
+
+        return DATA_WORKFLOW_METRICS_DATABASE.get(
+            metric_id
+        )
+
+
+
+    def workflow_metrics(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowMetrics]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_METRICS_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def average(
+        self,
+        workflow_id: str,
+    ) -> float:
+
+        metrics = self.workflow_metrics(
+            workflow_id
+        )
+
+
+        if not metrics:
+
+            return 0.0
+
+
+        return sum(
+
+            item.value
+
+            for item
+
+            in metrics
+
+        ) / len(metrics)
+
+
+
+    def highest(
+        self,
+    ) -> Optional[DataWorkflowMetrics]:
+
+        metrics = list(
+            DATA_WORKFLOW_METRICS_DATABASE.values()
+        )
+
+
+        if not metrics:
+
+            return None
+
+
+        return max(
+
+            metrics,
+
+            key=lambda x:
+
+            x.value,
+
+        )
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "metrics":
+
+                len(
+                    DATA_WORKFLOW_METRICS_DATABASE
+                ),
+
+            "samples":
+
+                sum(
+
+                    item.sample_count
+
+                    for item
+
+                    in DATA_WORKFLOW_METRICS_DATABASE.values()
+
+                ),
+
+            "average":
+
+                (
+
+                    sum(
+
+                        item.value
+
+                        for item
+
+                        in DATA_WORKFLOW_METRICS_DATABASE.values()
+
+                    )
+
+                    /
+
+                    max(
+
+                        len(
+                            DATA_WORKFLOW_METRICS_DATABASE
+                        ),
+
+                        1,
+
+                    )
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_METRICS_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_METRICS_ENGINE = (
+    DataWorkflowMetricsEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 363
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 364
+# ==========================================================
+
+class DataWorkflowLogRecord(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    execution_id: str = ""
+
+    log_level: str = "INFO"
+
+    message: str = ""
+
+    component: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    error_code: str = ""
+
+    stack_trace: str = ""
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_LOG_DATABASE: Dict[
+    str,
+    DataWorkflowLogRecord,
+] = {}
+
+
+
+class DataWorkflowLogEngine:
+
+
+    def write(
+        self,
+        log: DataWorkflowLogRecord,
+    ) -> None:
+
+        log.created_time = utc_now()
+
+        DATA_WORKFLOW_LOG_DATABASE[
+            log.id
+        ] = log
+
+
+
+    def info(
+        self,
+        workflow_id: str,
+        message: str,
+        component: str = "",
+    ) -> None:
+
+        self.write(
+
+            DataWorkflowLogRecord(
+
+                id=f"LOG_{uuid4()}",
+
+                workflow_id=workflow_id,
+
+                log_level="INFO",
+
+                message=message,
+
+                component=component,
+
+            )
+
+        )
+
+
+
+    def warning(
+        self,
+        workflow_id: str,
+        message: str,
+    ) -> None:
+
+        self.write(
+
+            DataWorkflowLogRecord(
+
+                id=f"LOG_{uuid4()}",
+
+                workflow_id=workflow_id,
+
+                log_level="WARNING",
+
+                message=message,
+
+            )
+
+        )
+
+
+
+    def error(
+        self,
+        workflow_id: str,
+        message: str,
+        error_code: str = "",
+    ) -> None:
+
+        self.write(
+
+            DataWorkflowLogRecord(
+
+                id=f"LOG_{uuid4()}",
+
+                workflow_id=workflow_id,
+
+                log_level="ERROR",
+
+                message=message,
+
+                error_code=error_code,
+
+            )
+
+        )
+
+
+
+    def workflow_logs(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowLogRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_LOG_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def execution_logs(
+        self,
+        execution_id: str,
+    ) -> List[DataWorkflowLogRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_LOG_DATABASE.values()
+
+            if item.execution_id
+            ==
+            execution_id
+
+        ]
+
+
+
+    def errors(
+        self,
+    ) -> List[DataWorkflowLogRecord]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_LOG_DATABASE.values()
+
+            if item.log_level
+            ==
+            "ERROR"
+
+        ]
+
+
+
+    def latest(
+        self,
+        limit: int = 100,
+    ) -> List[DataWorkflowLogRecord]:
+
+        return sorted(
+
+            DATA_WORKFLOW_LOG_DATABASE.values(),
+
+            key=lambda x:
+
+            x.created_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )[:limit]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        logs = list(
+            DATA_WORKFLOW_LOG_DATABASE.values()
+        )
+
+
+        return {
+
+            "total":
+
+                len(logs),
+
+            "errors":
+
+                len(
+                    self.errors()
+                ),
+
+            "warnings":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in logs
+
+                        if x.log_level
+                        ==
+                        "WARNING"
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_LOG_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_LOG_ENGINE = (
+    DataWorkflowLogEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 364
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 365
+# ==========================================================
+
+class DataWorkflowCheckpoint(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    execution_id: str = ""
+
+    checkpoint_name: str = ""
+
+    checkpoint_data: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+    step_number: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    restored_count: int = 0
+
+    status: str = "AVAILABLE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_CHECKPOINT_DATABASE: Dict[
+    str,
+    DataWorkflowCheckpoint,
+] = {}
+
+
+
+class DataWorkflowCheckpointEngine:
+
+
+    def create(
+        self,
+        checkpoint: DataWorkflowCheckpoint,
+    ) -> None:
+
+        checkpoint.created_time = utc_now()
+
+        DATA_WORKFLOW_CHECKPOINT_DATABASE[
+            checkpoint.id
+        ] = checkpoint
+
+
+
+    def save(
+        self,
+        workflow_id: str,
+        execution_id: str,
+        name: str,
+        data: Dict[str, Any],
+        step: int,
+    ) -> DataWorkflowCheckpoint:
+
+        checkpoint = DataWorkflowCheckpoint(
+
+            id=f"CHECKPOINT_{uuid4()}",
+
+            workflow_id=workflow_id,
+
+            execution_id=execution_id,
+
+            checkpoint_name=name,
+
+            checkpoint_data=data,
+
+            step_number=step,
+
+        )
+
+
+        self.create(
+            checkpoint
+        )
+
+
+        return checkpoint
+
+
+
+    def restore(
+        self,
+        checkpoint_id: str,
+    ) -> Optional[Dict[str, Any]]:
+
+        checkpoint = (
+            DATA_WORKFLOW_CHECKPOINT_DATABASE.get(
+                checkpoint_id
+            )
+        )
+
+
+        if checkpoint is None:
+
+            return None
+
+
+        checkpoint.restored_count += 1
+
+
+        return checkpoint.checkpoint_data
+
+
+
+    def execution_history(
+        self,
+        execution_id: str,
+    ) -> List[DataWorkflowCheckpoint]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_CHECKPOINT_DATABASE.values()
+
+            if item.execution_id
+            ==
+            execution_id
+
+        ]
+
+
+
+    def latest(
+        self,
+        workflow_id: str,
+    ) -> Optional[DataWorkflowCheckpoint]:
+
+        checkpoints = [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_CHECKPOINT_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+        if not checkpoints:
+
+            return None
+
+
+        return sorted(
+
+            checkpoints,
+
+            key=lambda x:
+
+            x.created_time
+
+            or
+
+            utc_now(),
+
+            reverse=True,
+
+        )[0]
+
+
+
+    def remove(
+        self,
+        checkpoint_id: str,
+    ) -> None:
+
+        DATA_WORKFLOW_CHECKPOINT_DATABASE.pop(
+
+            checkpoint_id,
+
+            None,
+
+        )
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "checkpoints":
+
+                len(
+                    DATA_WORKFLOW_CHECKPOINT_DATABASE
+                ),
+
+            "restores":
+
+                sum(
+
+                    item.restored_count
+
+                    for item
+
+                    in DATA_WORKFLOW_CHECKPOINT_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_CHECKPOINT_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_CHECKPOINT_ENGINE = (
+    DataWorkflowCheckpointEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 365
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 366
+# ==========================================================
+
+class DataWorkflowRecovery(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    execution_id: str = ""
+
+    recovery_type: str = ""
+
+    checkpoint_id: str = ""
+
+    recovery_reason: str = ""
+
+    started_time: Optional[
+        datetime
+    ] = None
+
+    completed_time: Optional[
+        datetime
+    ] = None
+
+    recovered_step: int = 0
+
+    status: str = "PENDING"
+
+    error_message: str = ""
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_RECOVERY_DATABASE: Dict[
+    str,
+    DataWorkflowRecovery,
+] = {}
+
+
+
+class DataWorkflowRecoveryEngine:
+
+
+    def create(
+        self,
+        recovery: DataWorkflowRecovery,
+    ) -> None:
+
+        recovery.started_time = utc_now()
+
+        DATA_WORKFLOW_RECOVERY_DATABASE[
+            recovery.id
+        ] = recovery
+
+
+
+    def start(
+        self,
+        recovery_id: str,
+    ) -> bool:
+
+        recovery = (
+            DATA_WORKFLOW_RECOVERY_DATABASE.get(
+                recovery_id
+            )
+        )
+
+
+        if recovery is None:
+
+            return False
+
+
+        recovery.status = (
+            "RUNNING"
+        )
+
+        recovery.started_time = utc_now()
+
+
+        return True
+
+
+
+    def restore_checkpoint(
+        self,
+        recovery_id: str,
+        checkpoint_id: str,
+    ) -> bool:
+
+        recovery = (
+            DATA_WORKFLOW_RECOVERY_DATABASE.get(
+                recovery_id
+            )
+        )
+
+
+        checkpoint = (
+            DATA_WORKFLOW_CHECKPOINT_DATABASE.get(
+                checkpoint_id
+            )
+        )
+
+
+        if (
+
+            recovery is None
+
+            or
+
+            checkpoint is None
+
+        ):
+
+            return False
+
+
+        recovery.checkpoint_id = (
+            checkpoint_id
+        )
+
+        recovery.recovered_step = (
+            checkpoint.step_number
+        )
+
+
+        recovery.status = (
+            "RECOVERED"
+        )
+
+        recovery.completed_time = utc_now()
+
+
+        return True
+
+
+
+    def fail(
+        self,
+        recovery_id: str,
+        error: str,
+    ) -> None:
+
+        recovery = (
+            DATA_WORKFLOW_RECOVERY_DATABASE.get(
+                recovery_id
+            )
+        )
+
+
+        if recovery:
+
+            recovery.status = (
+                "FAILED"
+            )
+
+            recovery.error_message = error
+
+            recovery.completed_time = utc_now()
+
+
+
+    def active(
+        self,
+    ) -> List[DataWorkflowRecovery]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_RECOVERY_DATABASE.values()
+
+            if item.status
+            ==
+            "RUNNING"
+
+        ]
+
+
+
+    def history(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowRecovery]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_RECOVERY_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        recoveries = list(
+            DATA_WORKFLOW_RECOVERY_DATABASE.values()
+        )
+
+
+        return {
+
+            "recoveries":
+
+                len(recoveries),
+
+            "successful":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in recoveries
+
+                        if x.status
+                        ==
+                        "RECOVERED"
+
+                    ]
+
+                ),
+
+            "failed":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in recoveries
+
+                        if x.status
+                        ==
+                        "FAILED"
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_RECOVERY_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_RECOVERY_ENGINE = (
+    DataWorkflowRecoveryEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 366
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 367
+# ==========================================================
+
+class DataWorkflowRetryPolicy(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    policy_name: str = ""
+
+    max_retry: int = 3
+
+    retry_interval_seconds: int = 60
+
+    backoff_strategy: str = "LINEAR"
+
+    retry_count: int = 0
+
+    success_after_retry: int = 0
+
+    failed_after_retry: int = 0
+
+    enabled: bool = True
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_RETRY_DATABASE: Dict[
+    str,
+    DataWorkflowRetryPolicy,
+] = {}
+
+
+
+class DataWorkflowRetryEngine:
+
+
+    def register(
+        self,
+        policy: DataWorkflowRetryPolicy,
+    ) -> None:
+
+        policy.created_time = utc_now()
+
+        policy.updated_time = utc_now()
+
+        DATA_WORKFLOW_RETRY_DATABASE[
+            policy.id
+        ] = policy
+
+
+
+    def should_retry(
+        self,
+        policy_id: str,
+    ) -> bool:
+
+        policy = (
+            DATA_WORKFLOW_RETRY_DATABASE.get(
+                policy_id
+            )
+        )
+
+
+        if policy is None:
+
+            return False
+
+
+        if not policy.enabled:
+
+            return False
+
+
+        return (
+
+            policy.retry_count
+
+            <
+
+            policy.max_retry
+
+        )
+
+
+
+    def retry(
+        self,
+        policy_id: str,
+    ) -> int:
+
+        policy = (
+            DATA_WORKFLOW_RETRY_DATABASE.get(
+                policy_id
+            )
+        )
+
+
+        if policy is None:
+
+            return 0
+
+
+        if self.should_retry(policy_id):
+
+            policy.retry_count += 1
+
+            policy.updated_time = utc_now()
+
+
+            return policy.retry_count
+
+
+
+        return policy.retry_count
+
+
+
+    def success(
+        self,
+        policy_id: str,
+    ) -> None:
+
+        policy = (
+            DATA_WORKFLOW_RETRY_DATABASE.get(
+                policy_id
+            )
+        )
+
+
+        if policy:
+
+            policy.success_after_retry += 1
+
+            policy.retry_count = 0
+
+            policy.updated_time = utc_now()
+
+
+
+    def failed(
+        self,
+        policy_id: str,
+    ) -> None:
+
+        policy = (
+            DATA_WORKFLOW_RETRY_DATABASE.get(
+                policy_id
+            )
+        )
+
+
+        if policy:
+
+            policy.failed_after_retry += 1
+
+            policy.updated_time = utc_now()
+
+
+
+    def active(
+        self,
+    ) -> List[DataWorkflowRetryPolicy]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_RETRY_DATABASE.values()
+
+            if item.enabled
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "policies":
+
+                len(
+                    DATA_WORKFLOW_RETRY_DATABASE
+                ),
+
+            "active":
+
+                len(
+                    self.active()
+                ),
+
+            "retries":
+
+                sum(
+
+                    item.retry_count
+
+                    for item
+
+                    in DATA_WORKFLOW_RETRY_DATABASE.values()
+
+                ),
+
+            "successful":
+
+                sum(
+
+                    item.success_after_retry
+
+                    for item
+
+                    in DATA_WORKFLOW_RETRY_DATABASE.values()
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_RETRY_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_RETRY_ENGINE = (
+    DataWorkflowRetryEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 367
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 368
+# ==========================================================
+
+class DataWorkflowQueue(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    queue_name: str = ""
+
+    queue_type: str = ""
+
+    max_size: int = 10000
+
+    current_size: int = 0
+
+    processed_count: int = 0
+
+    failed_count: int = 0
+
+    priority_level: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_QUEUE_DATABASE: Dict[
+    str,
+    DataWorkflowQueue,
+] = {}
+
+
+
+class DataWorkflowQueueEngine:
+
+
+    def register(
+        self,
+        queue: DataWorkflowQueue,
+    ) -> None:
+
+        queue.created_time = utc_now()
+
+        queue.updated_time = utc_now()
+
+        DATA_WORKFLOW_QUEUE_DATABASE[
+            queue.id
+        ] = queue
+
+
+
+    def push(
+        self,
+        queue_id: str,
+    ) -> bool:
+
+        queue = (
+            DATA_WORKFLOW_QUEUE_DATABASE.get(
+                queue_id
+            )
+        )
+
+
+        if queue is None:
+
+            return False
+
+
+        if queue.current_size >= queue.max_size:
+
+            return False
+
+
+        queue.current_size += 1
+
+        queue.updated_time = utc_now()
+
+
+        return True
+
+
+
+    def pop(
+        self,
+        queue_id: str,
+    ) -> bool:
+
+        queue = (
+            DATA_WORKFLOW_QUEUE_DATABASE.get(
+                queue_id
+            )
+        )
+
+
+        if queue is None:
+
+            return False
+
+
+        if queue.current_size <= 0:
+
+            return False
+
+
+        queue.current_size -= 1
+
+        queue.processed_count += 1
+
+        queue.updated_time = utc_now()
+
+
+        return True
+
+
+
+    def fail(
+        self,
+        queue_id: str,
+    ) -> None:
+
+        queue = (
+            DATA_WORKFLOW_QUEUE_DATABASE.get(
+                queue_id
+            )
+        )
+
+
+        if queue:
+
+            queue.failed_count += 1
+
+            queue.updated_time = utc_now()
+
+
+
+    def clear_queue(
+        self,
+        queue_id: str,
+    ) -> None:
+
+        queue = (
+            DATA_WORKFLOW_QUEUE_DATABASE.get(
+                queue_id
+            )
+        )
+
+
+        if queue:
+
+            queue.current_size = 0
+
+            queue.updated_time = utc_now()
+
+
+
+    def workflow_queues(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowQueue]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_QUEUE_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def active_queues(
+        self,
+    ) -> List[DataWorkflowQueue]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_QUEUE_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        queues = list(
+            DATA_WORKFLOW_QUEUE_DATABASE.values()
+        )
+
+
+        return {
+
+            "queues":
+
+                len(queues),
+
+            "active":
+
+                len(
+                    self.active_queues()
+                ),
+
+            "pending":
+
+                sum(
+
+                    item.current_size
+
+                    for item
+
+                    in queues
+
+                ),
+
+            "processed":
+
+                sum(
+
+                    item.processed_count
+
+                    for item
+
+                    in queues
+
+                ),
+
+            "failed":
+
+                sum(
+
+                    item.failed_count
+
+                    for item
+
+                    in queues
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_QUEUE_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_QUEUE_ENGINE = (
+    DataWorkflowQueueEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 368
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 369
+# ==========================================================
+
+class DataWorkflowWorker(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    worker_name: str = ""
+
+    worker_type: str = ""
+
+    capacity: int = 1
+
+    active_tasks: int = 0
+
+    completed_tasks: int = 0
+
+    failed_tasks: int = 0
+
+    last_activity: Optional[
+        datetime
+    ] = None
+
+    status: str = "IDLE"
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_WORKER_DATABASE: Dict[
+    str,
+    DataWorkflowWorker,
+] = {}
+
+
+
+class DataWorkflowWorkerEngine:
+
+
+    def register(
+        self,
+        worker: DataWorkflowWorker,
+    ) -> None:
+
+        worker.created_time = utc_now()
+
+        DATA_WORKFLOW_WORKER_DATABASE[
+            worker.id
+        ] = worker
+
+
+
+    def assign_task(
+        self,
+        worker_id: str,
+    ) -> bool:
+
+        worker = (
+            DATA_WORKFLOW_WORKER_DATABASE.get(
+                worker_id
+            )
+        )
+
+
+        if worker is None:
+
+            return False
+
+
+        if worker.active_tasks >= worker.capacity:
+
+            return False
+
+
+        worker.active_tasks += 1
+
+        worker.status = (
+            "WORKING"
+        )
+
+        worker.last_activity = utc_now()
+
+
+        return True
+
+
+
+    def complete_task(
+        self,
+        worker_id: str,
+    ) -> None:
+
+        worker = (
+            DATA_WORKFLOW_WORKER_DATABASE.get(
+                worker_id
+            )
+        )
+
+
+        if worker is None:
+
+            return
+
+
+        if worker.active_tasks > 0:
+
+            worker.active_tasks -= 1
+
+
+        worker.completed_tasks += 1
+
+        worker.last_activity = utc_now()
+
+
+        if worker.active_tasks == 0:
+
+            worker.status = (
+                "IDLE"
+            )
+
+
+
+    def fail_task(
+        self,
+        worker_id: str,
+    ) -> None:
+
+        worker = (
+            DATA_WORKFLOW_WORKER_DATABASE.get(
+                worker_id
+            )
+        )
+
+
+        if worker:
+
+            if worker.active_tasks > 0:
+
+                worker.active_tasks -= 1
+
+
+            worker.failed_tasks += 1
+
+            worker.last_activity = utc_now()
+
+
+
+    def available_workers(
+        self,
+    ) -> List[DataWorkflowWorker]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_WORKER_DATABASE.values()
+
+            if item.active_tasks < item.capacity
+
+        ]
+
+
+
+    def busy_workers(
+        self,
+    ) -> List[DataWorkflowWorker]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_WORKER_DATABASE.values()
+
+            if item.active_tasks > 0
+
+        ]
+
+
+
+    def workflow_workers(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowWorker]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_WORKER_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        workers = list(
+            DATA_WORKFLOW_WORKER_DATABASE.values()
+        )
+
+
+        return {
+
+            "workers":
+
+                len(workers),
+
+            "working":
+
+                len(
+                    self.busy_workers()
+                ),
+
+            "completed":
+
+                sum(
+
+                    item.completed_tasks
+
+                    for item
+
+                    in workers
+
+                ),
+
+            "failed":
+
+                sum(
+
+                    item.failed_tasks
+
+                    for item
+
+                    in workers
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_WORKER_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_WORKER_ENGINE = (
+    DataWorkflowWorkerEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 369
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 370
+# ==========================================================
+
+class DataWorkflowWorkerPool(BaseModel):
+
+    id: str
+
+    pool_name: str
+
+    workflow_id: str = ""
+
+    worker_ids: List[str] = Field(
+        default_factory=list
+    )
+
+    max_workers: int = 10
+
+    active_workers: int = 0
+
+    completed_jobs: int = 0
+
+    failed_jobs: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_POOL_DATABASE: Dict[
+    str,
+    DataWorkflowWorkerPool,
+] = {}
+
+
+
+class DataWorkflowWorkerPoolEngine:
+
+
+    def register(
+        self,
+        pool: DataWorkflowWorkerPool,
+    ) -> None:
+
+        pool.created_time = utc_now()
+
+        pool.updated_time = utc_now()
+
+        DATA_WORKFLOW_POOL_DATABASE[
+            pool.id
+        ] = pool
+
+
+
+    def add_worker(
+        self,
+        pool_id: str,
+        worker_id: str,
+    ) -> bool:
+
+        pool = DATA_WORKFLOW_POOL_DATABASE.get(
+            pool_id
+        )
+
+
+        if pool is None:
+
+            return False
+
+
+        if len(pool.worker_ids) >= pool.max_workers:
+
+            return False
+
+
+        if worker_id not in pool.worker_ids:
+
+            pool.worker_ids.append(
+                worker_id
+            )
+
+            pool.updated_time = utc_now()
+
+
+
+        return True
+
+
+
+    def remove_worker(
+        self,
+        pool_id: str,
+        worker_id: str,
+    ) -> None:
+
+        pool = DATA_WORKFLOW_POOL_DATABASE.get(
+            pool_id
+        )
+
+
+        if pool is None:
+
+            return
+
+
+        if worker_id in pool.worker_ids:
+
+            pool.worker_ids.remove(
+                worker_id
+            )
+
+            pool.updated_time = utc_now()
+
+
+
+    def update_activity(
+        self,
+        pool_id: str,
+        active_count: int,
+    ) -> None:
+
+        pool = DATA_WORKFLOW_POOL_DATABASE.get(
+            pool_id
+        )
+
+
+        if pool:
+
+            pool.active_workers = active_count
+
+            pool.updated_time = utc_now()
+
+
+
+    def complete_job(
+        self,
+        pool_id: str,
+    ) -> None:
+
+        pool = DATA_WORKFLOW_POOL_DATABASE.get(
+            pool_id
+        )
+
+
+        if pool:
+
+            pool.completed_jobs += 1
+
+            pool.updated_time = utc_now()
+
+
+
+    def fail_job(
+        self,
+        pool_id: str,
+    ) -> None:
+
+        pool = DATA_WORKFLOW_POOL_DATABASE.get(
+            pool_id
+        )
+
+
+        if pool:
+
+            pool.failed_jobs += 1
+
+            pool.updated_time = utc_now()
+
+
+
+    def get(
+        self,
+        pool_id: str,
+    ) -> Optional[DataWorkflowWorkerPool]:
+
+        return DATA_WORKFLOW_POOL_DATABASE.get(
+            pool_id
+        )
+
+
+
+    def workflow_pools(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowWorkerPool]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_POOL_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def active_pools(
+        self,
+    ) -> List[DataWorkflowWorkerPool]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_POOL_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        pools = list(
+            DATA_WORKFLOW_POOL_DATABASE.values()
+        )
+
+
+        return {
+
+            "pools":
+
+                len(pools),
+
+            "active":
+
+                len(
+                    self.active_pools()
+                ),
+
+            "workers":
+
+                sum(
+
+                    len(
+                        item.worker_ids
+                    )
+
+                    for item
+
+                    in pools
+
+                ),
+
+            "completed":
+
+                sum(
+
+                    item.completed_jobs
+
+                    for item
+
+                    in pools
+
+                ),
+
+            "failed":
+
+                sum(
+
+                    item.failed_jobs
+
+                    for item
+
+                    in pools
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_POOL_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_WORKER_POOL_ENGINE = (
+    DataWorkflowWorkerPoolEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 370
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 371
+# ==========================================================
+
+class DataWorkflowLoadBalancer(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    balancer_name: str = ""
+
+    strategy: str = "ROUND_ROBIN"
+
+    worker_pool_id: str = ""
+
+    total_requests: int = 0
+
+    distributed_requests: int = 0
+
+    failed_requests: int = 0
+
+    current_worker_index: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_BALANCER_DATABASE: Dict[
+    str,
+    DataWorkflowLoadBalancer,
+] = {}
+
+
+
+class DataWorkflowLoadBalancerEngine:
+
+
+    def register(
+        self,
+        balancer: DataWorkflowLoadBalancer,
+    ) -> None:
+
+        balancer.created_time = utc_now()
+
+        balancer.updated_time = utc_now()
+
+        DATA_WORKFLOW_BALANCER_DATABASE[
+            balancer.id
+        ] = balancer
+
+
+
+    def select_worker(
+        self,
+        balancer_id: str,
+    ) -> Optional[str]:
+
+        balancer = (
+            DATA_WORKFLOW_BALANCER_DATABASE.get(
+                balancer_id
+            )
+        )
+
+
+        if balancer is None:
+
+            return None
+
+
+        pool = (
+            DATA_WORKFLOW_POOL_DATABASE.get(
+                balancer.worker_pool_id
+            )
+        )
+
+
+        if pool is None:
+
+            return None
+
+
+        workers = pool.worker_ids
+
+
+        if not workers:
+
+            return None
+
+
+
+        if balancer.strategy == "ROUND_ROBIN":
+
+            worker = workers[
+
+                balancer.current_worker_index
+
+                %
+
+                len(workers)
+
+            ]
+
+
+            balancer.current_worker_index += 1
+
+
+
+        else:
+
+            worker = workers[0]
+
+
+
+        balancer.total_requests += 1
+
+        balancer.distributed_requests += 1
+
+        balancer.updated_time = utc_now()
+
+
+
+        return worker
+
+
+
+    def failed_request(
+        self,
+        balancer_id: str,
+    ) -> None:
+
+        balancer = (
+            DATA_WORKFLOW_BALANCER_DATABASE.get(
+                balancer_id
+            )
+        )
+
+
+        if balancer:
+
+            balancer.failed_requests += 1
+
+            balancer.updated_time = utc_now()
+
+
+
+    def disable(
+        self,
+        balancer_id: str,
+    ) -> None:
+
+        balancer = (
+            DATA_WORKFLOW_BALANCER_DATABASE.get(
+                balancer_id
+            )
+        )
+
+
+        if balancer:
+
+            balancer.status = (
+                "DISABLED"
+            )
+
+
+
+    def enable(
+        self,
+        balancer_id: str,
+    ) -> None:
+
+        balancer = (
+            DATA_WORKFLOW_BALANCER_DATABASE.get(
+                balancer_id
+            )
+        )
+
+
+        if balancer:
+
+            balancer.status = (
+                "ACTIVE"
+            )
+
+
+
+    def active_balancers(
+        self,
+    ) -> List[DataWorkflowLoadBalancer]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_BALANCER_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        balancers = list(
+            DATA_WORKFLOW_BALANCER_DATABASE.values()
+        )
+
+
+        return {
+
+            "balancers":
+
+                len(balancers),
+
+            "active":
+
+                len(
+                    self.active_balancers()
+                ),
+
+            "requests":
+
+                sum(
+
+                    item.total_requests
+
+                    for item
+
+                    in balancers
+
+                ),
+
+            "distributed":
+
+                sum(
+
+                    item.distributed_requests
+
+                    for item
+
+                    in balancers
+
+                ),
+
+            "failed":
+
+                sum(
+
+                    item.failed_requests
+
+                    for item
+
+                    in balancers
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_BALANCER_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_LOAD_BALANCER_ENGINE = (
+    DataWorkflowLoadBalancerEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 371
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 372
+# ==========================================================
+
+class DataWorkflowResource(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    resource_name: str = ""
+
+    resource_type: str = ""
+
+    total_capacity: float = 0.0
+
+    allocated_capacity: float = 0.0
+
+    available_capacity: float = 0.0
+
+    usage_percent: float = 0.0
+
+    unit: str = ""
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "AVAILABLE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_WORKFLOW_RESOURCE_DATABASE: Dict[
+    str,
+    DataWorkflowResource,
+] = {}
+
+
+
+class DataWorkflowResourceEngine:
+
+
+    def register(
+        self,
+        resource: DataWorkflowResource,
+    ) -> None:
+
+        resource.created_time = utc_now()
+
+        resource.updated_time = utc_now()
+
+        resource.available_capacity = (
+
+            resource.total_capacity
+
+            -
+
+            resource.allocated_capacity
+
+        )
+
+
+        DATA_WORKFLOW_RESOURCE_DATABASE[
+            resource.id
+        ] = resource
+
+
+
+    def allocate(
+        self,
+        resource_id: str,
+        amount: float,
+    ) -> bool:
+
+        resource = (
+            DATA_WORKFLOW_RESOURCE_DATABASE.get(
+                resource_id
+            )
+        )
+
+
+        if resource is None:
+
+            return False
+
+
+        if resource.available_capacity < amount:
+
+            return False
+
+
+        resource.allocated_capacity += amount
+
+
+        resource.available_capacity = (
+
+            resource.total_capacity
+
+            -
+
+            resource.allocated_capacity
+
+        )
+
+
+        if resource.total_capacity > 0:
+
+            resource.usage_percent = (
+
+                resource.allocated_capacity
+
+                /
+
+                resource.total_capacity
+
+            ) * 100
+
+
+
+        resource.updated_time = utc_now()
+
+
+        if resource.available_capacity == 0:
+
+            resource.status = (
+                "FULL"
+            )
+
+
+        return True
+
+
+
+    def release(
+        self,
+        resource_id: str,
+        amount: float,
+    ) -> None:
+
+        resource = (
+            DATA_WORKFLOW_RESOURCE_DATABASE.get(
+                resource_id
+            )
+        )
+
+
+        if resource is None:
+
+            return
+
+
+        resource.allocated_capacity -= amount
+
+
+        if resource.allocated_capacity < 0:
+
+            resource.allocated_capacity = 0
+
+
+
+        resource.available_capacity = (
+
+            resource.total_capacity
+
+            -
+
+            resource.allocated_capacity
+
+        )
+
+
+        if resource.total_capacity > 0:
+
+            resource.usage_percent = (
+
+                resource.allocated_capacity
+
+                /
+
+                resource.total_capacity
+
+            ) * 100
+
+
+
+        resource.status = (
+            "AVAILABLE"
+        )
+
+
+        resource.updated_time = utc_now()
+
+
+
+    def workflow_resources(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowResource]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_RESOURCE_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def overloaded(
+        self,
+        threshold: float = 90,
+    ) -> List[DataWorkflowResource]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_WORKFLOW_RESOURCE_DATABASE.values()
+
+            if item.usage_percent >= threshold
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        resources = list(
+            DATA_WORKFLOW_RESOURCE_DATABASE.values()
+        )
+
+
+        return {
+
+            "resources":
+
+                len(resources),
+
+            "capacity":
+
+                sum(
+
+                    item.total_capacity
+
+                    for item
+
+                    in resources
+
+                ),
+
+            "allocated":
+
+                sum(
+
+                    item.allocated_capacity
+
+                    for item
+
+                    in resources
+
+                ),
+
+            "overloaded":
+
+                len(
+                    self.overloaded()
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_WORKFLOW_RESOURCE_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_RESOURCE_ENGINE = (
+    DataWorkflowResourceEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 372
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 373
+# ==========================================================
+
+class DataWorkflowResourceAllocation(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    resource_id: str
+
+    allocation_name: str = ""
+
+    requested_amount: float = 0.0
+
+    allocated_amount: float = 0.0
+
+    requester: str = ""
+
+    priority: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    completed_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "REQUESTED"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_RESOURCE_ALLOCATION_DATABASE: Dict[
+    str,
+    DataWorkflowResourceAllocation,
+] = {}
+
+
+
+class DataWorkflowResourceAllocationEngine:
+
+
+    def create(
+        self,
+        allocation: DataWorkflowResourceAllocation,
+    ) -> None:
+
+        allocation.created_time = utc_now()
+
+        DATA_RESOURCE_ALLOCATION_DATABASE[
+            allocation.id
+        ] = allocation
+
+
+
+    def request(
+        self,
+        allocation_id: str,
+    ) -> bool:
+
+        allocation = (
+            DATA_RESOURCE_ALLOCATION_DATABASE.get(
+                allocation_id
+            )
+        )
+
+
+        if allocation is None:
+
+            return False
+
+
+        allocation.status = (
+            "PROCESSING"
+        )
+
+
+        return True
+
+
+
+    def allocate(
+        self,
+        allocation_id: str,
+    ) -> bool:
+
+        allocation = (
+            DATA_RESOURCE_ALLOCATION_DATABASE.get(
+                allocation_id
+            )
+        )
+
+
+        if allocation is None:
+
+            return False
+
+
+        success = (
+            DATA_WORKFLOW_RESOURCE_ENGINE.allocate(
+
+                allocation.resource_id,
+
+                allocation.requested_amount,
+
+            )
+        )
+
+
+        if success:
+
+            allocation.allocated_amount = (
+
+                allocation.requested_amount
+
+            )
+
+            allocation.status = (
+                "ALLOCATED"
+            )
+
+            allocation.completed_time = utc_now()
+
+
+
+        else:
+
+            allocation.status = (
+                "FAILED"
+            )
+
+
+        return success
+
+
+
+    def release(
+        self,
+        allocation_id: str,
+    ) -> None:
+
+        allocation = (
+            DATA_RESOURCE_ALLOCATION_DATABASE.get(
+                allocation_id
+            )
+        )
+
+
+        if allocation is None:
+
+            return
+
+
+        DATA_WORKFLOW_RESOURCE_ENGINE.release(
+
+            allocation.resource_id,
+
+            allocation.allocated_amount,
+
+        )
+
+
+        allocation.status = (
+            "RELEASED"
+        )
+
+        allocation.completed_time = utc_now()
+
+
+
+    def active(
+        self,
+    ) -> List[DataWorkflowResourceAllocation]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_RESOURCE_ALLOCATION_DATABASE.values()
+
+            if item.status
+            ==
+            "ALLOCATED"
+
+        ]
+
+
+
+    def workflow_allocations(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowResourceAllocation]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_RESOURCE_ALLOCATION_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        allocations = list(
+            DATA_RESOURCE_ALLOCATION_DATABASE.values()
+        )
+
+
+        return {
+
+            "allocations":
+
+                len(allocations),
+
+            "active":
+
+                len(
+                    self.active()
+                ),
+
+            "allocated_amount":
+
+                sum(
+
+                    item.allocated_amount
+
+                    for item
+
+                    in allocations
+
+                ),
+
+            "failed":
+
+                len(
+
+                    [
+
+                        x
+
+                        for x
+
+                        in allocations
+
+                        if x.status
+                        ==
+                        "FAILED"
+
+                    ]
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_RESOURCE_ALLOCATION_DATABASE.clear()
+
+
+
+DATA_RESOURCE_ALLOCATION_ENGINE = (
+    DataWorkflowResourceAllocationEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 373
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 374
+# ==========================================================
+
+class DataWorkflowResourceScheduler(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    scheduler_name: str = ""
+
+    strategy: str = "PRIORITY"
+
+    resource_types: List[str] = Field(
+        default_factory=list
+    )
+
+    pending_requests: int = 0
+
+    scheduled_requests: int = 0
+
+    rejected_requests: int = 0
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_RESOURCE_SCHEDULER_DATABASE: Dict[
+    str,
+    DataWorkflowResourceScheduler,
+] = {}
+
+
+
+class DataWorkflowResourceSchedulerEngine:
+
+
+    def register(
+        self,
+        scheduler: DataWorkflowResourceScheduler,
+    ) -> None:
+
+        scheduler.created_time = utc_now()
+
+        scheduler.updated_time = utc_now()
+
+        DATA_RESOURCE_SCHEDULER_DATABASE[
+            scheduler.id
+        ] = scheduler
+
+
+
+    def add_request(
+        self,
+        scheduler_id: str,
+    ) -> None:
+
+        scheduler = (
+            DATA_RESOURCE_SCHEDULER_DATABASE.get(
+                scheduler_id
+            )
+        )
+
+
+        if scheduler:
+
+            scheduler.pending_requests += 1
+
+            scheduler.updated_time = utc_now()
+
+
+
+    def schedule(
+        self,
+        scheduler_id: str,
+    ) -> bool:
+
+        scheduler = (
+            DATA_RESOURCE_SCHEDULER_DATABASE.get(
+                scheduler_id
+            )
+        )
+
+
+        if scheduler is None:
+
+            return False
+
+
+        if scheduler.pending_requests <= 0:
+
+            return False
+
+
+
+        scheduler.pending_requests -= 1
+
+        scheduler.scheduled_requests += 1
+
+        scheduler.updated_time = utc_now()
+
+
+        return True
+
+
+
+    def reject(
+        self,
+        scheduler_id: str,
+    ) -> None:
+
+        scheduler = (
+            DATA_RESOURCE_SCHEDULER_DATABASE.get(
+                scheduler_id
+            )
+        )
+
+
+        if scheduler:
+
+            if scheduler.pending_requests > 0:
+
+                scheduler.pending_requests -= 1
+
+
+            scheduler.rejected_requests += 1
+
+            scheduler.updated_time = utc_now()
+
+
+
+    def disable(
+        self,
+        scheduler_id: str,
+    ) -> None:
+
+        scheduler = (
+            DATA_RESOURCE_SCHEDULER_DATABASE.get(
+                scheduler_id
+            )
+        )
+
+
+        if scheduler:
+
+            scheduler.status = (
+                "DISABLED"
+            )
+
+
+
+    def active_schedulers(
+        self,
+    ) -> List[DataWorkflowResourceScheduler]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_RESOURCE_SCHEDULER_DATABASE.values()
+
+            if item.status
+            ==
+            "ACTIVE"
+
+        ]
+
+
+
+    def workflow_schedulers(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowResourceScheduler]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_RESOURCE_SCHEDULER_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        schedulers = list(
+            DATA_RESOURCE_SCHEDULER_DATABASE.values()
+        )
+
+
+        return {
+
+            "schedulers":
+
+                len(schedulers),
+
+            "active":
+
+                len(
+                    self.active_schedulers()
+                ),
+
+            "pending":
+
+                sum(
+
+                    item.pending_requests
+
+                    for item
+
+                    in schedulers
+
+                ),
+
+            "scheduled":
+
+                sum(
+
+                    item.scheduled_requests
+
+                    for item
+
+                    in schedulers
+
+                ),
+
+            "rejected":
+
+                sum(
+
+                    item.rejected_requests
+
+                    for item
+
+                    in schedulers
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_RESOURCE_SCHEDULER_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_RESOURCE_SCHEDULER_ENGINE = (
+    DataWorkflowResourceSchedulerEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 374
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 375
+# ==========================================================
+
+class DataWorkflowResourceQuota(BaseModel):
+
+    id: str
+
+    workflow_id: str
+
+    resource_type: str = ""
+
+    quota_name: str = ""
+
+    total_quota: float = 0.0
+
+    used_quota: float = 0.0
+
+    remaining_quota: float = 0.0
+
+    reset_period: str = ""
+
+    last_reset: Optional[
+        datetime
+    ] = None
+
+    created_time: Optional[
+        datetime
+    ] = None
+
+    updated_time: Optional[
+        datetime
+    ] = None
+
+    status: str = "ACTIVE"
+
+    metadata: Dict[
+        str,
+        Any,
+    ] = Field(
+        default_factory=dict
+    )
+
+
+
+DATA_RESOURCE_QUOTA_DATABASE: Dict[
+    str,
+    DataWorkflowResourceQuota,
+] = {}
+
+
+
+class DataWorkflowResourceQuotaEngine:
+
+
+    def register(
+        self,
+        quota: DataWorkflowResourceQuota,
+    ) -> None:
+
+        quota.created_time = utc_now()
+
+        quota.updated_time = utc_now()
+
+        quota.remaining_quota = (
+
+            quota.total_quota
+
+            -
+
+            quota.used_quota
+
+        )
+
+
+        DATA_RESOURCE_QUOTA_DATABASE[
+            quota.id
+        ] = quota
+
+
+
+    def consume(
+        self,
+        quota_id: str,
+        amount: float,
+    ) -> bool:
+
+        quota = (
+            DATA_RESOURCE_QUOTA_DATABASE.get(
+                quota_id
+            )
+        )
+
+
+        if quota is None:
+
+            return False
+
+
+        if quota.remaining_quota < amount:
+
+            return False
+
+
+
+        quota.used_quota += amount
+
+
+        quota.remaining_quota = (
+
+            quota.total_quota
+
+            -
+
+            quota.used_quota
+
+        )
+
+
+        quota.updated_time = utc_now()
+
+
+        return True
+
+
+
+    def release(
+        self,
+        quota_id: str,
+        amount: float,
+    ) -> None:
+
+        quota = (
+            DATA_RESOURCE_QUOTA_DATABASE.get(
+                quota_id
+            )
+        )
+
+
+        if quota is None:
+
+            return
+
+
+        quota.used_quota -= amount
+
+
+        if quota.used_quota < 0:
+
+            quota.used_quota = 0
+
+
+
+        quota.remaining_quota = (
+
+            quota.total_quota
+
+            -
+
+            quota.used_quota
+
+        )
+
+
+        quota.updated_time = utc_now()
+
+
+
+    def reset(
+        self,
+        quota_id: str,
+    ) -> None:
+
+        quota = (
+            DATA_RESOURCE_QUOTA_DATABASE.get(
+                quota_id
+            )
+        )
+
+
+        if quota:
+
+            quota.used_quota = 0
+
+            quota.remaining_quota = quota.total_quota
+
+            quota.last_reset = utc_now()
+
+            quota.updated_time = utc_now()
+
+
+
+    def exceeded(
+        self,
+    ) -> List[DataWorkflowResourceQuota]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_RESOURCE_QUOTA_DATABASE.values()
+
+            if item.used_quota >= item.total_quota
+
+        ]
+
+
+
+    def workflow_quotas(
+        self,
+        workflow_id: str,
+    ) -> List[DataWorkflowResourceQuota]:
+
+        return [
+
+            item
+
+            for item
+
+            in DATA_RESOURCE_QUOTA_DATABASE.values()
+
+            if item.workflow_id
+            ==
+            workflow_id
+
+        ]
+
+
+
+    def statistics(
+        self,
+    ) -> Dict[str, Any]:
+
+        quotas = list(
+            DATA_RESOURCE_QUOTA_DATABASE.values()
+        )
+
+
+        return {
+
+            "quotas":
+
+                len(quotas),
+
+            "total":
+
+                sum(
+
+                    item.total_quota
+
+                    for item
+
+                    in quotas
+
+                ),
+
+            "used":
+
+                sum(
+
+                    item.used_quota
+
+                    for item
+
+                    in quotas
+
+                ),
+
+            "remaining":
+
+                sum(
+
+                    item.remaining_quota
+
+                    for item
+
+                    in quotas
+
+                ),
+
+            "updated":
+
+                utc_now(),
+
+        }
+
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        DATA_RESOURCE_QUOTA_DATABASE.clear()
+
+
+
+DATA_WORKFLOW_RESOURCE_QUOTA_ENGINE = (
+    DataWorkflowResourceQuotaEngine()
+)
+
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 375
+# ==========================================================
