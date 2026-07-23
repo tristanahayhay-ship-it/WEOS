@@ -23046,3 +23046,1018 @@ GLOBAL_FOREIGN_INVESTMENT_FLOW_ENGINE = (
 # ==========================================================
 # KẾT THÚC ĐOẠN 240
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 241
+# ==========================================================
+
+class GoldPriceForecastRecord(BaseModel):
+    id: str
+    symbol: str = "XAUUSD"
+    current_price: float = 0.0
+    dxy_pressure_score: float = 0.0
+    real_yield_score: float = 0.0
+    inflation_expectation_score: float = 0.0
+    fed_policy_score: float = 0.0
+    geopolitical_risk_score: float = 0.0
+    etf_flow_score: float = 0.0
+    central_bank_demand_score: float = 0.0
+    technical_momentum_score: float = 0.0
+    forecast_price: float = 0.0
+    confidence_score: float = 0.0
+    forecast_direction: str = ""
+    ai_summary: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GOLD_PRICE_FORECAST_DATABASE: Dict[
+    str,
+    GoldPriceForecastRecord,
+] = {}
+
+
+class GoldPriceForecastEngine:
+
+    def register(
+        self,
+        record: GoldPriceForecastRecord,
+    ) -> None:
+
+        GOLD_PRICE_FORECAST_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GoldPriceForecastRecord]:
+
+        return GOLD_PRICE_FORECAST_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GOLD_PRICE_FORECAST_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        gold_bias_score = (
+            record.dxy_pressure_score * 0.15
+            +
+            record.real_yield_score * 0.15
+            +
+            record.inflation_expectation_score * 0.10
+            +
+            record.fed_policy_score * 0.15
+            +
+            record.geopolitical_risk_score * 0.15
+            +
+            record.etf_flow_score * 0.10
+            +
+            record.central_bank_demand_score * 0.10
+            +
+            record.technical_momentum_score * 0.10
+        )
+
+        price_adjustment = (
+            gold_bias_score
+            -
+            50
+        ) / 100
+
+        record.forecast_price = (
+            record.current_price
+            *
+            (
+                1
+                +
+                price_adjustment
+            )
+        )
+
+        record.confidence_score = (
+            abs(
+                gold_bias_score
+                -
+                50
+            )
+            *
+            2
+        )
+
+        if gold_bias_score >= 65:
+            record.forecast_direction = (
+                "BULLISH_GOLD"
+            )
+
+        elif gold_bias_score <= 35:
+            record.forecast_direction = (
+                "BEARISH_GOLD"
+            )
+
+        else:
+            record.forecast_direction = (
+                "SIDEWAY_GOLD"
+            )
+
+        record.ai_summary = (
+            f"XAUUSD forecast: "
+            f"{record.forecast_direction}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+    def ranking(
+        self,
+    ) -> List[GoldPriceForecastRecord]:
+
+        return sorted(
+            GOLD_PRICE_FORECAST_DATABASE.values(),
+            key=lambda item:
+            item.confidence_score,
+            reverse=True,
+        )
+
+
+GOLD_PRICE_FORECAST_ENGINE = (
+    GoldPriceForecastEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 241
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 242
+# ==========================================================
+
+class DXYForecastRecord(BaseModel):
+    id: str
+    symbol: str = "DXY"
+    current_value: float = 0.0
+    fed_policy_score: float = 0.0
+    interest_rate_score: float = 0.0
+    inflation_score: float = 0.0
+    economic_strength_score: float = 0.0
+    global_risk_score: float = 0.0
+    treasury_yield_score: float = 0.0
+    capital_inflow_score: float = 0.0
+    technical_strength_score: float = 0.0
+    forecast_value: float = 0.0
+    confidence_score: float = 0.0
+    forecast_direction: str = ""
+    ai_summary: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+DXY_FORECAST_DATABASE: Dict[
+    str,
+    DXYForecastRecord,
+] = {}
+
+
+class DXYForecastEngine:
+
+    def register(
+        self,
+        record: DXYForecastRecord,
+    ) -> None:
+
+        DXY_FORECAST_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[DXYForecastRecord]:
+
+        return DXY_FORECAST_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        DXY_FORECAST_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        dollar_strength = (
+            record.fed_policy_score * 0.15
+            +
+            record.interest_rate_score * 0.20
+            +
+            record.inflation_score * 0.10
+            +
+            record.economic_strength_score * 0.20
+            +
+            record.global_risk_score * 0.10
+            +
+            record.treasury_yield_score * 0.15
+            +
+            record.capital_inflow_score * 0.05
+            +
+            record.technical_strength_score * 0.05
+        )
+
+
+        adjustment = (
+            dollar_strength
+            -
+            50
+        ) / 100
+
+
+        record.forecast_value = (
+            record.current_value
+            *
+            (
+                1
+                +
+                adjustment
+            )
+        )
+
+
+        record.confidence_score = (
+            abs(
+                dollar_strength
+                -
+                50
+            )
+            *
+            2
+        )
+
+
+        if dollar_strength >= 65:
+
+            record.forecast_direction = (
+                "USD_STRENGTHENING"
+            )
+
+
+        elif dollar_strength <= 35:
+
+            record.forecast_direction = (
+                "USD_WEAKENING"
+            )
+
+
+        else:
+
+            record.forecast_direction = (
+                "USD_NEUTRAL"
+            )
+
+
+        record.ai_summary = (
+            f"DXY forecast: "
+            f"{record.forecast_direction}"
+        )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[DXYForecastRecord]:
+
+        return sorted(
+            DXY_FORECAST_DATABASE.values(),
+            key=lambda item:
+            item.confidence_score,
+            reverse=True,
+        )
+
+
+
+DXY_FORECAST_ENGINE = (
+    DXYForecastEngine()
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 242
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 243
+# ==========================================================
+
+class MarketPredictionModelRecord(BaseModel):
+    id: str
+    market_name: str
+    asset_class: str = ""
+    current_price: float = 0.0
+    historical_trend_score: float = 0.0
+    macro_factor_score: float = 0.0
+    liquidity_factor_score: float = 0.0
+    sentiment_factor_score: float = 0.0
+    technical_factor_score: float = 0.0
+    institutional_flow_score: float = 0.0
+    volatility_factor_score: float = 0.0
+    predicted_price: float = 0.0
+    prediction_confidence: float = 0.0
+    prediction_signal: str = ""
+    ai_explanation: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MARKET_PREDICTION_MODEL_DATABASE: Dict[
+    str,
+    MarketPredictionModelRecord,
+] = {}
+
+
+class MarketPredictionModelEngine:
+
+    def register(
+        self,
+        record: MarketPredictionModelRecord,
+    ) -> None:
+
+        MARKET_PREDICTION_MODEL_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MarketPredictionModelRecord]:
+
+        return MARKET_PREDICTION_MODEL_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        MARKET_PREDICTION_MODEL_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        market_score = (
+            record.historical_trend_score * 0.15
+            +
+            record.macro_factor_score * 0.20
+            +
+            record.liquidity_factor_score * 0.15
+            +
+            record.sentiment_factor_score * 0.10
+            +
+            record.technical_factor_score * 0.15
+            +
+            record.institutional_flow_score * 0.15
+            +
+            record.volatility_factor_score * 0.10
+        )
+
+
+        price_change = (
+            market_score
+            -
+            50
+        ) / 100
+
+
+        record.predicted_price = (
+            record.current_price
+            *
+            (
+                1
+                +
+                price_change
+            )
+        )
+
+
+        record.prediction_confidence = (
+            abs(
+                market_score
+                -
+                50
+            )
+            *
+            2
+        )
+
+
+        if market_score >= 65:
+
+            record.prediction_signal = (
+                "BUY_BIAS"
+            )
+
+
+        elif market_score <= 35:
+
+            record.prediction_signal = (
+                "SELL_BIAS"
+            )
+
+
+        else:
+
+            record.prediction_signal = (
+                "NEUTRAL_BIAS"
+            )
+
+
+        record.ai_explanation = (
+            f"{record.market_name}: "
+            f"{record.prediction_signal}"
+        )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[MarketPredictionModelRecord]:
+
+        return sorted(
+            MARKET_PREDICTION_MODEL_DATABASE.values(),
+            key=lambda item:
+            item.prediction_confidence,
+            reverse=True,
+        )
+
+
+
+MARKET_PREDICTION_MODEL_ENGINE = (
+    MarketPredictionModelEngine()
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 243
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 244
+# ==========================================================
+
+class AIFinancialDecisionRecord(BaseModel):
+    id: str
+    market_name: str
+    asset_class: str = ""
+    current_price: float = 0.0
+    trend_score: float = 0.0
+    macro_score: float = 0.0
+    liquidity_score: float = 0.0
+    risk_score: float = 0.0
+    sentiment_score: float = 0.0
+    prediction_score: float = 0.0
+    final_decision_score: float = 0.0
+    decision_signal: str = ""
+    risk_level: str = ""
+    ai_reasoning: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_FINANCIAL_DECISION_DATABASE: Dict[
+    str,
+    AIFinancialDecisionRecord,
+] = {}
+
+
+class AIFinancialDecisionEngine:
+
+    def register(
+        self,
+        record: AIFinancialDecisionRecord,
+    ) -> None:
+
+        AI_FINANCIAL_DECISION_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AIFinancialDecisionRecord]:
+
+        return AI_FINANCIAL_DECISION_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        AI_FINANCIAL_DECISION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        record.final_decision_score = (
+            record.trend_score * 0.20
+            +
+            record.macro_score * 0.25
+            +
+            record.liquidity_score * 0.15
+            +
+            record.sentiment_score * 0.10
+            +
+            record.prediction_score * 0.20
+            -
+            record.risk_score * 0.10
+        )
+
+
+        if record.final_decision_score >= 70:
+
+            record.decision_signal = (
+                "AI_BUY_OPPORTUNITY"
+            )
+
+
+        elif record.final_decision_score <= 30:
+
+            record.decision_signal = (
+                "AI_SELL_WARNING"
+            )
+
+
+        else:
+
+            record.decision_signal = (
+                "AI_WAIT_CONFIRMATION"
+            )
+
+
+        if record.risk_score >= 70:
+
+            record.risk_level = (
+                "HIGH_RISK"
+            )
+
+        elif record.risk_score >= 40:
+
+            record.risk_level = (
+                "MEDIUM_RISK"
+            )
+
+        else:
+
+            record.risk_level = (
+                "LOW_RISK"
+            )
+
+
+        record.ai_reasoning = (
+            f"{record.market_name}: "
+            f"{record.decision_signal}, "
+            f"Risk {record.risk_level}"
+        )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[AIFinancialDecisionRecord]:
+
+        return sorted(
+            AI_FINANCIAL_DECISION_DATABASE.values(),
+            key=lambda item:
+            item.final_decision_score,
+            reverse=True,
+        )
+
+
+
+AI_FINANCIAL_DECISION_ENGINE = (
+    AIFinancialDecisionEngine()
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 244
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 245
+# ==========================================================
+
+class TradingSignalGenerationRecord(BaseModel):
+    id: str
+    symbol: str
+    timeframe: str = ""
+    market_price: float = 0.0
+    trend_strength_score: float = 0.0
+    momentum_score: float = 0.0
+    support_resistance_score: float = 0.0
+    volume_confirmation_score: float = 0.0
+    macro_alignment_score: float = 0.0
+    risk_reward_score: float = 0.0
+    signal_score: float = 0.0
+    signal_type: str = ""
+    entry_zone: float = 0.0
+    stop_loss_zone: float = 0.0
+    take_profit_zone: float = 0.0
+    ai_explanation: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+TRADING_SIGNAL_DATABASE: Dict[
+    str,
+    TradingSignalGenerationRecord,
+] = {}
+
+
+class TradingSignalGenerationEngine:
+
+    def register(
+        self,
+        record: TradingSignalGenerationRecord,
+    ) -> None:
+
+        TRADING_SIGNAL_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[TradingSignalGenerationRecord]:
+
+        return TRADING_SIGNAL_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        TRADING_SIGNAL_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        record.signal_score = (
+            record.trend_strength_score * 0.20
+            +
+            record.momentum_score * 0.15
+            +
+            record.support_resistance_score * 0.15
+            +
+            record.volume_confirmation_score * 0.15
+            +
+            record.macro_alignment_score * 0.20
+            +
+            record.risk_reward_score * 0.15
+        )
+
+
+        if record.signal_score >= 75:
+
+            record.signal_type = (
+                "STRONG_BUY_SIGNAL"
+            )
+
+        elif record.signal_score >= 60:
+
+            record.signal_type = (
+                "BUY_CONFIRMATION"
+            )
+
+        elif record.signal_score <= 25:
+
+            record.signal_type = (
+                "STRONG_SELL_SIGNAL"
+            )
+
+        elif record.signal_score <= 40:
+
+            record.signal_type = (
+                "SELL_CONFIRMATION"
+            )
+
+        else:
+
+            record.signal_type = (
+                "NO_TRADE_ZONE"
+            )
+
+
+        record.ai_explanation = (
+            f"{record.symbol} "
+            f"{record.timeframe}: "
+            f"{record.signal_type}"
+        )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[TradingSignalGenerationRecord]:
+
+        return sorted(
+            TRADING_SIGNAL_DATABASE.values(),
+            key=lambda item:
+            item.signal_score,
+            reverse=True,
+        )
+
+
+
+TRADING_SIGNAL_ENGINE = (
+    TradingSignalGenerationEngine()
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 245
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 246
+# ==========================================================
+
+class RiskManagementAIRecord(BaseModel):
+    id: str
+    account_size_usd: float = 0.0
+    current_position_size: float = 0.0
+    asset_symbol: str = ""
+    entry_price: float = 0.0
+    current_price: float = 0.0
+    volatility_score: float = 0.0
+    market_risk_score: float = 0.0
+    correlation_risk_score: float = 0.0
+    liquidity_risk_score: float = 0.0
+    maximum_loss_allowed_usd: float = 0.0
+    recommended_position_size: float = 0.0
+    risk_score: float = 0.0
+    risk_status: str = ""
+    ai_recommendation: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+RISK_MANAGEMENT_AI_DATABASE: Dict[
+    str,
+    RiskManagementAIRecord,
+] = {}
+
+
+class RiskManagementAIEngine:
+
+    def register(
+        self,
+        record: RiskManagementAIRecord,
+    ) -> None:
+
+        RISK_MANAGEMENT_AI_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[RiskManagementAIRecord]:
+
+        return RISK_MANAGEMENT_AI_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        RISK_MANAGEMENT_AI_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        record.risk_score = (
+            record.volatility_score * 0.25
+            +
+            record.market_risk_score * 0.25
+            +
+            record.correlation_risk_score * 0.20
+            +
+            record.liquidity_risk_score * 0.20
+            +
+            (
+                record.current_position_size
+                /
+                max(
+                    record.account_size_usd,
+                    1
+                )
+            )
+            *
+            100
+            *
+            0.10
+        )
+
+
+        record.recommended_position_size = (
+            record.maximum_loss_allowed_usd
+            /
+            max(
+                abs(
+                    record.current_price
+                    -
+                    record.entry_price
+                ),
+                0.01
+            )
+        )
+
+
+        if record.risk_score >= 75:
+
+            record.risk_status = (
+                "DANGER"
+            )
+
+            record.ai_recommendation = (
+                "REDUCE_POSITION_SIZE"
+            )
+
+
+        elif record.risk_score >= 50:
+
+            record.risk_status = (
+                "WARNING"
+            )
+
+            record.ai_recommendation = (
+                "CONTROL_RISK"
+            )
+
+
+        else:
+
+            record.risk_status = (
+                "SAFE"
+            )
+
+            record.ai_recommendation = (
+                "POSITION_ACCEPTABLE"
+            )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[RiskManagementAIRecord]:
+
+        return sorted(
+            RISK_MANAGEMENT_AI_DATABASE.values(),
+            key=lambda item:
+            item.risk_score,
+            reverse=True,
+        )
+
+
+
+RISK_MANAGEMENT_AI_ENGINE = (
+    RiskManagementAIEngine()
+)
+
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 246
+# ==========================================================
