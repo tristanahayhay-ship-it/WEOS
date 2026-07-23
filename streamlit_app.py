@@ -27349,3 +27349,977 @@ AI_TRADE_RISK_REWARD_ENGINE = (
 # ==========================================================
 # KẾT THÚC ĐOẠN 266
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 267
+# ==========================================================
+
+class AIExecutionTimingRecord(BaseModel):
+    id: str
+    symbol: str
+    timeframe: str = ""
+    current_price: float = 0.0
+    volatility_score: float = 0.0
+    liquidity_score: float = 0.0
+    spread_score: float = 0.0
+    momentum_score: float = 0.0
+    trend_alignment_score: float = 0.0
+    news_risk_score: float = 0.0
+    macro_alignment_score: float = 0.0
+    execution_score: float = 0.0
+    execution_state: str = ""
+    optimal_entry: bool = False
+    ai_message: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_EXECUTION_TIMING_DATABASE: Dict[
+    str,
+    AIExecutionTimingRecord,
+] = {}
+
+
+class AIExecutionTimingEngine:
+
+    def register(
+        self,
+        record: AIExecutionTimingRecord,
+    ) -> None:
+
+        AI_EXECUTION_TIMING_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AIExecutionTimingRecord]:
+
+        return AI_EXECUTION_TIMING_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        AI_EXECUTION_TIMING_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        record.execution_score = (
+            record.volatility_score * 0.15
+            +
+            record.liquidity_score * 0.20
+            +
+            record.spread_score * 0.10
+            +
+            record.momentum_score * 0.20
+            +
+            record.trend_alignment_score * 0.20
+            +
+            record.macro_alignment_score * 0.15
+            -
+            record.news_risk_score * 0.10
+        )
+
+
+        if record.execution_score >= 80:
+
+            record.execution_state = (
+                "EXECUTE_NOW"
+            )
+
+            record.optimal_entry = True
+
+
+        elif record.execution_score >= 60:
+
+            record.execution_state = (
+                "GOOD_ENTRY_WINDOW"
+            )
+
+            record.optimal_entry = True
+
+
+        elif record.execution_score >= 40:
+
+            record.execution_state = (
+                "WAIT_FOR_CONFIRMATION"
+            )
+
+            record.optimal_entry = False
+
+
+        else:
+
+            record.execution_state = (
+                "AVOID_EXECUTION"
+            )
+
+            record.optimal_entry = False
+
+
+        record.ai_message = (
+            f"{record.symbol}: "
+            f"{record.execution_state}"
+        )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[AIExecutionTimingRecord]:
+
+        return sorted(
+            AI_EXECUTION_TIMING_DATABASE.values(),
+            key=lambda item:
+            item.execution_score,
+            reverse=True,
+        )
+
+
+
+AI_EXECUTION_TIMING_ENGINE = (
+    AIExecutionTimingEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 267
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 268
+# ==========================================================
+
+class AIConfidenceAggregationRecord(BaseModel):
+    id: str
+    symbol: str
+    technical_confidence: float = 0.0
+    macro_confidence: float = 0.0
+    fundamental_confidence: float = 0.0
+    sentiment_confidence: float = 0.0
+    liquidity_confidence: float = 0.0
+    capital_flow_confidence: float = 0.0
+    prediction_confidence: float = 0.0
+    anomaly_penalty: float = 0.0
+    overall_confidence: float = 0.0
+    confidence_level: str = ""
+    ai_summary: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_CONFIDENCE_AGGREGATION_DATABASE: Dict[
+    str,
+    AIConfidenceAggregationRecord,
+] = {}
+
+
+class AIConfidenceAggregationEngine:
+
+    def register(
+        self,
+        record: AIConfidenceAggregationRecord,
+    ) -> None:
+
+        AI_CONFIDENCE_AGGREGATION_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AIConfidenceAggregationRecord]:
+
+        return AI_CONFIDENCE_AGGREGATION_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        AI_CONFIDENCE_AGGREGATION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        record.overall_confidence = (
+            record.technical_confidence * 0.15
+            +
+            record.macro_confidence * 0.20
+            +
+            record.fundamental_confidence * 0.15
+            +
+            record.sentiment_confidence * 0.10
+            +
+            record.liquidity_confidence * 0.10
+            +
+            record.capital_flow_confidence * 0.15
+            +
+            record.prediction_confidence * 0.15
+            -
+            record.anomaly_penalty * 0.10
+        )
+
+
+        if record.overall_confidence >= 85:
+
+            record.confidence_level = (
+                "VERY_HIGH"
+            )
+
+        elif record.overall_confidence >= 70:
+
+            record.confidence_level = (
+                "HIGH"
+            )
+
+        elif record.overall_confidence >= 50:
+
+            record.confidence_level = (
+                "MEDIUM"
+            )
+
+        else:
+
+            record.confidence_level = (
+                "LOW"
+            )
+
+
+        record.ai_summary = (
+            f"{record.symbol}: "
+            f"{record.confidence_level} "
+            f"confidence"
+        )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[AIConfidenceAggregationRecord]:
+
+        return sorted(
+            AI_CONFIDENCE_AGGREGATION_DATABASE.values(),
+            key=lambda item:
+            item.overall_confidence,
+            reverse=True,
+        )
+
+
+
+AI_CONFIDENCE_AGGREGATION_ENGINE = (
+    AIConfidenceAggregationEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 268
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 269
+# ==========================================================
+
+class AIUnifiedMarketDecisionRecord(BaseModel):
+    id: str
+    symbol: str
+    timeframe: str = ""
+    technical_score: float = 0.0
+    macro_score: float = 0.0
+    liquidity_score: float = 0.0
+    capital_flow_score: float = 0.0
+    institutional_score: float = 0.0
+    sentiment_score: float = 0.0
+    prediction_score: float = 0.0
+    confidence_score: float = 0.0
+    risk_score: float = 0.0
+    final_score: float = 0.0
+    decision: str = ""
+    explanation: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_UNIFIED_MARKET_DECISION_DATABASE: Dict[
+    str,
+    AIUnifiedMarketDecisionRecord,
+] = {}
+
+
+class AIUnifiedMarketDecisionEngine:
+
+    def register(
+        self,
+        record: AIUnifiedMarketDecisionRecord,
+    ) -> None:
+
+        AI_UNIFIED_MARKET_DECISION_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[
+        AIUnifiedMarketDecisionRecord
+    ]:
+
+        return AI_UNIFIED_MARKET_DECISION_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        AI_UNIFIED_MARKET_DECISION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        record.final_score = (
+            record.technical_score * 0.15
+            +
+            record.macro_score * 0.20
+            +
+            record.liquidity_score * 0.10
+            +
+            record.capital_flow_score * 0.15
+            +
+            record.institutional_score * 0.10
+            +
+            record.sentiment_score * 0.10
+            +
+            record.prediction_score * 0.10
+            +
+            record.confidence_score * 0.10
+            -
+            record.risk_score * 0.10
+        )
+
+
+        if record.final_score >= 80:
+
+            record.decision = (
+                "STRONG_BUY"
+            )
+
+        elif record.final_score >= 65:
+
+            record.decision = (
+                "BUY"
+            )
+
+        elif record.final_score >= 45:
+
+            record.decision = (
+                "HOLD"
+            )
+
+        elif record.final_score >= 30:
+
+            record.decision = (
+                "SELL"
+            )
+
+        else:
+
+            record.decision = (
+                "STRONG_SELL"
+            )
+
+
+        record.explanation = (
+            f"{record.symbol}: "
+            f"{record.decision}"
+        )
+
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[
+        AIUnifiedMarketDecisionRecord
+    ]:
+
+        return sorted(
+            AI_UNIFIED_MARKET_DECISION_DATABASE.values(),
+            key=lambda item:
+            item.final_score,
+            reverse=True,
+        )
+
+
+
+AI_UNIFIED_MARKET_DECISION_ENGINE = (
+    AIUnifiedMarketDecisionEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 269
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 270
+# ==========================================================
+
+class AIGlobalEconomicBrainRecord(BaseModel):
+    id: str
+    region: str
+    timestamp: Optional[datetime] = None
+    macro_score: float = 0.0
+    monetary_score: float = 0.0
+    fiscal_score: float = 0.0
+    inflation_score: float = 0.0
+    employment_score: float = 0.0
+    liquidity_score: float = 0.0
+    market_score: float = 0.0
+    capital_flow_score: float = 0.0
+    geopolitical_score: float = 0.0
+    risk_score: float = 0.0
+    confidence_score: float = 0.0
+    overall_health_score: float = 0.0
+    economic_state: str = ""
+    ai_summary: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+AI_GLOBAL_ECONOMIC_BRAIN_DATABASE: Dict[
+    str,
+    AIGlobalEconomicBrainRecord,
+] = {}
+
+
+class AIGlobalEconomicBrainEngine:
+
+    def register(
+        self,
+        record: AIGlobalEconomicBrainRecord,
+    ) -> None:
+
+        AI_GLOBAL_ECONOMIC_BRAIN_DATABASE[
+            record.id
+        ] = record
+
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AIGlobalEconomicBrainRecord]:
+
+        return AI_GLOBAL_ECONOMIC_BRAIN_DATABASE.get(
+            record_id
+        )
+
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        AI_GLOBAL_ECONOMIC_BRAIN_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+
+        record.overall_health_score = (
+            record.macro_score * 0.15
+            +
+            record.monetary_score * 0.10
+            +
+            record.fiscal_score * 0.10
+            +
+            record.inflation_score * 0.10
+            +
+            record.employment_score * 0.10
+            +
+            record.liquidity_score * 0.10
+            +
+            record.market_score * 0.10
+            +
+            record.capital_flow_score * 0.10
+            +
+            record.geopolitical_score * 0.05
+            +
+            record.confidence_score * 0.10
+            -
+            record.risk_score * 0.10
+        )
+
+
+        if record.overall_health_score >= 80:
+
+            record.economic_state = (
+                "VERY_STRONG"
+            )
+
+        elif record.overall_health_score >= 65:
+
+            record.economic_state = (
+                "STRONG"
+            )
+
+        elif record.overall_health_score >= 45:
+
+            record.economic_state = (
+                "NEUTRAL"
+            )
+
+        elif record.overall_health_score >= 30:
+
+            record.economic_state = (
+                "WEAK"
+            )
+
+        else:
+
+            record.economic_state = (
+                "CRITICAL"
+            )
+
+
+        record.ai_summary = (
+            f"{record.region}: "
+            f"{record.economic_state}"
+        )
+
+
+        record.timestamp = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+
+
+    def ranking(
+        self,
+    ) -> List[AIGlobalEconomicBrainRecord]:
+
+        return sorted(
+            AI_GLOBAL_ECONOMIC_BRAIN_DATABASE.values(),
+            key=lambda item:
+            item.overall_health_score,
+            reverse=True,
+        )
+
+
+
+AI_GLOBAL_ECONOMIC_BRAIN_ENGINE = (
+    AIGlobalEconomicBrainEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 270
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 271
+# ==========================================================
+
+class GlobeLayerType(str, Enum):
+    COUNTRY = "COUNTRY"
+    REGION = "REGION"
+    CITY = "CITY"
+    COMPANY = "COMPANY"
+    PORT = "PORT"
+    AIRPORT = "AIRPORT"
+    FACTORY = "FACTORY"
+    MINE = "MINE"
+    BANK = "BANK"
+    DATACENTER = "DATACENTER"
+    POWERPLANT = "POWERPLANT"
+    CABLE = "CABLE"
+    SATELLITE = "SATELLITE"
+    FLOW = "FLOW"
+
+
+class GlobeNode(BaseModel):
+    id: str
+    name: str
+    layer: GlobeLayerType
+    latitude: float
+    longitude: float
+    altitude: float = 0.0
+    size: float = 1.0
+    color: List[int] = Field(
+        default_factory=lambda: [0, 200, 255]
+    )
+    pulse_strength: float = 1.0
+    visible: bool = True
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict
+    )
+    updated_at: Optional[datetime] = None
+
+
+class GlobeFlow(BaseModel):
+    id: str
+    source_node: str
+    target_node: str
+    value: float = 0.0
+    width: float = 1.0
+    color: List[int] = Field(
+        default_factory=lambda: [255, 180, 0]
+    )
+    animated: bool = True
+    updated_at: Optional[datetime] = None
+
+
+GLOBE_NODE_DATABASE: Dict[
+    str,
+    GlobeNode,
+] = {}
+
+GLOBE_FLOW_DATABASE: Dict[
+    str,
+    GlobeFlow,
+] = {}
+
+
+class GlobeEngine:
+
+    def register_node(
+        self,
+        node: GlobeNode,
+    ) -> None:
+
+        node.updated_at = utc_now()
+
+        GLOBE_NODE_DATABASE[
+            node.id
+        ] = node
+
+
+    def register_flow(
+        self,
+        flow: GlobeFlow,
+    ) -> None:
+
+        flow.updated_at = utc_now()
+
+        GLOBE_FLOW_DATABASE[
+            flow.id
+        ] = flow
+
+
+    def remove_node(
+        self,
+        node_id: str,
+    ) -> None:
+
+        GLOBE_NODE_DATABASE.pop(
+            node_id,
+            None,
+        )
+
+
+    def remove_flow(
+        self,
+        flow_id: str,
+    ) -> None:
+
+        GLOBE_FLOW_DATABASE.pop(
+            flow_id,
+            None,
+        )
+
+
+    def nodes(
+        self,
+    ) -> List[GlobeNode]:
+
+        return list(
+            GLOBE_NODE_DATABASE.values()
+        )
+
+
+    def flows(
+        self,
+    ) -> List[GlobeFlow]:
+
+        return list(
+            GLOBE_FLOW_DATABASE.values()
+        )
+
+
+    def visible_nodes(
+        self,
+    ) -> List[GlobeNode]:
+
+        return [
+            node
+            for node in self.nodes()
+            if node.visible
+        ]
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        GLOBE_NODE_DATABASE.clear()
+        GLOBE_FLOW_DATABASE.clear()
+
+
+GLOBE_ENGINE = GlobeEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 271
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 272
+# ==========================================================
+
+class GlobeRenderEngine:
+
+    def node_dataframe(
+        self,
+    ) -> pd.DataFrame:
+
+        rows = []
+
+        for node in GLOBE_ENGINE.visible_nodes():
+
+            rows.append(
+                {
+                    "id": node.id,
+                    "name": node.name,
+                    "layer": node.layer.value,
+                    "lat": node.latitude,
+                    "lon": node.longitude,
+                    "altitude": node.altitude,
+                    "size": node.size,
+                    "color": node.color,
+                    "pulse": node.pulse_strength,
+                }
+            )
+
+        return pd.DataFrame(rows)
+
+
+    def flow_dataframe(
+        self,
+    ) -> pd.DataFrame:
+
+        rows = []
+
+        for flow in GLOBE_ENGINE.flows():
+
+            source = GLOBE_NODE_DATABASE.get(
+                flow.source_node
+            )
+
+            target = GLOBE_NODE_DATABASE.get(
+                flow.target_node
+            )
+
+            if source is None:
+                continue
+
+            if target is None:
+                continue
+
+            rows.append(
+                {
+                    "from_lat": source.latitude,
+                    "from_lon": source.longitude,
+                    "to_lat": target.latitude,
+                    "to_lon": target.longitude,
+                    "width": flow.width,
+                    "value": flow.value,
+                    "color": flow.color,
+                }
+            )
+
+        return pd.DataFrame(rows)
+
+
+    def deck_layers(
+        self,
+    ) -> List[Any]:
+
+        layers = []
+
+        node_df = self.node_dataframe()
+
+        if not node_df.empty:
+
+            layers.append(
+
+                pdk.Layer(
+
+                    "ScatterplotLayer",
+
+                    data=node_df,
+
+                    get_position="[lon, lat]",
+
+                    get_radius="size",
+
+                    get_fill_color="color",
+
+                    pickable=True,
+
+                    auto_highlight=True,
+
+                )
+
+            )
+
+
+        flow_df = self.flow_dataframe()
+
+        if not flow_df.empty:
+
+            layers.append(
+
+                pdk.Layer(
+
+                    "ArcLayer",
+
+                    data=flow_df,
+
+                    get_source_position="[from_lon, from_lat]",
+
+                    get_target_position="[to_lon, to_lat]",
+
+                    get_width="width",
+
+                    get_source_color="color",
+
+                    get_target_color="color",
+
+                    pickable=True,
+
+                )
+
+            )
+
+
+        return layers
+
+
+    def render(
+        self,
+    ) -> pdk.Deck:
+
+        return pdk.Deck(
+
+            map_style=None,
+
+            initial_view_state=pdk.ViewState(
+
+                latitude=15,
+
+                longitude=0,
+
+                zoom=1.2,
+
+                pitch=35,
+
+                bearing=0,
+
+            ),
+
+            layers=self.deck_layers(),
+
+            tooltip={
+
+                "text": "{name}"
+
+            },
+
+        )
+
+
+GLOBE_RENDER_ENGINE = (
+    GlobeRenderEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 272
+# ==========================================================
