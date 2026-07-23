@@ -28323,3 +28323,1586 @@ GLOBE_RENDER_ENGINE = (
 # ==========================================================
 # KẾT THÚC ĐOẠN 272
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 273
+# ==========================================================
+
+class GlobeInteractionEngine:
+
+    def __init__(self):
+
+        self.selected_node: Optional[str] = None
+        self.selected_layer: Optional[
+            GlobeLayerType
+        ] = None
+        self.zoom_level: float = 1.2
+
+
+    def select_node(
+        self,
+        node_id: str,
+    ) -> None:
+
+        if node_id in GLOBE_NODE_DATABASE:
+
+            self.selected_node = node_id
+
+
+    def clear_selection(
+        self,
+    ) -> None:
+
+        self.selected_node = None
+
+
+    def selected(
+        self,
+    ) -> Optional[GlobeNode]:
+
+        if self.selected_node is None:
+
+            return None
+
+        return GLOBE_NODE_DATABASE.get(
+            self.selected_node
+        )
+
+
+    def filter_layer(
+        self,
+        layer: GlobeLayerType,
+    ) -> None:
+
+        self.selected_layer = layer
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            node.visible = (
+                node.layer == layer
+            )
+
+
+    def show_all(
+        self,
+    ) -> None:
+
+        self.selected_layer = None
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            node.visible = True
+
+
+    def update_zoom(
+        self,
+        zoom: float,
+    ) -> None:
+
+        self.zoom_level = zoom
+
+
+    def visible_layers(
+        self,
+    ) -> List[str]:
+
+        layers = set()
+
+        for node in GLOBE_ENGINE.visible_nodes():
+
+            layers.add(
+                node.layer.value
+            )
+
+        return sorted(
+            list(layers)
+        )
+
+
+    def node_statistics(
+        self,
+    ) -> Dict[str, int]:
+
+        result: Dict[str, int] = {}
+
+        for node in GLOBE_ENGINE.nodes():
+
+            key = node.layer.value
+
+            result[key] = (
+                result.get(key, 0)
+                + 1
+            )
+
+        return result
+
+
+    def pulse_all(
+        self,
+        factor: float,
+    ) -> None:
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            node.pulse_strength = factor
+
+            node.updated_at = utc_now()
+
+
+    def reset(
+        self,
+    ) -> None:
+
+        self.clear_selection()
+
+        self.show_all()
+
+        self.zoom_level = 1.2
+
+
+GLOBE_INTERACTION_ENGINE = (
+    GlobeInteractionEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 273
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 274
+# ==========================================================
+
+class GlobeCameraEngine:
+
+    def __init__(self):
+
+        self.latitude = 15.0
+        self.longitude = 0.0
+        self.zoom = 1.2
+        self.pitch = 35.0
+        self.bearing = 0.0
+
+
+    def move_to(
+        self,
+        latitude: float,
+        longitude: float,
+        zoom: Optional[float] = None,
+    ) -> None:
+
+        self.latitude = latitude
+        self.longitude = longitude
+
+        if zoom is not None:
+
+            self.zoom = zoom
+
+
+    def rotate(
+        self,
+        bearing: float,
+    ) -> None:
+
+        self.bearing = bearing
+
+
+    def tilt(
+        self,
+        pitch: float,
+    ) -> None:
+
+        self.pitch = pitch
+
+
+    def zoom_in(
+        self,
+        step: float = 0.5,
+    ) -> None:
+
+        self.zoom += step
+
+
+    def zoom_out(
+        self,
+        step: float = 0.5,
+    ) -> None:
+
+        self.zoom = max(
+            0.5,
+            self.zoom - step,
+        )
+
+
+    def focus_node(
+        self,
+        node_id: str,
+    ) -> None:
+
+        node = GLOBE_NODE_DATABASE.get(
+            node_id
+        )
+
+        if node is None:
+            return
+
+        self.latitude = node.latitude
+        self.longitude = node.longitude
+
+        if node.layer == GlobeLayerType.COUNTRY:
+
+            self.zoom = 3
+
+        elif node.layer == GlobeLayerType.CITY:
+
+            self.zoom = 8
+
+        elif node.layer == GlobeLayerType.COMPANY:
+
+            self.zoom = 12
+
+        elif node.layer == GlobeLayerType.FACTORY:
+
+            self.zoom = 14
+
+        else:
+
+            self.zoom = 6
+
+
+    def view_state(
+        self,
+    ) -> pdk.ViewState:
+
+        return pdk.ViewState(
+
+            latitude=self.latitude,
+
+            longitude=self.longitude,
+
+            zoom=self.zoom,
+
+            pitch=self.pitch,
+
+            bearing=self.bearing,
+
+        )
+
+
+    def reset(
+        self,
+    ) -> None:
+
+        self.latitude = 15.0
+        self.longitude = 0.0
+        self.zoom = 1.2
+        self.pitch = 35.0
+        self.bearing = 0.0
+
+
+GLOBE_CAMERA_ENGINE = (
+    GlobeCameraEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 274
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 275
+# ==========================================================
+
+class GlobeZoomEngine:
+
+    def __init__(self):
+
+        self.zoom_breakpoints = {
+
+            1: [
+                GlobeLayerType.COUNTRY,
+            ],
+
+            3: [
+                GlobeLayerType.COUNTRY,
+                GlobeLayerType.REGION,
+            ],
+
+            5: [
+                GlobeLayerType.CITY,
+                GlobeLayerType.PORT,
+                GlobeLayerType.AIRPORT,
+            ],
+
+            8: [
+                GlobeLayerType.COMPANY,
+                GlobeLayerType.BANK,
+                GlobeLayerType.MINE,
+                GlobeLayerType.POWERPLANT,
+            ],
+
+            12: [
+                GlobeLayerType.FACTORY,
+                GlobeLayerType.DATACENTER,
+                GlobeLayerType.CABLE,
+            ],
+
+            15: [
+                GlobeLayerType.SATELLITE,
+            ],
+
+        }
+
+
+    def visible_layers(
+        self,
+        zoom: float,
+    ) -> List[GlobeLayerType]:
+
+        layers: List[
+            GlobeLayerType
+        ] = []
+
+        for level in sorted(
+            self.zoom_breakpoints.keys()
+        ):
+
+            if zoom >= level:
+
+                layers.extend(
+                    self.zoom_breakpoints[
+                        level
+                    ]
+                )
+
+        return layers
+
+
+    def update_visibility(
+        self,
+        zoom: float,
+    ) -> None:
+
+        visible = set(
+            self.visible_layers(
+                zoom
+            )
+        )
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            node.visible = (
+                node.layer
+                in
+                visible
+            )
+
+            node.updated_at = utc_now()
+
+
+    def statistics(
+        self,
+        zoom: float,
+    ) -> Dict[str, int]:
+
+        result: Dict[
+            str,
+            int,
+        ] = {}
+
+        visible = set(
+            self.visible_layers(
+                zoom
+            )
+        )
+
+        for layer in visible:
+
+            result[
+                layer.value
+            ] = len(
+
+                [
+
+                    node
+
+                    for node
+
+                    in GLOBE_NODE_DATABASE.values()
+
+                    if node.layer == layer
+
+                ]
+
+            )
+
+        return result
+
+
+    def current_layers(
+        self,
+    ) -> List[str]:
+
+        return [
+
+            layer.value
+
+            for layer
+
+            in self.visible_layers(
+
+                GLOBE_CAMERA_ENGINE.zoom
+
+            )
+
+        ]
+
+
+GLOBE_ZOOM_ENGINE = (
+    GlobeZoomEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 275
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 276
+# ==========================================================
+
+class GlobeAnimationEngine:
+
+    def __init__(self):
+
+        self.frame = 0
+        self.running = True
+        self.speed = 1.0
+
+
+    def next_frame(
+        self,
+    ) -> int:
+
+        self.frame += 1
+
+        return self.frame
+
+
+    def animate_nodes(
+        self,
+    ) -> None:
+
+        if not self.running:
+
+            return
+
+        pulse = (
+            (
+                self.frame % 100
+            )
+            /
+            100
+        )
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            node.pulse_strength = (
+
+                0.8
+
+                +
+
+                pulse
+
+            )
+
+            node.updated_at = utc_now()
+
+
+    def animate_flows(
+        self,
+    ) -> None:
+
+        if not self.running:
+
+            return
+
+        for flow in GLOBE_FLOW_DATABASE.values():
+
+            flow.width = max(
+
+                1,
+
+                flow.width
+
+                +
+
+                0.02
+
+                *
+
+                self.speed
+
+            )
+
+            flow.updated_at = utc_now()
+
+
+    def tick(
+        self,
+    ) -> None:
+
+        self.next_frame()
+
+        self.animate_nodes()
+
+        self.animate_flows()
+
+
+    def pause(
+        self,
+    ) -> None:
+
+        self.running = False
+
+
+    def resume(
+        self,
+    ) -> None:
+
+        self.running = True
+
+
+    def set_speed(
+        self,
+        speed: float,
+    ) -> None:
+
+        self.speed = max(
+            0.1,
+            speed,
+        )
+
+
+    def reset(
+        self,
+    ) -> None:
+
+        self.frame = 0
+        self.running = True
+        self.speed = 1.0
+
+
+GLOBE_ANIMATION_ENGINE = (
+    GlobeAnimationEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 276
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 277
+# ==========================================================
+
+class GlobeRealtimeSyncEngine:
+
+    def __init__(self):
+
+        self.last_sync: Optional[
+            datetime
+        ] = None
+
+        self.sync_count = 0
+
+        self.enabled = True
+
+
+    def sync_nodes(
+        self,
+    ) -> None:
+
+        if not self.enabled:
+
+            return
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            node.updated_at = utc_now()
+
+
+    def sync_flows(
+        self,
+    ) -> None:
+
+        if not self.enabled:
+
+            return
+
+        for flow in GLOBE_FLOW_DATABASE.values():
+
+            flow.updated_at = utc_now()
+
+
+    def sync(
+        self,
+    ) -> None:
+
+        if not self.enabled:
+
+            return
+
+        self.sync_nodes()
+
+        self.sync_flows()
+
+        self.last_sync = utc_now()
+
+        self.sync_count += 1
+
+
+    def status(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "enabled": self.enabled,
+
+            "last_sync": self.last_sync,
+
+            "sync_count": self.sync_count,
+
+            "nodes": len(
+                GLOBE_NODE_DATABASE
+            ),
+
+            "flows": len(
+                GLOBE_FLOW_DATABASE
+            ),
+
+        }
+
+
+    def enable(
+        self,
+    ) -> None:
+
+        self.enabled = True
+
+
+    def disable(
+        self,
+    ) -> None:
+
+        self.enabled = False
+
+
+    def reset(
+        self,
+    ) -> None:
+
+        self.last_sync = None
+
+        self.sync_count = 0
+
+
+GLOBE_REALTIME_SYNC_ENGINE = (
+
+    GlobeRealtimeSyncEngine()
+
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 277
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 278
+# ==========================================================
+
+class GlobeHierarchyEngine:
+
+    def __init__(self):
+
+        self.parent_map: Dict[
+            str,
+            str,
+        ] = {}
+
+        self.children_map: Dict[
+            str,
+            List[str],
+        ] = {}
+
+
+    def add_relation(
+        self,
+        parent_id: str,
+        child_id: str,
+    ) -> None:
+
+        self.parent_map[
+            child_id
+        ] = parent_id
+
+        self.children_map.setdefault(
+            parent_id,
+            [],
+        ).append(
+            child_id
+        )
+
+
+    def parent(
+        self,
+        node_id: str,
+    ) -> Optional[GlobeNode]:
+
+        parent = self.parent_map.get(
+            node_id
+        )
+
+        if parent is None:
+
+            return None
+
+        return GLOBE_NODE_DATABASE.get(
+            parent
+        )
+
+
+    def children(
+        self,
+        node_id: str,
+    ) -> List[GlobeNode]:
+
+        result: List[
+            GlobeNode
+        ] = []
+
+        for child in self.children_map.get(
+            node_id,
+            [],
+        ):
+
+            node = GLOBE_NODE_DATABASE.get(
+                child
+            )
+
+            if node is not None:
+
+                result.append(
+                    node
+                )
+
+        return result
+
+
+    def ancestors(
+        self,
+        node_id: str,
+    ) -> List[GlobeNode]:
+
+        result = []
+
+        current = node_id
+
+        while current in self.parent_map:
+
+            current = self.parent_map[
+                current
+            ]
+
+            node = GLOBE_NODE_DATABASE.get(
+                current
+            )
+
+            if node:
+
+                result.append(
+                    node
+                )
+
+        return result
+
+
+    def descendants(
+        self,
+        node_id: str,
+    ) -> List[GlobeNode]:
+
+        result = []
+
+        stack = [node_id]
+
+        while stack:
+
+            current = stack.pop()
+
+            for child in self.children_map.get(
+                current,
+                [],
+            ):
+
+                node = GLOBE_NODE_DATABASE.get(
+                    child
+                )
+
+                if node:
+
+                    result.append(
+                        node
+                    )
+
+                stack.append(
+                    child
+                )
+
+        return result
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        self.parent_map.clear()
+
+        self.children_map.clear()
+
+
+GLOBE_HIERARCHY_ENGINE = (
+    GlobeHierarchyEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 278
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 279
+# ==========================================================
+
+class GlobeSearchEngine:
+
+    def search(
+        self,
+        keyword: str,
+    ) -> List[GlobeNode]:
+
+        keyword = keyword.lower()
+
+        result: List[
+            GlobeNode
+        ] = []
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            if (
+                keyword
+                in
+                node.name.lower()
+            ):
+
+                result.append(
+                    node
+                )
+
+        return result
+
+
+    def search_by_layer(
+        self,
+        layer: GlobeLayerType,
+    ) -> List[GlobeNode]:
+
+        return [
+
+            node
+
+            for node
+
+            in GLOBE_NODE_DATABASE.values()
+
+            if node.layer == layer
+
+        ]
+
+
+    def nearest(
+        self,
+        latitude: float,
+        longitude: float,
+    ) -> Optional[GlobeNode]:
+
+        nearest_node = None
+
+        nearest_distance = float("inf")
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            distance = (
+
+                (node.latitude - latitude) ** 2
+
+                +
+
+                (node.longitude - longitude) ** 2
+
+            )
+
+            if distance < nearest_distance:
+
+                nearest_distance = distance
+
+                nearest_node = node
+
+        return nearest_node
+
+
+    def count_by_layer(
+        self,
+    ) -> Dict[str, int]:
+
+        result: Dict[
+            str,
+            int,
+        ] = {}
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            layer = node.layer.value
+
+            result[layer] = (
+
+                result.get(
+                    layer,
+                    0,
+                )
+
+                + 1
+
+            )
+
+        return result
+
+
+    def exists(
+        self,
+        node_id: str,
+    ) -> bool:
+
+        return (
+
+            node_id
+
+            in
+
+            GLOBE_NODE_DATABASE
+
+        )
+
+
+    def clear(
+        self,
+    ) -> None:
+
+        GLOBE_NODE_DATABASE.clear()
+
+
+GLOBE_SEARCH_ENGINE = (
+    GlobeSearchEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 279
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 280
+# ==========================================================
+
+class GlobeStatisticsEngine:
+
+    def total_nodes(
+        self,
+    ) -> int:
+
+        return len(
+            GLOBE_NODE_DATABASE
+        )
+
+
+    def total_flows(
+        self,
+    ) -> int:
+
+        return len(
+            GLOBE_FLOW_DATABASE
+        )
+
+
+    def nodes_by_layer(
+        self,
+    ) -> Dict[str, int]:
+
+        statistics: Dict[
+            str,
+            int,
+        ] = {}
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            layer = node.layer.value
+
+            statistics[layer] = (
+
+                statistics.get(
+                    layer,
+                    0,
+                )
+
+                + 1
+
+            )
+
+        return statistics
+
+
+    def average_pulse(
+        self,
+    ) -> float:
+
+        if not GLOBE_NODE_DATABASE:
+
+            return 0.0
+
+        total = sum(
+
+            node.pulse_strength
+
+            for node
+
+            in GLOBE_NODE_DATABASE.values()
+
+        )
+
+        return (
+
+            total
+
+            /
+
+            len(
+                GLOBE_NODE_DATABASE
+            )
+
+        )
+
+
+    def total_flow_value(
+        self,
+    ) -> float:
+
+        return sum(
+
+            flow.value
+
+            for flow
+
+            in GLOBE_FLOW_DATABASE.values()
+
+        )
+
+
+    def active_nodes(
+        self,
+    ) -> int:
+
+        return sum(
+
+            1
+
+            for node
+
+            in GLOBE_NODE_DATABASE.values()
+
+            if node.visible
+
+        )
+
+
+    def summary(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "nodes": self.total_nodes(),
+
+            "flows": self.total_flows(),
+
+            "active_nodes": self.active_nodes(),
+
+            "average_pulse": self.average_pulse(),
+
+            "total_flow_value": self.total_flow_value(),
+
+            "layers": self.nodes_by_layer(),
+
+            "generated_at": utc_now(),
+
+        }
+
+
+    def reset(
+        self,
+    ) -> None:
+
+        GLOBE_NODE_DATABASE.clear()
+
+        GLOBE_FLOW_DATABASE.clear()
+
+
+GLOBE_STATISTICS_ENGINE = (
+    GlobeStatisticsEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 280
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 281
+# ==========================================================
+
+class GlobeDataImportEngine:
+
+    def import_nodes(
+        self,
+        nodes: List[GlobeNode],
+    ) -> int:
+
+        count = 0
+
+        for node in nodes:
+
+            GLOBE_ENGINE.register_node(
+                node
+            )
+
+            count += 1
+
+        return count
+
+
+    def import_flows(
+        self,
+        flows: List[GlobeFlow],
+    ) -> int:
+
+        count = 0
+
+        for flow in flows:
+
+            GLOBE_ENGINE.register_flow(
+                flow
+            )
+
+            count += 1
+
+        return count
+
+
+    def merge_nodes(
+        self,
+        nodes: List[GlobeNode],
+    ) -> None:
+
+        for node in nodes:
+
+            existing = GLOBE_NODE_DATABASE.get(
+                node.id
+            )
+
+            if existing is None:
+
+                GLOBE_ENGINE.register_node(
+                    node
+                )
+
+                continue
+
+            existing.name = node.name
+            existing.layer = node.layer
+            existing.latitude = node.latitude
+            existing.longitude = node.longitude
+            existing.altitude = node.altitude
+            existing.size = node.size
+            existing.color = node.color
+            existing.pulse_strength = (
+                node.pulse_strength
+            )
+            existing.metadata = node.metadata
+            existing.updated_at = utc_now()
+
+
+    def merge_flows(
+        self,
+        flows: List[GlobeFlow],
+    ) -> None:
+
+        for flow in flows:
+
+            existing = GLOBE_FLOW_DATABASE.get(
+                flow.id
+            )
+
+            if existing is None:
+
+                GLOBE_ENGINE.register_flow(
+                    flow
+                )
+
+                continue
+
+            existing.source_node = (
+                flow.source_node
+            )
+
+            existing.target_node = (
+                flow.target_node
+            )
+
+            existing.value = flow.value
+            existing.width = flow.width
+            existing.color = flow.color
+            existing.animated = (
+                flow.animated
+            )
+            existing.updated_at = utc_now()
+
+
+    def import_summary(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "nodes": len(
+                GLOBE_NODE_DATABASE
+            ),
+
+            "flows": len(
+                GLOBE_FLOW_DATABASE
+            ),
+
+            "updated_at": utc_now(),
+
+        }
+
+
+GLOBE_DATA_IMPORT_ENGINE = (
+    GlobeDataImportEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 281
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 282
+# ==========================================================
+
+class GlobeDataExportEngine:
+
+    def export_nodes(
+        self,
+    ) -> List[Dict[str, Any]]:
+
+        result: List[
+            Dict[str, Any]
+        ] = []
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            result.append(
+
+                node.model_dump()
+
+            )
+
+        return result
+
+
+    def export_flows(
+        self,
+    ) -> List[Dict[str, Any]]:
+
+        result: List[
+            Dict[str, Any]
+        ] = []
+
+        for flow in GLOBE_FLOW_DATABASE.values():
+
+            result.append(
+
+                flow.model_dump()
+
+            )
+
+        return result
+
+
+    def export_snapshot(
+        self,
+    ) -> Dict[str, Any]:
+
+        return {
+
+            "generated_at": utc_now(),
+
+            "nodes": self.export_nodes(),
+
+            "flows": self.export_flows(),
+
+            "statistics": GLOBE_STATISTICS_ENGINE.summary(),
+
+        }
+
+
+    def export_json(
+        self,
+    ) -> str:
+
+        return orjson.dumps(
+
+            self.export_snapshot(),
+
+            option=
+
+            orjson.OPT_INDENT_2
+
+            |
+
+            orjson.OPT_SERIALIZE_NUMPY,
+
+        ).decode()
+
+
+    def save_snapshot(
+        self,
+        filepath: str,
+    ) -> None:
+
+        with open(
+
+            filepath,
+
+            "w",
+
+            encoding="utf-8",
+
+        ) as file:
+
+            file.write(
+
+                self.export_json()
+
+            )
+
+
+    def export_size(
+        self,
+    ) -> int:
+
+        return len(
+
+            self.export_json()
+
+        )
+
+
+GLOBE_DATA_EXPORT_ENGINE = (
+
+    GlobeDataExportEngine()
+
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 282
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 283
+# ==========================================================
+
+class GlobeValidationEngine:
+
+    def validate_node(
+        self,
+        node: GlobeNode,
+    ) -> bool:
+
+        if not node.id.strip():
+
+            return False
+
+        if not node.name.strip():
+
+            return False
+
+        if node.latitude < -90:
+
+            return False
+
+        if node.latitude > 90:
+
+            return False
+
+        if node.longitude < -180:
+
+            return False
+
+        if node.longitude > 180:
+
+            return False
+
+        return True
+
+
+    def validate_flow(
+        self,
+        flow: GlobeFlow,
+    ) -> bool:
+
+        if flow.source_node not in GLOBE_NODE_DATABASE:
+
+            return False
+
+        if flow.target_node not in GLOBE_NODE_DATABASE:
+
+            return False
+
+        if flow.value < 0:
+
+            return False
+
+        return True
+
+
+    def invalid_nodes(
+        self,
+    ) -> List[GlobeNode]:
+
+        result: List[
+            GlobeNode
+        ] = []
+
+        for node in GLOBE_NODE_DATABASE.values():
+
+            if not self.validate_node(
+                node
+            ):
+
+                result.append(
+                    node
+                )
+
+        return result
+
+
+    def invalid_flows(
+        self,
+    ) -> List[GlobeFlow]:
+
+        result: List[
+            GlobeFlow
+        ] = []
+
+        for flow in GLOBE_FLOW_DATABASE.values():
+
+            if not self.validate_flow(
+                flow
+            ):
+
+                result.append(
+                    flow
+                )
+
+        return result
+
+
+    def report(
+        self,
+    ) -> Dict[str, Any]:
+
+        invalid_nodes = self.invalid_nodes()
+
+        invalid_flows = self.invalid_flows()
+
+        return {
+
+            "valid_nodes":
+
+                len(
+                    GLOBE_NODE_DATABASE
+                )
+                -
+                len(
+                    invalid_nodes
+                ),
+
+            "invalid_nodes":
+
+                len(
+                    invalid_nodes
+                ),
+
+            "valid_flows":
+
+                len(
+                    GLOBE_FLOW_DATABASE
+                )
+                -
+                len(
+                    invalid_flows
+                ),
+
+            "invalid_flows":
+
+                len(
+                    invalid_flows
+                ),
+
+            "checked_at":
+
+                utc_now(),
+
+        }
+
+
+    def is_valid(
+        self,
+    ) -> bool:
+
+        return (
+
+            len(
+                self.invalid_nodes()
+            ) == 0
+
+            and
+
+            len(
+                self.invalid_flows()
+            ) == 0
+
+        )
+
+
+GLOBE_VALIDATION_ENGINE = (
+    GlobeValidationEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 283
+# ==========================================================
