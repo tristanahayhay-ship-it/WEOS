@@ -2524,3 +2524,2580 @@ SUPPLY_CHAIN_ENGINE = SupplyChainEngine()
 # ==========================================================
 # KẾT THÚC ĐOẠN 041
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 042
+# ==========================================================
+
+class EnergyAssetType(str, Enum):
+    OIL_FIELD = "oil_field"
+    GAS_FIELD = "gas_field"
+    REFINERY = "refinery"
+    POWER_PLANT = "power_plant"
+    SOLAR = "solar"
+    WIND = "wind"
+    HYDRO = "hydro"
+    NUCLEAR = "nuclear"
+
+
+class EnergyAsset(BaseModel):
+    id: str
+    name: str
+    asset_type: EnergyAssetType
+    country: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    capacity: float = 0.0
+    capacity_unit: str = ""
+    production: float = 0.0
+    production_unit: str = ""
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+ENERGY_ASSETS: Dict[str, EnergyAsset] = {}
+
+
+class EnergyEngine:
+
+    def register(self, asset: EnergyAsset) -> None:
+        ENERGY_ASSETS[asset.id] = asset
+
+    def get(self, asset_id: str) -> Optional[EnergyAsset]:
+        return ENERGY_ASSETS.get(asset_id)
+
+    def remove(self, asset_id: str) -> None:
+        ENERGY_ASSETS.pop(asset_id, None)
+
+    def update_production(
+        self,
+        asset_id: str,
+        production: float,
+    ) -> None:
+        asset = self.get(asset_id)
+        if asset is None:
+            return
+        asset.production = production
+        asset.updated_at = utc_now()
+
+    def all(self) -> List[EnergyAsset]:
+        return sorted(
+            ENERGY_ASSETS.values(),
+            key=lambda item: item.name,
+        )
+
+
+ENERGY_ENGINE = EnergyEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 042
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 043
+# ==========================================================
+
+class PortRecord(BaseModel):
+    id: str
+    name: str
+    country: str = ""
+    city: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    port_type: str = ""
+    annual_capacity: float = 0.0
+    capacity_unit: str = ""
+    throughput: float = 0.0
+    throughput_unit: str = ""
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+PORTS: Dict[str, PortRecord] = {}
+
+
+class PortEngine:
+
+    def register(self, port: PortRecord) -> None:
+        PORTS[port.id] = port
+
+    def get(self, port_id: str) -> Optional[PortRecord]:
+        return PORTS.get(port_id)
+
+    def remove(self, port_id: str) -> None:
+        PORTS.pop(port_id, None)
+
+    def update_throughput(
+        self,
+        port_id: str,
+        throughput: float,
+    ) -> None:
+        port = self.get(port_id)
+        if port is None:
+            return
+        port.throughput = throughput
+        port.updated_at = utc_now()
+
+    def all(self) -> List[PortRecord]:
+        return sorted(
+            PORTS.values(),
+            key=lambda item: item.name,
+        )
+
+
+PORT_ENGINE = PortEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 043
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 044
+# ==========================================================
+
+class AirportRecord(BaseModel):
+    id: str
+    name: str
+    iata: str = ""
+    icao: str = ""
+    country: str = ""
+    city: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    annual_passengers: float = 0.0
+    annual_cargo_tons: float = 0.0
+    runways: int = 0
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+AIRPORTS: Dict[str, AirportRecord] = {}
+
+
+class AirportEngine:
+
+    def register(self, airport: AirportRecord) -> None:
+        AIRPORTS[airport.id] = airport
+
+    def get(self, airport_id: str) -> Optional[AirportRecord]:
+        return AIRPORTS.get(airport_id)
+
+    def remove(self, airport_id: str) -> None:
+        AIRPORTS.pop(airport_id, None)
+
+    def update_statistics(
+        self,
+        airport_id: str,
+        passengers: float,
+        cargo_tons: float,
+    ) -> None:
+        airport = self.get(airport_id)
+        if airport is None:
+            return
+        airport.annual_passengers = passengers
+        airport.annual_cargo_tons = cargo_tons
+        airport.updated_at = utc_now()
+
+    def all(self) -> List[AirportRecord]:
+        return sorted(
+            AIRPORTS.values(),
+            key=lambda item: item.name,
+        )
+
+
+AIRPORT_ENGINE = AirportEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 044
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 045
+# ==========================================================
+
+class BankRecord(BaseModel):
+    id: str
+    name: str
+    country: str = ""
+    city: str = ""
+    bank_type: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    assets_usd: float = 0.0
+    deposits_usd: float = 0.0
+    market_value_usd: float = 0.0
+    founded: str = ""
+    website: str = ""
+    updated_at: Optional[datetime] = None
+
+
+BANKS: Dict[str, BankRecord] = {}
+
+
+class BankEngine:
+
+    def register(self, bank: BankRecord) -> None:
+        BANKS[bank.id] = bank
+
+    def get(self, bank_id: str) -> Optional[BankRecord]:
+        return BANKS.get(bank_id)
+
+    def remove(self, bank_id: str) -> None:
+        BANKS.pop(bank_id, None)
+
+    def update_assets(
+        self,
+        bank_id: str,
+        assets_usd: float,
+        deposits_usd: float,
+    ) -> None:
+        bank = self.get(bank_id)
+        if bank is None:
+            return
+        bank.assets_usd = assets_usd
+        bank.deposits_usd = deposits_usd
+        bank.updated_at = utc_now()
+
+    def all(self) -> List[BankRecord]:
+        return sorted(
+            BANKS.values(),
+            key=lambda item: item.name,
+        )
+
+
+BANK_ENGINE = BankEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 045
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 046
+# ==========================================================
+
+class CentralBankRecord(BaseModel):
+    id: str
+    name: str
+    country: str
+    currency: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    interest_rate: Optional[float] = None
+    balance_sheet_usd: Optional[float] = None
+    gold_reserves_tonnes: Optional[float] = None
+    fx_reserves_usd: Optional[float] = None
+    updated_at: Optional[datetime] = None
+
+
+CENTRAL_BANKS: Dict[str, CentralBankRecord] = {}
+
+
+class CentralBankEngine:
+
+    def register(self, bank: CentralBankRecord) -> None:
+        CENTRAL_BANKS[bank.id] = bank
+
+    def get(self, bank_id: str) -> Optional[CentralBankRecord]:
+        return CENTRAL_BANKS.get(bank_id)
+
+    def remove(self, bank_id: str) -> None:
+        CENTRAL_BANKS.pop(bank_id, None)
+
+    def update(
+        self,
+        bank_id: str,
+        interest_rate: Optional[float],
+        balance_sheet_usd: Optional[float],
+        gold_reserves_tonnes: Optional[float],
+        fx_reserves_usd: Optional[float],
+    ) -> None:
+        bank = self.get(bank_id)
+        if bank is None:
+            return
+        bank.interest_rate = interest_rate
+        bank.balance_sheet_usd = balance_sheet_usd
+        bank.gold_reserves_tonnes = gold_reserves_tonnes
+        bank.fx_reserves_usd = fx_reserves_usd
+        bank.updated_at = utc_now()
+
+    def all(self) -> List[CentralBankRecord]:
+        return sorted(
+            CENTRAL_BANKS.values(),
+            key=lambda item: item.name,
+        )
+
+
+CENTRAL_BANK_ENGINE = CentralBankEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 046
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 047
+# ==========================================================
+
+class ExchangeRecord(BaseModel):
+    id: str
+    name: str
+    country: str = ""
+    city: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    timezone: str = ""
+    currency: str = ""
+    market_cap_usd: float = 0.0
+    daily_volume_usd: float = 0.0
+    listed_companies: int = 0
+    status: str = "open"
+    updated_at: Optional[datetime] = None
+
+
+EXCHANGES: Dict[str, ExchangeRecord] = {}
+
+
+class ExchangeEngine:
+
+    def register(self, exchange: ExchangeRecord) -> None:
+        EXCHANGES[exchange.id] = exchange
+
+    def get(self, exchange_id: str) -> Optional[ExchangeRecord]:
+        return EXCHANGES.get(exchange_id)
+
+    def remove(self, exchange_id: str) -> None:
+        EXCHANGES.pop(exchange_id, None)
+
+    def update(
+        self,
+        exchange_id: str,
+        market_cap_usd: float,
+        daily_volume_usd: float,
+        listed_companies: int,
+    ) -> None:
+        exchange = self.get(exchange_id)
+        if exchange is None:
+            return
+        exchange.market_cap_usd = market_cap_usd
+        exchange.daily_volume_usd = daily_volume_usd
+        exchange.listed_companies = listed_companies
+        exchange.updated_at = utc_now()
+
+    def all(self) -> List[ExchangeRecord]:
+        return sorted(
+            EXCHANGES.values(),
+            key=lambda item: item.name,
+        )
+
+
+EXCHANGE_ENGINE = ExchangeEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 047
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 048
+# ==========================================================
+
+class MineRecord(BaseModel):
+    id: str
+    name: str
+    country: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    mineral: str = ""
+    owner: str = ""
+    annual_production: float = 0.0
+    production_unit: str = ""
+    reserves: float = 0.0
+    reserve_unit: str = ""
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+MINES: Dict[str, MineRecord] = {}
+
+
+class MineEngine:
+
+    def register(self, mine: MineRecord) -> None:
+        MINES[mine.id] = mine
+
+    def get(self, mine_id: str) -> Optional[MineRecord]:
+        return MINES.get(mine_id)
+
+    def remove(self, mine_id: str) -> None:
+        MINES.pop(mine_id, None)
+
+    def update(
+        self,
+        mine_id: str,
+        annual_production: float,
+        reserves: float,
+    ) -> None:
+        mine = self.get(mine_id)
+        if mine is None:
+            return
+        mine.annual_production = annual_production
+        mine.reserves = reserves
+        mine.updated_at = utc_now()
+
+    def all(self) -> List[MineRecord]:
+        return sorted(
+            MINES.values(),
+            key=lambda item: item.name,
+        )
+
+
+MINE_ENGINE = MineEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 048
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 049
+# ==========================================================
+
+class DataCenterRecord(BaseModel):
+    id: str
+    name: str
+    operator: str = ""
+    country: str = ""
+    city: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    tier: str = ""
+    rack_count: int = 0
+    power_mw: float = 0.0
+    floor_area_m2: float = 0.0
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+DATA_CENTERS: Dict[str, DataCenterRecord] = {}
+
+
+class DataCenterEngine:
+
+    def register(self, center: DataCenterRecord) -> None:
+        DATA_CENTERS[center.id] = center
+
+    def get(self, center_id: str) -> Optional[DataCenterRecord]:
+        return DATA_CENTERS.get(center_id)
+
+    def remove(self, center_id: str) -> None:
+        DATA_CENTERS.pop(center_id, None)
+
+    def update(
+        self,
+        center_id: str,
+        rack_count: int,
+        power_mw: float,
+        floor_area_m2: float,
+    ) -> None:
+        center = self.get(center_id)
+        if center is None:
+            return
+        center.rack_count = rack_count
+        center.power_mw = power_mw
+        center.floor_area_m2 = floor_area_m2
+        center.updated_at = utc_now()
+
+    def all(self) -> List[DataCenterRecord]:
+        return sorted(
+            DATA_CENTERS.values(),
+            key=lambda item: item.name,
+        )
+
+
+DATA_CENTER_ENGINE = DataCenterEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 049
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 050
+# ==========================================================
+
+class FactoryRecord(BaseModel):
+    id: str
+    name: str
+    company_id: str = ""
+    country: str = ""
+    city: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    industry: str = ""
+    employees: int = 0
+    production_capacity: float = 0.0
+    capacity_unit: str = ""
+    annual_revenue_usd: float = 0.0
+    annual_output: float = 0.0
+    output_unit: str = ""
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+FACTORIES: Dict[str, FactoryRecord] = {}
+
+
+class FactoryEngine:
+
+    def register(self, factory: FactoryRecord) -> None:
+        FACTORIES[factory.id] = factory
+
+    def get(self, factory_id: str) -> Optional[FactoryRecord]:
+        return FACTORIES.get(factory_id)
+
+    def remove(self, factory_id: str) -> None:
+        FACTORIES.pop(factory_id, None)
+
+    def update(
+        self,
+        factory_id: str,
+        employees: int,
+        annual_revenue_usd: float,
+        annual_output: float,
+    ) -> None:
+        factory = self.get(factory_id)
+        if factory is None:
+            return
+        factory.employees = employees
+        factory.annual_revenue_usd = annual_revenue_usd
+        factory.annual_output = annual_output
+        factory.updated_at = utc_now()
+
+    def all(self) -> List[FactoryRecord]:
+        return sorted(
+            FACTORIES.values(),
+            key=lambda item: item.name,
+        )
+
+
+FACTORY_ENGINE = FactoryEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 050
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 051
+# ==========================================================
+
+class WarehouseRecord(BaseModel):
+    id: str
+    name: str
+    company_id: str = ""
+    country: str = ""
+    city: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    warehouse_type: str = ""
+    area_m2: float = 0.0
+    storage_capacity: float = 0.0
+    capacity_unit: str = ""
+    utilization_percent: float = 0.0
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+WAREHOUSES: Dict[str, WarehouseRecord] = {}
+
+
+class WarehouseEngine:
+
+    def register(self, warehouse: WarehouseRecord) -> None:
+        WAREHOUSES[warehouse.id] = warehouse
+
+    def get(self, warehouse_id: str) -> Optional[WarehouseRecord]:
+        return WAREHOUSES.get(warehouse_id)
+
+    def remove(self, warehouse_id: str) -> None:
+        WAREHOUSES.pop(warehouse_id, None)
+
+    def update(
+        self,
+        warehouse_id: str,
+        area_m2: float,
+        storage_capacity: float,
+        utilization_percent: float,
+    ) -> None:
+        warehouse = self.get(warehouse_id)
+        if warehouse is None:
+            return
+        warehouse.area_m2 = area_m2
+        warehouse.storage_capacity = storage_capacity
+        warehouse.utilization_percent = utilization_percent
+        warehouse.updated_at = utc_now()
+
+    def all(self) -> List[WarehouseRecord]:
+        return sorted(
+            WAREHOUSES.values(),
+            key=lambda item: item.name,
+        )
+
+
+WAREHOUSE_ENGINE = WarehouseEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 051
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 052
+# ==========================================================
+
+class RailwayRecord(BaseModel):
+    id: str
+    name: str
+    country: str = ""
+    operator: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    railway_type: str = ""
+    total_length_km: float = 0.0
+    freight_tons_year: float = 0.0
+    passengers_year: float = 0.0
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+RAILWAYS: Dict[str, RailwayRecord] = {}
+
+
+class RailwayEngine:
+
+    def register(self, railway: RailwayRecord) -> None:
+        RAILWAYS[railway.id] = railway
+
+    def get(self, railway_id: str) -> Optional[RailwayRecord]:
+        return RAILWAYS.get(railway_id)
+
+    def remove(self, railway_id: str) -> None:
+        RAILWAYS.pop(railway_id, None)
+
+    def update(
+        self,
+        railway_id: str,
+        total_length_km: float,
+        freight_tons_year: float,
+        passengers_year: float,
+    ) -> None:
+        railway = self.get(railway_id)
+        if railway is None:
+            return
+        railway.total_length_km = total_length_km
+        railway.freight_tons_year = freight_tons_year
+        railway.passengers_year = passengers_year
+        railway.updated_at = utc_now()
+
+    def all(self) -> List[RailwayRecord]:
+        return sorted(
+            RAILWAYS.values(),
+            key=lambda item: item.name,
+        )
+
+
+RAILWAY_ENGINE = RailwayEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 052
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 053
+# ==========================================================
+
+class HighwayRecord(BaseModel):
+    id: str
+    name: str
+    country: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    highway_type: str = ""
+    total_length_km: float = 0.0
+    lane_count: int = 0
+    annual_traffic: float = 0.0
+    toll_revenue_usd: float = 0.0
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+HIGHWAYS: Dict[str, HighwayRecord] = {}
+
+
+class HighwayEngine:
+
+    def register(self, highway: HighwayRecord) -> None:
+        HIGHWAYS[highway.id] = highway
+
+    def get(self, highway_id: str) -> Optional[HighwayRecord]:
+        return HIGHWAYS.get(highway_id)
+
+    def remove(self, highway_id: str) -> None:
+        HIGHWAYS.pop(highway_id, None)
+
+    def update(
+        self,
+        highway_id: str,
+        total_length_km: float,
+        annual_traffic: float,
+        toll_revenue_usd: float,
+    ) -> None:
+        highway = self.get(highway_id)
+        if highway is None:
+            return
+        highway.total_length_km = total_length_km
+        highway.annual_traffic = annual_traffic
+        highway.toll_revenue_usd = toll_revenue_usd
+        highway.updated_at = utc_now()
+
+    def all(self) -> List[HighwayRecord]:
+        return sorted(
+            HIGHWAYS.values(),
+            key=lambda item: item.name,
+        )
+
+
+HIGHWAY_ENGINE = HighwayEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 053
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 054
+# ==========================================================
+
+class PipelineRecord(BaseModel):
+    id: str
+    name: str
+    country: str = ""
+    operator: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    pipeline_type: str = ""
+    total_length_km: float = 0.0
+    capacity_per_day: float = 0.0
+    capacity_unit: str = ""
+    source: str = ""
+    destination: str = ""
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+PIPELINES: Dict[str, PipelineRecord] = {}
+
+
+class PipelineEngine:
+
+    def register(self, pipeline: PipelineRecord) -> None:
+        PIPELINES[pipeline.id] = pipeline
+
+    def get(self, pipeline_id: str) -> Optional[PipelineRecord]:
+        return PIPELINES.get(pipeline_id)
+
+    def remove(self, pipeline_id: str) -> None:
+        PIPELINES.pop(pipeline_id, None)
+
+    def update(
+        self,
+        pipeline_id: str,
+        total_length_km: float,
+        capacity_per_day: float,
+        status: str,
+    ) -> None:
+        pipeline = self.get(pipeline_id)
+        if pipeline is None:
+            return
+        pipeline.total_length_km = total_length_km
+        pipeline.capacity_per_day = capacity_per_day
+        pipeline.status = status
+        pipeline.updated_at = utc_now()
+
+    def all(self) -> List[PipelineRecord]:
+        return sorted(
+            PIPELINES.values(),
+            key=lambda item: item.name,
+        )
+
+
+PIPELINE_ENGINE = PipelineEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 054
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 055
+# ==========================================================
+
+class ShippingLaneRecord(BaseModel):
+    id: str
+    name: str
+    ocean: str = ""
+    source_port: str = ""
+    destination_port: str = ""
+    distance_km: float = 0.0
+    annual_cargo_tons: float = 0.0
+    annual_ship_count: int = 0
+    average_transit_days: float = 0.0
+    risk_level: str = "low"
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+SHIPPING_LANES: Dict[str, ShippingLaneRecord] = {}
+
+
+class ShippingLaneEngine:
+
+    def register(self, lane: ShippingLaneRecord) -> None:
+        SHIPPING_LANES[lane.id] = lane
+
+    def get(self, lane_id: str) -> Optional[ShippingLaneRecord]:
+        return SHIPPING_LANES.get(lane_id)
+
+    def remove(self, lane_id: str) -> None:
+        SHIPPING_LANES.pop(lane_id, None)
+
+    def update(
+        self,
+        lane_id: str,
+        annual_cargo_tons: float,
+        annual_ship_count: int,
+        average_transit_days: float,
+    ) -> None:
+        lane = self.get(lane_id)
+        if lane is None:
+            return
+        lane.annual_cargo_tons = annual_cargo_tons
+        lane.annual_ship_count = annual_ship_count
+        lane.average_transit_days = average_transit_days
+        lane.updated_at = utc_now()
+
+    def all(self) -> List[ShippingLaneRecord]:
+        return sorted(
+            SHIPPING_LANES.values(),
+            key=lambda item: item.name,
+        )
+
+
+SHIPPING_LANE_ENGINE = ShippingLaneEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 055
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 056
+# ==========================================================
+
+class SatelliteRecord(BaseModel):
+    id: str
+    name: str
+    operator: str = ""
+    country: str = ""
+    orbit: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    altitude_km: float = 0.0
+    launch_date: str = ""
+    purpose: str = ""
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+SATELLITES: Dict[str, SatelliteRecord] = {}
+
+
+class SatelliteEngine:
+
+    def register(self, satellite: SatelliteRecord) -> None:
+        SATELLITES[satellite.id] = satellite
+
+    def get(self, satellite_id: str) -> Optional[SatelliteRecord]:
+        return SATELLITES.get(satellite_id)
+
+    def remove(self, satellite_id: str) -> None:
+        SATELLITES.pop(satellite_id, None)
+
+    def update(
+        self,
+        satellite_id: str,
+        latitude: float,
+        longitude: float,
+        altitude_km: float,
+        status: str,
+    ) -> None:
+        satellite = self.get(satellite_id)
+        if satellite is None:
+            return
+        satellite.latitude = latitude
+        satellite.longitude = longitude
+        satellite.altitude_km = altitude_km
+        satellite.status = status
+        satellite.updated_at = utc_now()
+
+    def all(self) -> List[SatelliteRecord]:
+        return sorted(
+            SATELLITES.values(),
+            key=lambda item: item.name,
+        )
+
+
+SATELLITE_ENGINE = SatelliteEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 056
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 057
+# ==========================================================
+
+class CableRecord(BaseModel):
+    id: str
+    name: str
+    cable_type: str = ""
+    owner: str = ""
+    source: str = ""
+    destination: str = ""
+    length_km: float = 0.0
+    bandwidth_tbps: float = 0.0
+    landing_points: int = 0
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+CABLES: Dict[str, CableRecord] = {}
+
+
+class CableEngine:
+
+    def register(self, cable: CableRecord) -> None:
+        CABLES[cable.id] = cable
+
+    def get(self, cable_id: str) -> Optional[CableRecord]:
+        return CABLES.get(cable_id)
+
+    def remove(self, cable_id: str) -> None:
+        CABLES.pop(cable_id, None)
+
+    def update(
+        self,
+        cable_id: str,
+        bandwidth_tbps: float,
+        landing_points: int,
+        status: str,
+    ) -> None:
+        cable = self.get(cable_id)
+        if cable is None:
+            return
+        cable.bandwidth_tbps = bandwidth_tbps
+        cable.landing_points = landing_points
+        cable.status = status
+        cable.updated_at = utc_now()
+
+    def all(self) -> List[CableRecord]:
+        return sorted(
+            CABLES.values(),
+            key=lambda item: item.name,
+        )
+
+
+CABLE_ENGINE = CableEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 057
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 058
+# ==========================================================
+
+class FiberNetworkRecord(BaseModel):
+    id: str
+    name: str
+    operator: str = ""
+    country: str = ""
+    network_type: str = ""
+    total_length_km: float = 0.0
+    cities_connected: int = 0
+    bandwidth_tbps: float = 0.0
+    redundancy_level: str = ""
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+FIBER_NETWORKS: Dict[str, FiberNetworkRecord] = {}
+
+
+class FiberNetworkEngine:
+
+    def register(self, network: FiberNetworkRecord) -> None:
+        FIBER_NETWORKS[network.id] = network
+
+    def get(self, network_id: str) -> Optional[FiberNetworkRecord]:
+        return FIBER_NETWORKS.get(network_id)
+
+    def remove(self, network_id: str) -> None:
+        FIBER_NETWORKS.pop(network_id, None)
+
+    def update(
+        self,
+        network_id: str,
+        total_length_km: float,
+        cities_connected: int,
+        bandwidth_tbps: float,
+    ) -> None:
+        network = self.get(network_id)
+        if network is None:
+            return
+        network.total_length_km = total_length_km
+        network.cities_connected = cities_connected
+        network.bandwidth_tbps = bandwidth_tbps
+        network.updated_at = utc_now()
+
+    def all(self) -> List[FiberNetworkRecord]:
+        return sorted(
+            FIBER_NETWORKS.values(),
+            key=lambda item: item.name,
+        )
+
+
+FIBER_NETWORK_ENGINE = FiberNetworkEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 058
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 059
+# ==========================================================
+
+class PowerGridRecord(BaseModel):
+    id: str
+    name: str
+    country: str = ""
+    operator: str = ""
+    grid_type: str = ""
+    voltage_kv: float = 0.0
+    total_length_km: float = 0.0
+    capacity_mw: float = 0.0
+    connected_regions: int = 0
+    reliability_percent: float = 0.0
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+POWER_GRIDS: Dict[str, PowerGridRecord] = {}
+
+
+class PowerGridEngine:
+
+    def register(self, grid: PowerGridRecord) -> None:
+        POWER_GRIDS[grid.id] = grid
+
+    def get(self, grid_id: str) -> Optional[PowerGridRecord]:
+        return POWER_GRIDS.get(grid_id)
+
+    def remove(self, grid_id: str) -> None:
+        POWER_GRIDS.pop(grid_id, None)
+
+    def update(
+        self,
+        grid_id: str,
+        total_length_km: float,
+        capacity_mw: float,
+        reliability_percent: float,
+    ) -> None:
+        grid = self.get(grid_id)
+        if grid is None:
+            return
+        grid.total_length_km = total_length_km
+        grid.capacity_mw = capacity_mw
+        grid.reliability_percent = reliability_percent
+        grid.updated_at = utc_now()
+
+    def all(self) -> List[PowerGridRecord]:
+        return sorted(
+            POWER_GRIDS.values(),
+            key=lambda item: item.name,
+        )
+
+
+POWER_GRID_ENGINE = PowerGridEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 059
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 060
+# ==========================================================
+
+class PowerPlantRecord(BaseModel):
+    id: str
+    name: str
+    country: str = ""
+    city: str = ""
+    operator: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    plant_type: str = ""
+    fuel: str = ""
+    capacity_mw: float = 0.0
+    annual_generation_gwh: float = 0.0
+    carbon_emission_tons: float = 0.0
+    status: str = "active"
+    updated_at: Optional[datetime] = None
+
+
+POWER_PLANTS: Dict[str, PowerPlantRecord] = {}
+
+
+class PowerPlantEngine:
+
+    def register(self, plant: PowerPlantRecord) -> None:
+        POWER_PLANTS[plant.id] = plant
+
+    def get(self, plant_id: str) -> Optional[PowerPlantRecord]:
+        return POWER_PLANTS.get(plant_id)
+
+    def remove(self, plant_id: str) -> None:
+        POWER_PLANTS.pop(plant_id, None)
+
+    def update(
+        self,
+        plant_id: str,
+        capacity_mw: float,
+        annual_generation_gwh: float,
+        carbon_emission_tons: float,
+    ) -> None:
+        plant = self.get(plant_id)
+        if plant is None:
+            return
+        plant.capacity_mw = capacity_mw
+        plant.annual_generation_gwh = annual_generation_gwh
+        plant.carbon_emission_tons = carbon_emission_tons
+        plant.updated_at = utc_now()
+
+    def all(self) -> List[PowerPlantRecord]:
+        return sorted(
+            POWER_PLANTS.values(),
+            key=lambda item: item.name,
+        )
+
+
+POWER_PLANT_ENGINE = PowerPlantEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 060
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 061
+# ==========================================================
+
+class GDPRecord(BaseModel):
+    id: str
+    country: str
+    nominal_gdp_usd: float = 0.0
+    real_gdp_growth: float = 0.0
+    gdp_per_capita: float = 0.0
+    quarter: str = ""
+    year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GDP_DATABASE: Dict[str, GDPRecord] = {}
+
+
+class GDPEngine:
+
+    def register(self, record: GDPRecord) -> None:
+        GDP_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[GDPRecord]:
+        return GDP_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        GDP_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        nominal_gdp_usd: float,
+        real_gdp_growth: float,
+        gdp_per_capita: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.nominal_gdp_usd = nominal_gdp_usd
+        record.real_gdp_growth = real_gdp_growth
+        record.gdp_per_capita = gdp_per_capita
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[GDPRecord]:
+        return sorted(
+            GDP_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+GDP_ENGINE = GDPEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 061
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 062
+# ==========================================================
+
+class CPIRecord(BaseModel):
+    id: str
+    country: str
+    headline_cpi: float = 0.0
+    core_cpi: float = 0.0
+    monthly_change: float = 0.0
+    yearly_change: float = 0.0
+    month: str = ""
+    year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+CPI_DATABASE: Dict[str, CPIRecord] = {}
+
+
+class CPIEngine:
+
+    def register(self, record: CPIRecord) -> None:
+        CPI_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[CPIRecord]:
+        return CPI_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        CPI_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        headline_cpi: float,
+        core_cpi: float,
+        monthly_change: float,
+        yearly_change: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.headline_cpi = headline_cpi
+        record.core_cpi = core_cpi
+        record.monthly_change = monthly_change
+        record.yearly_change = yearly_change
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[CPIRecord]:
+        return sorted(
+            CPI_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+CPI_ENGINE = CPIEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 062
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 063
+# ==========================================================
+
+class PPIRecord(BaseModel):
+    id: str
+    country: str
+    headline_ppi: float = 0.0
+    core_ppi: float = 0.0
+    monthly_change: float = 0.0
+    yearly_change: float = 0.0
+    month: str = ""
+    year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+PPI_DATABASE: Dict[str, PPIRecord] = {}
+
+
+class PPIEngine:
+
+    def register(self, record: PPIRecord) -> None:
+        PPI_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[PPIRecord]:
+        return PPI_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        PPI_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        headline_ppi: float,
+        core_ppi: float,
+        monthly_change: float,
+        yearly_change: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.headline_ppi = headline_ppi
+        record.core_ppi = core_ppi
+        record.monthly_change = monthly_change
+        record.yearly_change = yearly_change
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[PPIRecord]:
+        return sorted(
+            PPI_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+PPI_ENGINE = PPIEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 063
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 064
+# ==========================================================
+
+class PCERecord(BaseModel):
+    id: str
+    country: str
+    headline_pce: float = 0.0
+    core_pce: float = 0.0
+    monthly_change: float = 0.0
+    yearly_change: float = 0.0
+    month: str = ""
+    year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+PCE_DATABASE: Dict[str, PCERecord] = {}
+
+
+class PCEEngine:
+
+    def register(self, record: PCERecord) -> None:
+        PCE_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[PCERecord]:
+        return PCE_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        PCE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        headline_pce: float,
+        core_pce: float,
+        monthly_change: float,
+        yearly_change: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.headline_pce = headline_pce
+        record.core_pce = core_pce
+        record.monthly_change = monthly_change
+        record.yearly_change = yearly_change
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[PCERecord]:
+        return sorted(
+            PCE_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+PCE_ENGINE = PCEEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 064
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 065
+# ==========================================================
+
+class NFPRecord(BaseModel):
+    id: str
+    country: str
+    actual: float = 0.0
+    forecast: float = 0.0
+    previous: float = 0.0
+    unemployment_rate: float = 0.0
+    average_hourly_earnings: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+NFP_DATABASE: Dict[str, NFPRecord] = {}
+
+
+class NFPEngine:
+
+    def register(self, record: NFPRecord) -> None:
+        NFP_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[NFPRecord]:
+        return NFP_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        NFP_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        actual: float,
+        forecast: float,
+        previous: float,
+        unemployment_rate: float,
+        average_hourly_earnings: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.actual = actual
+        record.forecast = forecast
+        record.previous = previous
+        record.unemployment_rate = unemployment_rate
+        record.average_hourly_earnings = average_hourly_earnings
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[NFPRecord]:
+        return sorted(
+            NFP_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+NFP_ENGINE = NFPEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 065
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 066
+# ==========================================================
+
+class InterestRateRecord(BaseModel):
+    id: str
+    country: str
+    central_bank: str = ""
+    policy_rate: float = 0.0
+    previous_rate: float = 0.0
+    change_bps: float = 0.0
+    decision_date: str = ""
+    next_meeting: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+INTEREST_RATE_DATABASE: Dict[str, InterestRateRecord] = {}
+
+
+class InterestRateEngine:
+
+    def register(self, record: InterestRateRecord) -> None:
+        INTEREST_RATE_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[InterestRateRecord]:
+        return INTEREST_RATE_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        INTEREST_RATE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        policy_rate: float,
+        previous_rate: float,
+        change_bps: float,
+        next_meeting: str,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.policy_rate = policy_rate
+        record.previous_rate = previous_rate
+        record.change_bps = change_bps
+        record.next_meeting = next_meeting
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[InterestRateRecord]:
+        return sorted(
+            INTEREST_RATE_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+INTEREST_RATE_ENGINE = InterestRateEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 066
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 067
+# ==========================================================
+
+class UnemploymentRecord(BaseModel):
+    id: str
+    country: str
+    unemployment_rate: float = 0.0
+    labor_force: float = 0.0
+    employed_population: float = 0.0
+    unemployed_population: float = 0.0
+    youth_unemployment_rate: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+UNEMPLOYMENT_DATABASE: Dict[str, UnemploymentRecord] = {}
+
+
+class UnemploymentEngine:
+
+    def register(self, record: UnemploymentRecord) -> None:
+        UNEMPLOYMENT_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[UnemploymentRecord]:
+        return UNEMPLOYMENT_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        UNEMPLOYMENT_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        unemployment_rate: float,
+        labor_force: float,
+        employed_population: float,
+        unemployed_population: float,
+        youth_unemployment_rate: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.unemployment_rate = unemployment_rate
+        record.labor_force = labor_force
+        record.employed_population = employed_population
+        record.unemployed_population = unemployed_population
+        record.youth_unemployment_rate = youth_unemployment_rate
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[UnemploymentRecord]:
+        return sorted(
+            UNEMPLOYMENT_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+UNEMPLOYMENT_ENGINE = UnemploymentEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 067
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 068
+# ==========================================================
+
+class InflationRecord(BaseModel):
+    id: str
+    country: str
+    inflation_rate: float = 0.0
+    target_rate: float = 0.0
+    food_inflation: float = 0.0
+    energy_inflation: float = 0.0
+    services_inflation: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+INFLATION_DATABASE: Dict[str, InflationRecord] = {}
+
+
+class InflationEngine:
+
+    def register(self, record: InflationRecord) -> None:
+        INFLATION_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[InflationRecord]:
+        return INFLATION_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        INFLATION_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        inflation_rate: float,
+        target_rate: float,
+        food_inflation: float,
+        energy_inflation: float,
+        services_inflation: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.inflation_rate = inflation_rate
+        record.target_rate = target_rate
+        record.food_inflation = food_inflation
+        record.energy_inflation = energy_inflation
+        record.services_inflation = services_inflation
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[InflationRecord]:
+        return sorted(
+            INFLATION_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+INFLATION_ENGINE = InflationEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 068
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 069
+# ==========================================================
+
+class TradeBalanceRecord(BaseModel):
+    id: str
+    country: str
+    exports_usd: float = 0.0
+    imports_usd: float = 0.0
+    trade_balance_usd: float = 0.0
+    export_growth: float = 0.0
+    import_growth: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+TRADE_BALANCE_DATABASE: Dict[str, TradeBalanceRecord] = {}
+
+
+class TradeBalanceEngine:
+
+    def register(self, record: TradeBalanceRecord) -> None:
+        TRADE_BALANCE_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[TradeBalanceRecord]:
+        return TRADE_BALANCE_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        TRADE_BALANCE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        exports_usd: float,
+        imports_usd: float,
+        trade_balance_usd: float,
+        export_growth: float,
+        import_growth: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.exports_usd = exports_usd
+        record.imports_usd = imports_usd
+        record.trade_balance_usd = trade_balance_usd
+        record.export_growth = export_growth
+        record.import_growth = import_growth
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[TradeBalanceRecord]:
+        return sorted(
+            TRADE_BALANCE_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+TRADE_BALANCE_ENGINE = TradeBalanceEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 069
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 070
+# ==========================================================
+
+class ForeignReserveRecord(BaseModel):
+    id: str
+    country: str
+    total_reserves_usd: float = 0.0
+    gold_reserves_usd: float = 0.0
+    foreign_currency_usd: float = 0.0
+    imf_position_usd: float = 0.0
+    sdr_usd: float = 0.0
+    reserve_month: str = ""
+    reserve_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+FOREIGN_RESERVE_DATABASE: Dict[str, ForeignReserveRecord] = {}
+
+
+class ForeignReserveEngine:
+
+    def register(self, record: ForeignReserveRecord) -> None:
+        FOREIGN_RESERVE_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[ForeignReserveRecord]:
+        return FOREIGN_RESERVE_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        FOREIGN_RESERVE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        total_reserves_usd: float,
+        gold_reserves_usd: float,
+        foreign_currency_usd: float,
+        imf_position_usd: float,
+        sdr_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.total_reserves_usd = total_reserves_usd
+        record.gold_reserves_usd = gold_reserves_usd
+        record.foreign_currency_usd = foreign_currency_usd
+        record.imf_position_usd = imf_position_usd
+        record.sdr_usd = sdr_usd
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[ForeignReserveRecord]:
+        return sorted(
+            FOREIGN_RESERVE_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+FOREIGN_RESERVE_ENGINE = ForeignReserveEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 070
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 071
+# ==========================================================
+
+class PublicDebtRecord(BaseModel):
+    id: str
+    country: str
+    total_debt_usd: float = 0.0
+    debt_to_gdp: float = 0.0
+    domestic_debt_usd: float = 0.0
+    external_debt_usd: float = 0.0
+    interest_payment_usd: float = 0.0
+    report_period: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+PUBLIC_DEBT_DATABASE: Dict[str, PublicDebtRecord] = {}
+
+
+class PublicDebtEngine:
+
+    def register(self, record: PublicDebtRecord) -> None:
+        PUBLIC_DEBT_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[PublicDebtRecord]:
+        return PUBLIC_DEBT_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        PUBLIC_DEBT_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        total_debt_usd: float,
+        debt_to_gdp: float,
+        domestic_debt_usd: float,
+        external_debt_usd: float,
+        interest_payment_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.total_debt_usd = total_debt_usd
+        record.debt_to_gdp = debt_to_gdp
+        record.domestic_debt_usd = domestic_debt_usd
+        record.external_debt_usd = external_debt_usd
+        record.interest_payment_usd = interest_payment_usd
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[PublicDebtRecord]:
+        return sorted(
+            PUBLIC_DEBT_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+PUBLIC_DEBT_ENGINE = PublicDebtEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 071
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 072
+# ==========================================================
+
+class CurrentAccountRecord(BaseModel):
+    id: str
+    country: str
+    current_account_usd: float = 0.0
+    current_account_percent_gdp: float = 0.0
+    goods_balance_usd: float = 0.0
+    services_balance_usd: float = 0.0
+    primary_income_usd: float = 0.0
+    secondary_income_usd: float = 0.0
+    report_period: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+CURRENT_ACCOUNT_DATABASE: Dict[str, CurrentAccountRecord] = {}
+
+
+class CurrentAccountEngine:
+
+    def register(self, record: CurrentAccountRecord) -> None:
+        CURRENT_ACCOUNT_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[CurrentAccountRecord]:
+        return CURRENT_ACCOUNT_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        CURRENT_ACCOUNT_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        current_account_usd: float,
+        current_account_percent_gdp: float,
+        goods_balance_usd: float,
+        services_balance_usd: float,
+        primary_income_usd: float,
+        secondary_income_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.current_account_usd = current_account_usd
+        record.current_account_percent_gdp = current_account_percent_gdp
+        record.goods_balance_usd = goods_balance_usd
+        record.services_balance_usd = services_balance_usd
+        record.primary_income_usd = primary_income_usd
+        record.secondary_income_usd = secondary_income_usd
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[CurrentAccountRecord]:
+        return sorted(
+            CURRENT_ACCOUNT_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+CURRENT_ACCOUNT_ENGINE = CurrentAccountEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 072
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 073
+# ==========================================================
+
+class FDIRecord(BaseModel):
+    id: str
+    country: str
+    inward_fdi_usd: float = 0.0
+    outward_fdi_usd: float = 0.0
+    net_fdi_usd: float = 0.0
+    greenfield_projects: int = 0
+    merger_acquisition_usd: float = 0.0
+    report_period: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+FDI_DATABASE: Dict[str, FDIRecord] = {}
+
+
+class FDIEngine:
+
+    def register(self, record: FDIRecord) -> None:
+        FDI_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[FDIRecord]:
+        return FDI_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        FDI_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        inward_fdi_usd: float,
+        outward_fdi_usd: float,
+        net_fdi_usd: float,
+        greenfield_projects: int,
+        merger_acquisition_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.inward_fdi_usd = inward_fdi_usd
+        record.outward_fdi_usd = outward_fdi_usd
+        record.net_fdi_usd = net_fdi_usd
+        record.greenfield_projects = greenfield_projects
+        record.merger_acquisition_usd = merger_acquisition_usd
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[FDIRecord]:
+        return sorted(
+            FDI_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+FDI_ENGINE = FDIEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 073
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 074
+# ==========================================================
+
+class PMIRecord(BaseModel):
+    id: str
+    country: str
+    manufacturing_pmi: float = 0.0
+    services_pmi: float = 0.0
+    composite_pmi: float = 0.0
+    new_orders: float = 0.0
+    employment_index: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+PMI_DATABASE: Dict[str, PMIRecord] = {}
+
+
+class PMIEngine:
+
+    def register(self, record: PMIRecord) -> None:
+        PMI_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[PMIRecord]:
+        return PMI_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        PMI_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        manufacturing_pmi: float,
+        services_pmi: float,
+        composite_pmi: float,
+        new_orders: float,
+        employment_index: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.manufacturing_pmi = manufacturing_pmi
+        record.services_pmi = services_pmi
+        record.composite_pmi = composite_pmi
+        record.new_orders = new_orders
+        record.employment_index = employment_index
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[PMIRecord]:
+        return sorted(
+            PMI_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+PMI_ENGINE = PMIEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 074
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 075
+# ==========================================================
+
+class RetailSalesRecord(BaseModel):
+    id: str
+    country: str
+    retail_sales_index: float = 0.0
+    monthly_change: float = 0.0
+    yearly_change: float = 0.0
+    core_retail_sales: float = 0.0
+    ecommerce_share: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+RETAIL_SALES_DATABASE: Dict[str, RetailSalesRecord] = {}
+
+
+class RetailSalesEngine:
+
+    def register(self, record: RetailSalesRecord) -> None:
+        RETAIL_SALES_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[RetailSalesRecord]:
+        return RETAIL_SALES_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        RETAIL_SALES_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        retail_sales_index: float,
+        monthly_change: float,
+        yearly_change: float,
+        core_retail_sales: float,
+        ecommerce_share: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.retail_sales_index = retail_sales_index
+        record.monthly_change = monthly_change
+        record.yearly_change = yearly_change
+        record.core_retail_sales = core_retail_sales
+        record.ecommerce_share = ecommerce_share
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[RetailSalesRecord]:
+        return sorted(
+            RETAIL_SALES_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+RETAIL_SALES_ENGINE = RetailSalesEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 075
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 076
+# ==========================================================
+
+class IndustrialProductionRecord(BaseModel):
+    id: str
+    country: str
+    industrial_production_index: float = 0.0
+    manufacturing_output: float = 0.0
+    mining_output: float = 0.0
+    utilities_output: float = 0.0
+    monthly_change: float = 0.0
+    yearly_change: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+INDUSTRIAL_PRODUCTION_DATABASE: Dict[str, IndustrialProductionRecord] = {}
+
+
+class IndustrialProductionEngine:
+
+    def register(self, record: IndustrialProductionRecord) -> None:
+        INDUSTRIAL_PRODUCTION_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[IndustrialProductionRecord]:
+        return INDUSTRIAL_PRODUCTION_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        INDUSTRIAL_PRODUCTION_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        industrial_production_index: float,
+        manufacturing_output: float,
+        mining_output: float,
+        utilities_output: float,
+        monthly_change: float,
+        yearly_change: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.industrial_production_index = industrial_production_index
+        record.manufacturing_output = manufacturing_output
+        record.mining_output = mining_output
+        record.utilities_output = utilities_output
+        record.monthly_change = monthly_change
+        record.yearly_change = yearly_change
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[IndustrialProductionRecord]:
+        return sorted(
+            INDUSTRIAL_PRODUCTION_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+INDUSTRIAL_PRODUCTION_ENGINE = IndustrialProductionEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 076
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 077
+# ==========================================================
+
+class HousingRecord(BaseModel):
+    id: str
+    country: str
+    house_price_index: float = 0.0
+    new_home_sales: float = 0.0
+    existing_home_sales: float = 0.0
+    building_permits: float = 0.0
+    housing_starts: float = 0.0
+    mortgage_rate: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+HOUSING_DATABASE: Dict[str, HousingRecord] = {}
+
+
+class HousingEngine:
+
+    def register(self, record: HousingRecord) -> None:
+        HOUSING_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[HousingRecord]:
+        return HOUSING_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        HOUSING_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        house_price_index: float,
+        new_home_sales: float,
+        existing_home_sales: float,
+        building_permits: float,
+        housing_starts: float,
+        mortgage_rate: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.house_price_index = house_price_index
+        record.new_home_sales = new_home_sales
+        record.existing_home_sales = existing_home_sales
+        record.building_permits = building_permits
+        record.housing_starts = housing_starts
+        record.mortgage_rate = mortgage_rate
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[HousingRecord]:
+        return sorted(
+            HOUSING_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+HOUSING_ENGINE = HousingEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 077
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 078
+# ==========================================================
+
+class ConsumerConfidenceRecord(BaseModel):
+    id: str
+    country: str
+    consumer_confidence_index: float = 0.0
+    business_confidence_index: float = 0.0
+    economic_sentiment_index: float = 0.0
+    future_expectation_index: float = 0.0
+    current_condition_index: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+CONSUMER_CONFIDENCE_DATABASE: Dict[str, ConsumerConfidenceRecord] = {}
+
+
+class ConsumerConfidenceEngine:
+
+    def register(self, record: ConsumerConfidenceRecord) -> None:
+        CONSUMER_CONFIDENCE_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[ConsumerConfidenceRecord]:
+        return CONSUMER_CONFIDENCE_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        CONSUMER_CONFIDENCE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        consumer_confidence_index: float,
+        business_confidence_index: float,
+        economic_sentiment_index: float,
+        future_expectation_index: float,
+        current_condition_index: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.consumer_confidence_index = consumer_confidence_index
+        record.business_confidence_index = business_confidence_index
+        record.economic_sentiment_index = economic_sentiment_index
+        record.future_expectation_index = future_expectation_index
+        record.current_condition_index = current_condition_index
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[ConsumerConfidenceRecord]:
+        return sorted(
+            CONSUMER_CONFIDENCE_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+CONSUMER_CONFIDENCE_ENGINE = ConsumerConfidenceEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 078
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 079
+# ==========================================================
+
+class BusinessConfidenceRecord(BaseModel):
+    id: str
+    country: str
+    manufacturing_confidence: float = 0.0
+    services_confidence: float = 0.0
+    construction_confidence: float = 0.0
+    retail_confidence: float = 0.0
+    business_expectation: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+BUSINESS_CONFIDENCE_DATABASE: Dict[str, BusinessConfidenceRecord] = {}
+
+
+class BusinessConfidenceEngine:
+
+    def register(self, record: BusinessConfidenceRecord) -> None:
+        BUSINESS_CONFIDENCE_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[BusinessConfidenceRecord]:
+        return BUSINESS_CONFIDENCE_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        BUSINESS_CONFIDENCE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        manufacturing_confidence: float,
+        services_confidence: float,
+        construction_confidence: float,
+        retail_confidence: float,
+        business_expectation: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.manufacturing_confidence = manufacturing_confidence
+        record.services_confidence = services_confidence
+        record.construction_confidence = construction_confidence
+        record.retail_confidence = retail_confidence
+        record.business_expectation = business_expectation
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[BusinessConfidenceRecord]:
+        return sorted(
+            BUSINESS_CONFIDENCE_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+BUSINESS_CONFIDENCE_ENGINE = BusinessConfidenceEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 079
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 080
+# ==========================================================
+
+class FiscalBalanceRecord(BaseModel):
+    id: str
+    country: str
+    government_revenue_usd: float = 0.0
+    government_expenditure_usd: float = 0.0
+    fiscal_balance_usd: float = 0.0
+    fiscal_balance_percent_gdp: float = 0.0
+    primary_balance_usd: float = 0.0
+    public_investment_usd: float = 0.0
+    report_period: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+FISCAL_BALANCE_DATABASE: Dict[str, FiscalBalanceRecord] = {}
+
+
+class FiscalBalanceEngine:
+
+    def register(self, record: FiscalBalanceRecord) -> None:
+        FISCAL_BALANCE_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[FiscalBalanceRecord]:
+        return FISCAL_BALANCE_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        FISCAL_BALANCE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        government_revenue_usd: float,
+        government_expenditure_usd: float,
+        fiscal_balance_usd: float,
+        fiscal_balance_percent_gdp: float,
+        primary_balance_usd: float,
+        public_investment_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.government_revenue_usd = government_revenue_usd
+        record.government_expenditure_usd = government_expenditure_usd
+        record.fiscal_balance_usd = fiscal_balance_usd
+        record.fiscal_balance_percent_gdp = fiscal_balance_percent_gdp
+        record.primary_balance_usd = primary_balance_usd
+        record.public_investment_usd = public_investment_usd
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[FiscalBalanceRecord]:
+        return sorted(
+            FISCAL_BALANCE_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+FISCAL_BALANCE_ENGINE = FiscalBalanceEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 080
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 081
+# ==========================================================
+
+class MoneySupplyRecord(BaseModel):
+    id: str
+    country: str
+    m0: float = 0.0
+    m1: float = 0.0
+    m2: float = 0.0
+    m3: float = 0.0
+    monthly_growth: float = 0.0
+    yearly_growth: float = 0.0
+    report_month: str = ""
+    report_year: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MONEY_SUPPLY_DATABASE: Dict[str, MoneySupplyRecord] = {}
+
+
+class MoneySupplyEngine:
+
+    def register(self, record: MoneySupplyRecord) -> None:
+        MONEY_SUPPLY_DATABASE[record.id] = record
+
+    def get(self, record_id: str) -> Optional[MoneySupplyRecord]:
+        return MONEY_SUPPLY_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        MONEY_SUPPLY_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        m0: float,
+        m1: float,
+        m2: float,
+        m3: float,
+        monthly_growth: float,
+        yearly_growth: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.m0 = m0
+        record.m1 = m1
+        record.m2 = m2
+        record.m3 = m3
+        record.monthly_growth = monthly_growth
+        record.yearly_growth = yearly_growth
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[MoneySupplyRecord]:
+        return sorted(
+            MONEY_SUPPLY_DATABASE.values(),
+            key=lambda item: item.country,
+        )
+
+
+MONEY_SUPPLY_ENGINE = MoneySupplyEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 081
+# ==========================================================
