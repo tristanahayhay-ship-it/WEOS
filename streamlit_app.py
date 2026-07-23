@@ -17297,3 +17297,4880 @@ GLOBAL_LOGISTICS_NETWORK_ENGINE = (
 # ==========================================================
 # KẾT THÚC ĐOẠN 200
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 201
+# ==========================================================
+
+class GlobalMoneyFlowMapNodeRecord(BaseModel):
+    id: str
+    node_name: str
+    node_type: str = ""
+    country: str = ""
+    region: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    economic_power_score: float = 0.0
+    financial_power_score: float = 0.0
+    capital_inflow_usd: float = 0.0
+    capital_outflow_usd: float = 0.0
+    net_capital_flow_usd: float = 0.0
+    asset_focus: List[str] = []
+    activity_level: float = 0.0
+    visualization_size: float = 0.0
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_MONEY_FLOW_NODE_DATABASE: Dict[
+    str,
+    GlobalMoneyFlowMapNodeRecord,
+] = {}
+
+
+class GlobalMoneyFlowMapNodeEngine:
+
+    def register(
+        self,
+        record: GlobalMoneyFlowMapNodeRecord,
+    ) -> None:
+
+        GLOBAL_MONEY_FLOW_NODE_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalMoneyFlowMapNodeRecord]:
+
+        return GLOBAL_MONEY_FLOW_NODE_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_MONEY_FLOW_NODE_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.net_capital_flow_usd = (
+            record.capital_inflow_usd
+            -
+            record.capital_outflow_usd
+        )
+
+        record.activity_level = (
+            abs(
+                record.net_capital_flow_usd
+            )
+            /
+            1000000000
+        )
+
+        record.visualization_size = (
+            record.economic_power_score * 0.5
+            +
+            record.financial_power_score * 0.5
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalMoneyFlowMapNodeRecord]:
+
+        return sorted(
+            GLOBAL_MONEY_FLOW_NODE_DATABASE.values(),
+            key=lambda item:
+            item.activity_level,
+            reverse=True,
+        )
+
+
+GLOBAL_MONEY_FLOW_NODE_ENGINE = (
+    GlobalMoneyFlowMapNodeEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 201
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 202
+# ==========================================================
+
+class GlobalMoneyFlowMapEdgeRecord(BaseModel):
+    id: str
+    source_node: str
+    target_node: str
+    asset_type: str = ""
+    flow_direction: str = ""
+    capital_amount_usd: float = 0.0
+    flow_speed: float = 0.0
+    flow_strength: float = 0.0
+    institutional_score: float = 0.0
+    retail_score: float = 0.0
+    risk_score: float = 0.0
+    visualization_intensity: float = 0.0
+    line_color_signal: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_MONEY_FLOW_EDGE_DATABASE: Dict[
+    str,
+    GlobalMoneyFlowMapEdgeRecord,
+] = {}
+
+
+class GlobalMoneyFlowMapEdgeEngine:
+
+    def register(
+        self,
+        record: GlobalMoneyFlowMapEdgeRecord,
+    ) -> None:
+
+        GLOBAL_MONEY_FLOW_EDGE_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalMoneyFlowMapEdgeRecord]:
+
+        return GLOBAL_MONEY_FLOW_EDGE_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_MONEY_FLOW_EDGE_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.flow_strength = (
+            abs(record.capital_amount_usd)
+            /
+            1000000000
+            *
+            record.flow_speed
+        )
+
+        record.visualization_intensity = (
+            record.flow_strength * 0.50
+            +
+            record.institutional_score * 0.30
+            +
+            record.retail_score * 0.20
+        )
+
+        if record.capital_amount_usd > 0:
+            record.flow_direction = "INFLOW"
+            record.line_color_signal = "GREEN"
+
+        elif record.capital_amount_usd < 0:
+            record.flow_direction = "OUTFLOW"
+            record.line_color_signal = "RED"
+
+        else:
+            record.flow_direction = "NEUTRAL"
+            record.line_color_signal = "GRAY"
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def strongest_flows(
+        self,
+    ) -> List[GlobalMoneyFlowMapEdgeRecord]:
+
+        return sorted(
+            GLOBAL_MONEY_FLOW_EDGE_DATABASE.values(),
+            key=lambda item:
+            item.visualization_intensity,
+            reverse=True,
+        )
+
+
+GLOBAL_MONEY_FLOW_EDGE_ENGINE = (
+    GlobalMoneyFlowMapEdgeEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 202
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 203
+# ==========================================================
+
+class AssetRotationRecord(BaseModel):
+    id: str
+    asset_class: str
+    previous_allocation_percent: float = 0.0
+    current_allocation_percent: float = 0.0
+    capital_change_usd: float = 0.0
+    momentum_score: float = 0.0
+    risk_adjusted_score: float = 0.0
+    investor_sentiment_score: float = 0.0
+    institutional_flow_score: float = 0.0
+    rotation_direction: str = ""
+    rotation_strength: float = 0.0
+    explanation: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ASSET_ROTATION_DATABASE: Dict[
+    str,
+    AssetRotationRecord,
+] = {}
+
+
+class AssetRotationEngine:
+
+    def register(
+        self,
+        record: AssetRotationRecord,
+    ) -> None:
+
+        ASSET_ROTATION_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[AssetRotationRecord]:
+
+        return ASSET_ROTATION_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        ASSET_ROTATION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.capital_change_usd = (
+            (
+                record.current_allocation_percent
+                -
+                record.previous_allocation_percent
+            )
+            *
+            1000000000
+            /
+            100
+        )
+
+        record.rotation_strength = (
+            abs(
+                record.capital_change_usd
+            )
+            *
+            0.40
+            +
+            record.momentum_score
+            *
+            0.20
+            +
+            record.investor_sentiment_score
+            *
+            0.20
+            +
+            record.institutional_flow_score
+            *
+            0.20
+        )
+
+        if record.capital_change_usd > 0:
+            record.rotation_direction = (
+                "CAPITAL_INFLOW"
+            )
+
+        elif record.capital_change_usd < 0:
+            record.rotation_direction = (
+                "CAPITAL_OUTFLOW"
+            )
+
+        else:
+            record.rotation_direction = (
+                "NO_ROTATION"
+            )
+
+        record.explanation = (
+            f"{record.asset_class} rotation: "
+            f"{record.rotation_direction}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[AssetRotationRecord]:
+
+        return sorted(
+            ASSET_ROTATION_DATABASE.values(),
+            key=lambda item:
+            item.rotation_strength,
+            reverse=True,
+        )
+
+
+ASSET_ROTATION_ENGINE = AssetRotationEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 203
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 204
+# ==========================================================
+
+class DollarCycleRecord(BaseModel):
+    id: str
+    cycle_phase: str = ""
+    dxy_value: float = 0.0
+    dxy_change_percent: float = 0.0
+    fed_policy_score: float = 0.0
+    interest_rate_score: float = 0.0
+    inflation_pressure_score: float = 0.0
+    global_liquidity_score: float = 0.0
+    risk_sentiment_score: float = 0.0
+    dollar_strength_score: float = 0.0
+    affected_assets: List[str] = []
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+DOLLAR_CYCLE_DATABASE: Dict[
+    str,
+    DollarCycleRecord,
+] = {}
+
+
+class DollarCycleEngine:
+
+    def register(
+        self,
+        record: DollarCycleRecord,
+    ) -> None:
+
+        DOLLAR_CYCLE_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[DollarCycleRecord]:
+
+        return DOLLAR_CYCLE_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        DOLLAR_CYCLE_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.dollar_strength_score = (
+            record.dxy_value * 0.20
+            +
+            record.fed_policy_score * 0.20
+            +
+            record.interest_rate_score * 0.20
+            +
+            record.inflation_pressure_score * 0.15
+            +
+            record.global_liquidity_score * 0.15
+            +
+            record.risk_sentiment_score * 0.10
+        )
+
+        if record.dollar_strength_score >= 75:
+            record.cycle_phase = (
+                "STRONG_DOLLAR_CYCLE"
+            )
+
+        elif record.dollar_strength_score >= 50:
+            record.cycle_phase = (
+                "BALANCED_DOLLAR_CYCLE"
+            )
+
+        else:
+            record.cycle_phase = (
+                "WEAK_DOLLAR_CYCLE"
+            )
+
+        record.analysis_text = (
+            f"Dollar cycle phase: "
+            f"{record.cycle_phase}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[DollarCycleRecord]:
+
+        return sorted(
+            DOLLAR_CYCLE_DATABASE.values(),
+            key=lambda item:
+            item.dollar_strength_score,
+            reverse=True,
+        )
+
+
+DOLLAR_CYCLE_ENGINE = DollarCycleEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 204
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 205
+# ==========================================================
+
+class GoldMarketFlowRecord(BaseModel):
+    id: str
+    gold_price_usd: float = 0.0
+    gold_etf_flow_usd: float = 0.0
+    central_bank_purchase_ton: float = 0.0
+    jewelry_demand_ton: float = 0.0
+    investment_demand_ton: float = 0.0
+    real_yield_score: float = 0.0
+    dollar_pressure_score: float = 0.0
+    inflation_expectation_score: float = 0.0
+    geopolitical_risk_score: float = 0.0
+    gold_flow_strength: float = 0.0
+    gold_market_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GOLD_MARKET_FLOW_DATABASE: Dict[
+    str,
+    GoldMarketFlowRecord,
+] = {}
+
+
+class GoldMarketFlowEngine:
+
+    def register(
+        self,
+        record: GoldMarketFlowRecord,
+    ) -> None:
+
+        GOLD_MARKET_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GoldMarketFlowRecord]:
+
+        return GOLD_MARKET_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GOLD_MARKET_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.gold_flow_strength = (
+            record.gold_etf_flow_usd
+            /
+            1000000000
+            *
+            0.20
+            +
+            record.central_bank_purchase_ton
+            *
+            0.15
+            +
+            record.investment_demand_ton
+            *
+            0.10
+            +
+            record.real_yield_score
+            *
+            0.20
+            +
+            record.dollar_pressure_score
+            *
+            0.15
+            +
+            record.inflation_expectation_score
+            *
+            0.10
+            +
+            record.geopolitical_risk_score
+            *
+            0.10
+        )
+
+        if record.gold_flow_strength >= 70:
+            record.gold_market_signal = (
+                "BULLISH_GOLD_FLOW"
+            )
+
+        elif record.gold_flow_strength <= 30:
+            record.gold_market_signal = (
+                "BEARISH_GOLD_FLOW"
+            )
+
+        else:
+            record.gold_market_signal = (
+                "NEUTRAL_GOLD_FLOW"
+            )
+
+        record.analysis_text = (
+            f"Gold market signal: "
+            f"{record.gold_market_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GoldMarketFlowRecord]:
+
+        return sorted(
+            GOLD_MARKET_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.gold_flow_strength,
+            reverse=True,
+        )
+
+
+GOLD_MARKET_FLOW_ENGINE = (
+    GoldMarketFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 205
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 206
+# ==========================================================
+
+class ETFMoneyFlowRecord(BaseModel):
+    id: str
+    etf_name: str
+    ticker: str = ""
+    asset_class: str = ""
+    region: str = ""
+    total_assets_usd: float = 0.0
+    daily_inflow_usd: float = 0.0
+    daily_outflow_usd: float = 0.0
+    weekly_flow_usd: float = 0.0
+    monthly_flow_usd: float = 0.0
+    institutional_interest_score: float = 0.0
+    retail_interest_score: float = 0.0
+    momentum_score: float = 0.0
+    etf_flow_strength: float = 0.0
+    flow_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ETF_MONEY_FLOW_DATABASE: Dict[
+    str,
+    ETFMoneyFlowRecord,
+] = {}
+
+
+class ETFMoneyFlowEngine:
+
+    def register(
+        self,
+        record: ETFMoneyFlowRecord,
+    ) -> None:
+
+        ETF_MONEY_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[ETFMoneyFlowRecord]:
+
+        return ETF_MONEY_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        ETF_MONEY_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        net_daily_flow = (
+            record.daily_inflow_usd
+            -
+            record.daily_outflow_usd
+        )
+
+        record.etf_flow_strength = (
+            net_daily_flow
+            /
+            1000000000
+            *
+            0.30
+            +
+            record.weekly_flow_usd
+            /
+            10000000000
+            *
+            0.20
+            +
+            record.monthly_flow_usd
+            /
+            50000000000
+            *
+            0.20
+            +
+            record.institutional_interest_score
+            *
+            0.15
+            +
+            record.retail_interest_score
+            *
+            0.05
+            +
+            record.momentum_score
+            *
+            0.10
+        )
+
+        if record.etf_flow_strength >= 70:
+            record.flow_signal = (
+                "STRONG_CAPITAL_INFLOW"
+            )
+
+        elif record.etf_flow_strength <= 30:
+            record.flow_signal = (
+                "CAPITAL_OUTFLOW"
+            )
+
+        else:
+            record.flow_signal = (
+                "BALANCED_FLOW"
+            )
+
+        record.analysis_text = (
+            f"{record.etf_name}: "
+            f"{record.flow_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[ETFMoneyFlowRecord]:
+
+        return sorted(
+            ETF_MONEY_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.etf_flow_strength,
+            reverse=True,
+        )
+
+
+ETF_MONEY_FLOW_ENGINE = ETFMoneyFlowEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 206
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 207
+# ==========================================================
+
+class InstitutionalCapitalFlowRecord(BaseModel):
+    id: str
+    institution_name: str
+    institution_type: str = ""
+    country: str = ""
+    asset_class: str = ""
+    managed_assets_usd: float = 0.0
+    capital_inflow_usd: float = 0.0
+    capital_outflow_usd: float = 0.0
+    portfolio_allocation_change: float = 0.0
+    risk_preference_score: float = 0.0
+    market_confidence_score: float = 0.0
+    institutional_flow_strength: float = 0.0
+    flow_direction: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+INSTITUTIONAL_CAPITAL_FLOW_DATABASE: Dict[
+    str,
+    InstitutionalCapitalFlowRecord,
+] = {}
+
+
+class InstitutionalCapitalFlowEngine:
+
+    def register(
+        self,
+        record: InstitutionalCapitalFlowRecord,
+    ) -> None:
+
+        INSTITUTIONAL_CAPITAL_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[InstitutionalCapitalFlowRecord]:
+
+        return INSTITUTIONAL_CAPITAL_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        INSTITUTIONAL_CAPITAL_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        net_flow = (
+            record.capital_inflow_usd
+            -
+            record.capital_outflow_usd
+        )
+
+        asset_scale_score = min(
+            record.managed_assets_usd
+            /
+            100000000000,
+            100,
+        )
+
+        record.institutional_flow_strength = (
+            net_flow
+            /
+            10000000000
+            *
+            0.30
+            +
+            asset_scale_score
+            *
+            0.20
+            +
+            record.portfolio_allocation_change
+            *
+            0.20
+            +
+            record.risk_preference_score
+            *
+            0.15
+            +
+            record.market_confidence_score
+            *
+            0.15
+        )
+
+        if net_flow > 0:
+            record.flow_direction = (
+                "INSTITUTIONAL_ACCUMULATION"
+            )
+
+        elif net_flow < 0:
+            record.flow_direction = (
+                "INSTITUTIONAL_DISTRIBUTION"
+            )
+
+        else:
+            record.flow_direction = (
+                "NEUTRAL"
+            )
+
+        record.analysis_text = (
+            f"{record.institution_name}: "
+            f"{record.flow_direction}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[InstitutionalCapitalFlowRecord]:
+
+        return sorted(
+            INSTITUTIONAL_CAPITAL_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.institutional_flow_strength,
+            reverse=True,
+        )
+
+
+INSTITUTIONAL_CAPITAL_FLOW_ENGINE = (
+    InstitutionalCapitalFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 207
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 208
+# ==========================================================
+
+class GlobalHedgeFundFlowRecord(BaseModel):
+    id: str
+    fund_name: str
+    fund_type: str = ""
+    headquarters_country: str = ""
+    strategy: str = ""
+    total_assets_usd: float = 0.0
+    long_position_usd: float = 0.0
+    short_position_usd: float = 0.0
+    leverage_ratio: float = 0.0
+    risk_appetite_score: float = 0.0
+    market_exposure_score: float = 0.0
+    net_position_usd: float = 0.0
+    hedge_fund_flow_score: float = 0.0
+    market_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_HEDGE_FUND_FLOW_DATABASE: Dict[
+    str,
+    GlobalHedgeFundFlowRecord,
+] = {}
+
+
+class GlobalHedgeFundFlowEngine:
+
+    def register(
+        self,
+        record: GlobalHedgeFundFlowRecord,
+    ) -> None:
+
+        GLOBAL_HEDGE_FUND_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalHedgeFundFlowRecord]:
+
+        return GLOBAL_HEDGE_FUND_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_HEDGE_FUND_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.net_position_usd = (
+            record.long_position_usd
+            -
+            record.short_position_usd
+        )
+
+        asset_scale_score = min(
+            record.total_assets_usd
+            /
+            100000000000,
+            100,
+        )
+
+        record.hedge_fund_flow_score = (
+            record.net_position_usd
+            /
+            10000000000
+            *
+            0.30
+            +
+            asset_scale_score
+            *
+            0.20
+            +
+            record.leverage_ratio
+            *
+            0.15
+            +
+            record.risk_appetite_score
+            *
+            0.15
+            +
+            record.market_exposure_score
+            *
+            0.20
+        )
+
+        if record.net_position_usd > 0:
+            record.market_signal = (
+                "RISK_ON_ACCUMULATION"
+            )
+
+        elif record.net_position_usd < 0:
+            record.market_signal = (
+                "RISK_OFF_POSITIONING"
+            )
+
+        else:
+            record.market_signal = (
+                "NEUTRAL_POSITIONING"
+            )
+
+        record.analysis_text = (
+            f"{record.fund_name}: "
+            f"{record.market_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalHedgeFundFlowRecord]:
+
+        return sorted(
+            GLOBAL_HEDGE_FUND_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.hedge_fund_flow_score,
+            reverse=True,
+        )
+
+
+GLOBAL_HEDGE_FUND_FLOW_ENGINE = (
+    GlobalHedgeFundFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 208
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 209
+# ==========================================================
+
+class CentralBankPolicyFlowRecord(BaseModel):
+    id: str
+    central_bank_name: str
+    country: str = ""
+    policy_type: str = ""
+    interest_rate: float = 0.0
+    balance_sheet_usd: float = 0.0
+    asset_purchase_usd: float = 0.0
+    liquidity_injection_usd: float = 0.0
+    liquidity_withdrawal_usd: float = 0.0
+    monetary_policy_score: float = 0.0
+    market_impact_score: float = 0.0
+    policy_direction: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+CENTRAL_BANK_POLICY_FLOW_DATABASE: Dict[
+    str,
+    CentralBankPolicyFlowRecord,
+] = {}
+
+
+class CentralBankPolicyFlowEngine:
+
+    def register(
+        self,
+        record: CentralBankPolicyFlowRecord,
+    ) -> None:
+
+        CENTRAL_BANK_POLICY_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[CentralBankPolicyFlowRecord]:
+
+        return CENTRAL_BANK_POLICY_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        CENTRAL_BANK_POLICY_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        liquidity_flow = (
+            record.liquidity_injection_usd
+            -
+            record.liquidity_withdrawal_usd
+        )
+
+        balance_score = min(
+            record.balance_sheet_usd
+            /
+            1000000000000,
+            100,
+        )
+
+        record.monetary_policy_score = (
+            liquidity_flow
+            /
+            10000000000
+            *
+            0.35
+            +
+            balance_score
+            *
+            0.20
+            +
+            record.asset_purchase_usd
+            /
+            10000000000
+            *
+            0.20
+            +
+            record.market_impact_score
+            *
+            0.25
+        )
+
+        if liquidity_flow > 0:
+            record.policy_direction = (
+                "EASING_LIQUIDITY"
+            )
+
+        elif liquidity_flow < 0:
+            record.policy_direction = (
+                "TIGHTENING_LIQUIDITY"
+            )
+
+        else:
+            record.policy_direction = (
+                "NEUTRAL_POLICY"
+            )
+
+        record.analysis_text = (
+            f"{record.central_bank_name}: "
+            f"{record.policy_direction}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[CentralBankPolicyFlowRecord]:
+
+        return sorted(
+            CENTRAL_BANK_POLICY_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.monetary_policy_score,
+            reverse=True,
+        )
+
+
+CENTRAL_BANK_POLICY_FLOW_ENGINE = (
+    CentralBankPolicyFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 209
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 210
+# ==========================================================
+
+class GlobalLiquidityConditionRecord(BaseModel):
+    id: str
+    region: str
+    global_money_supply_usd: float = 0.0
+    m2_growth_rate: float = 0.0
+    central_bank_balance_change: float = 0.0
+    credit_growth_rate: float = 0.0
+    bond_market_liquidity_score: float = 0.0
+    equity_market_liquidity_score: float = 0.0
+    currency_liquidity_score: float = 0.0
+    liquidity_cycle_score: float = 0.0
+    liquidity_status: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_LIQUIDITY_CONDITION_DATABASE: Dict[
+    str,
+    GlobalLiquidityConditionRecord,
+] = {}
+
+
+class GlobalLiquidityConditionEngine:
+
+    def register(
+        self,
+        record: GlobalLiquidityConditionRecord,
+    ) -> None:
+
+        GLOBAL_LIQUIDITY_CONDITION_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalLiquidityConditionRecord]:
+
+        return GLOBAL_LIQUIDITY_CONDITION_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_LIQUIDITY_CONDITION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        money_supply_score = (
+            record.m2_growth_rate
+            *
+            5
+        )
+
+        central_bank_score = (
+            record.central_bank_balance_change
+            *
+            5
+        )
+
+        record.liquidity_cycle_score = (
+            money_supply_score * 0.25
+            +
+            central_bank_score * 0.25
+            +
+            record.credit_growth_rate * 0.20
+            +
+            record.bond_market_liquidity_score * 0.10
+            +
+            record.equity_market_liquidity_score * 0.10
+            +
+            record.currency_liquidity_score * 0.10
+        )
+
+        if record.liquidity_cycle_score >= 70:
+            record.liquidity_status = (
+                "ABUNDANT_LIQUIDITY"
+            )
+
+        elif record.liquidity_cycle_score >= 40:
+            record.liquidity_status = (
+                "NORMAL_LIQUIDITY"
+            )
+
+        else:
+            record.liquidity_status = (
+                "TIGHT_LIQUIDITY"
+            )
+
+        record.analysis_text = (
+            f"Liquidity condition: "
+            f"{record.liquidity_status}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalLiquidityConditionRecord]:
+
+        return sorted(
+            GLOBAL_LIQUIDITY_CONDITION_DATABASE.values(),
+            key=lambda item:
+            item.liquidity_cycle_score,
+            reverse=True,
+        )
+
+
+GLOBAL_LIQUIDITY_CONDITION_ENGINE = (
+    GlobalLiquidityConditionEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 210
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 211
+# ==========================================================
+
+class MarketRegimeDetectionRecord(BaseModel):
+    id: str
+    market_name: str
+    asset_class: str = ""
+    trend_score: float = 0.0
+    volatility_score: float = 0.0
+    liquidity_score: float = 0.0
+    momentum_score: float = 0.0
+    macro_support_score: float = 0.0
+    risk_sentiment_score: float = 0.0
+    regime_score: float = 0.0
+    current_regime: str = ""
+    confidence_score: float = 0.0
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MARKET_REGIME_DATABASE: Dict[
+    str,
+    MarketRegimeDetectionRecord,
+] = {}
+
+
+class MarketRegimeDetectionEngine:
+
+    def register(
+        self,
+        record: MarketRegimeDetectionRecord,
+    ) -> None:
+
+        MARKET_REGIME_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MarketRegimeDetectionRecord]:
+
+        return MARKET_REGIME_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        MARKET_REGIME_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.regime_score = (
+            record.trend_score * 0.20
+            +
+            record.volatility_score * 0.15
+            +
+            record.liquidity_score * 0.15
+            +
+            record.momentum_score * 0.15
+            +
+            record.macro_support_score * 0.20
+            +
+            record.risk_sentiment_score * 0.15
+        )
+
+        record.confidence_score = (
+            abs(
+                record.regime_score - 50
+            )
+            *
+            2
+        )
+
+        if record.regime_score >= 75:
+            record.current_regime = (
+                "BULL_MARKET_REGIME"
+            )
+
+        elif record.regime_score >= 55:
+            record.current_regime = (
+                "RISK_ON_REGIME"
+            )
+
+        elif record.regime_score >= 35:
+            record.current_regime = (
+                "NEUTRAL_REGIME"
+            )
+
+        else:
+            record.current_regime = (
+                "BEAR_MARKET_REGIME"
+            )
+
+        record.analysis_text = (
+            f"{record.market_name}: "
+            f"{record.current_regime}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[MarketRegimeDetectionRecord]:
+
+        return sorted(
+            MARKET_REGIME_DATABASE.values(),
+            key=lambda item:
+            item.regime_score,
+            reverse=True,
+        )
+
+
+MARKET_REGIME_ENGINE = (
+    MarketRegimeDetectionEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 211
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 212
+# ==========================================================
+
+class EconomicCycleDetectionRecord(BaseModel):
+    id: str
+    country: str
+    gdp_growth_rate: float = 0.0
+    inflation_rate: float = 0.0
+    unemployment_rate: float = 0.0
+    interest_rate_level: float = 0.0
+    consumer_activity_score: float = 0.0
+    industrial_activity_score: float = 0.0
+    credit_cycle_score: float = 0.0
+    economic_cycle_score: float = 0.0
+    current_cycle: str = ""
+    confidence_score: float = 0.0
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ECONOMIC_CYCLE_DATABASE: Dict[
+    str,
+    EconomicCycleDetectionRecord,
+] = {}
+
+
+class EconomicCycleDetectionEngine:
+
+    def register(
+        self,
+        record: EconomicCycleDetectionRecord,
+    ) -> None:
+
+        ECONOMIC_CYCLE_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[EconomicCycleDetectionRecord]:
+
+        return ECONOMIC_CYCLE_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        ECONOMIC_CYCLE_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        inflation_score = max(
+            0,
+            100 -
+            (
+                abs(
+                    record.inflation_rate
+                    -
+                    2
+                )
+                *
+                20
+            ),
+        )
+
+        employment_score = max(
+            0,
+            100 -
+            (
+                record.unemployment_rate
+                *
+                5
+            ),
+        )
+
+        record.economic_cycle_score = (
+            record.gdp_growth_rate
+            *
+            10
+            *
+            0.20
+            +
+            inflation_score
+            *
+            0.15
+            +
+            employment_score
+            *
+            0.15
+            +
+            record.consumer_activity_score
+            *
+            0.15
+            +
+            record.industrial_activity_score
+            *
+            0.15
+            +
+            record.credit_cycle_score
+            *
+            0.20
+        )
+
+        record.confidence_score = (
+            abs(
+                record.economic_cycle_score
+                -
+                50
+            )
+            *
+            2
+        )
+
+        if record.economic_cycle_score >= 75:
+            record.current_cycle = (
+                "EXPANSION_CYCLE"
+            )
+
+        elif record.economic_cycle_score >= 55:
+            record.current_cycle = (
+                "RECOVERY_CYCLE"
+            )
+
+        elif record.economic_cycle_score >= 35:
+            record.current_cycle = (
+                "SLOWDOWN_CYCLE"
+            )
+
+        else:
+            record.current_cycle = (
+                "RECESSION_RISK"
+            )
+
+        record.analysis_text = (
+            f"{record.country}: "
+            f"{record.current_cycle}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[EconomicCycleDetectionRecord]:
+
+        return sorted(
+            ECONOMIC_CYCLE_DATABASE.values(),
+            key=lambda item:
+            item.economic_cycle_score,
+            reverse=True,
+        )
+
+
+ECONOMIC_CYCLE_ENGINE = (
+    EconomicCycleDetectionEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 212
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 213
+# ==========================================================
+
+class EconomicScenarioSimulationRecord(BaseModel):
+    id: str
+    scenario_name: str
+    country: str = ""
+    scenario_type: str = ""
+    gdp_change_percent: float = 0.0
+    inflation_change_percent: float = 0.0
+    interest_rate_change_percent: float = 0.0
+    unemployment_change_percent: float = 0.0
+    currency_impact_score: float = 0.0
+    stock_market_impact_score: float = 0.0
+    bond_market_impact_score: float = 0.0
+    gold_market_impact_score: float = 0.0
+    probability_score: float = 0.0
+    scenario_impact_score: float = 0.0
+    conclusion: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ECONOMIC_SCENARIO_DATABASE: Dict[
+    str,
+    EconomicScenarioSimulationRecord,
+] = {}
+
+
+class EconomicScenarioSimulationEngine:
+
+    def register(
+        self,
+        record: EconomicScenarioSimulationRecord,
+    ) -> None:
+
+        ECONOMIC_SCENARIO_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[EconomicScenarioSimulationRecord]:
+
+        return ECONOMIC_SCENARIO_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        ECONOMIC_SCENARIO_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        growth_component = (
+            record.gdp_change_percent
+            *
+            10
+        )
+
+        inflation_component = (
+            abs(
+                record.inflation_change_percent
+            )
+            *
+            5
+        )
+
+        rate_component = (
+            abs(
+                record.interest_rate_change_percent
+            )
+            *
+            5
+        )
+
+        employment_component = (
+            abs(
+                record.unemployment_change_percent
+            )
+            *
+            5
+        )
+
+        record.scenario_impact_score = (
+            growth_component * 0.20
+            +
+            inflation_component * 0.20
+            +
+            rate_component * 0.15
+            +
+            employment_component * 0.15
+            +
+            record.currency_impact_score * 0.10
+            +
+            record.stock_market_impact_score * 0.05
+            +
+            record.bond_market_impact_score * 0.05
+            +
+            record.gold_market_impact_score * 0.10
+        )
+
+        if record.scenario_impact_score >= 70:
+            record.conclusion = (
+                "HIGH_MARKET_IMPACT"
+            )
+
+        elif record.scenario_impact_score >= 40:
+            record.conclusion = (
+                "MEDIUM_MARKET_IMPACT"
+            )
+
+        else:
+            record.conclusion = (
+                "LOW_MARKET_IMPACT"
+            )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[EconomicScenarioSimulationRecord]:
+
+        return sorted(
+            ECONOMIC_SCENARIO_DATABASE.values(),
+            key=lambda item:
+            item.scenario_impact_score,
+            reverse=True,
+        )
+
+
+ECONOMIC_SCENARIO_ENGINE = (
+    EconomicScenarioSimulationEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 213
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 214
+# ==========================================================
+
+class CrisisDetectionRecord(BaseModel):
+    id: str
+    region: str
+    economic_stress_score: float = 0.0
+    financial_stability_score: float = 0.0
+    currency_pressure_score: float = 0.0
+    debt_risk_score: float = 0.0
+    geopolitical_tension_score: float = 0.0
+    market_volatility_score: float = 0.0
+    liquidity_stress_score: float = 0.0
+    crisis_probability_score: float = 0.0
+    crisis_level: str = ""
+    warning_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+CRISIS_DETECTION_DATABASE: Dict[
+    str,
+    CrisisDetectionRecord,
+] = {}
+
+
+class CrisisDetectionEngine:
+
+    def register(
+        self,
+        record: CrisisDetectionRecord,
+    ) -> None:
+
+        CRISIS_DETECTION_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[CrisisDetectionRecord]:
+
+        return CRISIS_DETECTION_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        CRISIS_DETECTION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.crisis_probability_score = (
+            record.economic_stress_score * 0.15
+            +
+            record.financial_stability_score * 0.15
+            +
+            record.currency_pressure_score * 0.15
+            +
+            record.debt_risk_score * 0.15
+            +
+            record.geopolitical_tension_score * 0.15
+            +
+            record.market_volatility_score * 0.10
+            +
+            record.liquidity_stress_score * 0.15
+        )
+
+        if record.crisis_probability_score >= 80:
+            record.crisis_level = (
+                "CRITICAL"
+            )
+            record.warning_signal = (
+                "RED_ALERT"
+            )
+
+        elif record.crisis_probability_score >= 60:
+            record.crisis_level = (
+                "HIGH_RISK"
+            )
+            record.warning_signal = (
+                "ORANGE_ALERT"
+            )
+
+        elif record.crisis_probability_score >= 40:
+            record.crisis_level = (
+                "WATCH"
+            )
+            record.warning_signal = (
+                "YELLOW_ALERT"
+            )
+
+        else:
+            record.crisis_level = (
+                "STABLE"
+            )
+            record.warning_signal = (
+                "NO_ALERT"
+            )
+
+        record.analysis_text = (
+            f"{record.region}: "
+            f"{record.crisis_level}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[CrisisDetectionRecord]:
+
+        return sorted(
+            CRISIS_DETECTION_DATABASE.values(),
+            key=lambda item:
+            item.crisis_probability_score,
+            reverse=True,
+        )
+
+
+CRISIS_DETECTION_ENGINE = (
+    CrisisDetectionEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 214
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 215
+# ==========================================================
+
+class MarketShockDetectionRecord(BaseModel):
+    id: str
+    market_name: str
+    asset_class: str = ""
+    price_change_percent: float = 0.0
+    volume_change_percent: float = 0.0
+    volatility_change_percent: float = 0.0
+    liquidity_change_score: float = 0.0
+    investor_panic_score: float = 0.0
+    institutional_reaction_score: float = 0.0
+    macro_event_score: float = 0.0
+    shock_probability_score: float = 0.0
+    shock_level: str = ""
+    warning_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MARKET_SHOCK_DATABASE: Dict[
+    str,
+    MarketShockDetectionRecord,
+] = {}
+
+
+class MarketShockDetectionEngine:
+
+    def register(
+        self,
+        record: MarketShockDetectionRecord,
+    ) -> None:
+
+        MARKET_SHOCK_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[MarketShockDetectionRecord]:
+
+        return MARKET_SHOCK_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        MARKET_SHOCK_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        price_stress = abs(
+            record.price_change_percent
+        ) * 5
+
+        volume_stress = abs(
+            record.volume_change_percent
+        ) * 3
+
+        volatility_stress = abs(
+            record.volatility_change_percent
+        ) * 3
+
+        record.shock_probability_score = (
+            price_stress * 0.20
+            +
+            volume_stress * 0.15
+            +
+            volatility_stress * 0.15
+            +
+            record.liquidity_change_score * 0.15
+            +
+            record.investor_panic_score * 0.15
+            +
+            record.institutional_reaction_score * 0.10
+            +
+            record.macro_event_score * 0.10
+        )
+
+        if record.shock_probability_score >= 80:
+            record.shock_level = (
+                "EXTREME_SHOCK"
+            )
+            record.warning_signal = (
+                "RED_ALERT"
+            )
+
+        elif record.shock_probability_score >= 60:
+            record.shock_level = (
+                "HIGH_VOLATILITY"
+            )
+            record.warning_signal = (
+                "ORANGE_ALERT"
+            )
+
+        elif record.shock_probability_score >= 40:
+            record.shock_level = (
+                "MARKET_STRESS"
+            )
+            record.warning_signal = (
+                "YELLOW_ALERT"
+            )
+
+        else:
+            record.shock_level = (
+                "NORMAL"
+            )
+            record.warning_signal = (
+                "NO_ALERT"
+            )
+
+        record.analysis_text = (
+            f"{record.market_name}: "
+            f"{record.shock_level}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[MarketShockDetectionRecord]:
+
+        return sorted(
+            MARKET_SHOCK_DATABASE.values(),
+            key=lambda item:
+            item.shock_probability_score,
+            reverse=True,
+        )
+
+
+MARKET_SHOCK_ENGINE = (
+    MarketShockDetectionEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 215
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 216
+# ==========================================================
+
+class GlobalRiskHeatmapRecord(BaseModel):
+    id: str
+    region: str
+    country: str = ""
+    economic_risk_score: float = 0.0
+    financial_risk_score: float = 0.0
+    currency_risk_score: float = 0.0
+    political_risk_score: float = 0.0
+    climate_risk_score: float = 0.0
+    supply_chain_risk_score: float = 0.0
+    market_risk_score: float = 0.0
+    total_risk_score: float = 0.0
+    risk_color_level: str = ""
+    risk_category: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_RISK_HEATMAP_DATABASE: Dict[
+    str,
+    GlobalRiskHeatmapRecord,
+] = {}
+
+
+class GlobalRiskHeatmapEngine:
+
+    def register(
+        self,
+        record: GlobalRiskHeatmapRecord,
+    ) -> None:
+
+        GLOBAL_RISK_HEATMAP_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalRiskHeatmapRecord]:
+
+        return GLOBAL_RISK_HEATMAP_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_RISK_HEATMAP_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.total_risk_score = (
+            record.economic_risk_score * 0.20
+            +
+            record.financial_risk_score * 0.15
+            +
+            record.currency_risk_score * 0.15
+            +
+            record.political_risk_score * 0.15
+            +
+            record.climate_risk_score * 0.10
+            +
+            record.supply_chain_risk_score * 0.15
+            +
+            record.market_risk_score * 0.10
+        )
+
+        if record.total_risk_score >= 75:
+            record.risk_color_level = "RED"
+            record.risk_category = "HIGH_RISK"
+
+        elif record.total_risk_score >= 50:
+            record.risk_color_level = "ORANGE"
+            record.risk_category = "MEDIUM_RISK"
+
+        elif record.total_risk_score >= 25:
+            record.risk_color_level = "YELLOW"
+            record.risk_category = "LOW_RISK"
+
+        else:
+            record.risk_color_level = "GREEN"
+            record.risk_category = "STABLE"
+
+        record.analysis_text = (
+            f"{record.country}: "
+            f"{record.risk_category}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalRiskHeatmapRecord]:
+
+        return sorted(
+            GLOBAL_RISK_HEATMAP_DATABASE.values(),
+            key=lambda item:
+            item.total_risk_score,
+            reverse=True,
+        )
+
+
+GLOBAL_RISK_HEATMAP_ENGINE = (
+    GlobalRiskHeatmapEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 216
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 217
+# ==========================================================
+
+class GlobalInvestmentOpportunityRecord(BaseModel):
+    id: str
+    country: str
+    sector: str = ""
+    market_size_usd: float = 0.0
+    growth_potential_score: float = 0.0
+    investor_interest_score: float = 0.0
+    economic_stability_score: float = 0.0
+    regulatory_environment_score: float = 0.0
+    technology_advantage_score: float = 0.0
+    risk_discount_score: float = 0.0
+    opportunity_score: float = 0.0
+    opportunity_level: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_INVESTMENT_OPPORTUNITY_DATABASE: Dict[
+    str,
+    GlobalInvestmentOpportunityRecord,
+] = {}
+
+
+class GlobalInvestmentOpportunityEngine:
+
+    def register(
+        self,
+        record: GlobalInvestmentOpportunityRecord,
+    ) -> None:
+
+        GLOBAL_INVESTMENT_OPPORTUNITY_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalInvestmentOpportunityRecord]:
+
+        return GLOBAL_INVESTMENT_OPPORTUNITY_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_INVESTMENT_OPPORTUNITY_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        market_score = min(
+            record.market_size_usd
+            /
+            100000000000,
+            100,
+        )
+
+        record.opportunity_score = (
+            market_score * 0.20
+            +
+            record.growth_potential_score * 0.20
+            +
+            record.investor_interest_score * 0.15
+            +
+            record.economic_stability_score * 0.15
+            +
+            record.regulatory_environment_score * 0.10
+            +
+            record.technology_advantage_score * 0.10
+            -
+            record.risk_discount_score * 0.10
+        )
+
+        if record.opportunity_score >= 75:
+            record.opportunity_level = (
+                "HIGH_OPPORTUNITY"
+            )
+
+        elif record.opportunity_score >= 50:
+            record.opportunity_level = (
+                "MEDIUM_OPPORTUNITY"
+            )
+
+        else:
+            record.opportunity_level = (
+                "LOW_OPPORTUNITY"
+            )
+
+        record.analysis_text = (
+            f"{record.country} - "
+            f"{record.sector}: "
+            f"{record.opportunity_level}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalInvestmentOpportunityRecord]:
+
+        return sorted(
+            GLOBAL_INVESTMENT_OPPORTUNITY_DATABASE.values(),
+            key=lambda item:
+            item.opportunity_score,
+            reverse=True,
+        )
+
+
+GLOBAL_INVESTMENT_OPPORTUNITY_ENGINE = (
+    GlobalInvestmentOpportunityEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 217
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 218
+# ==========================================================
+
+class GlobalPortfolioAllocationRecord(BaseModel):
+    id: str
+    investor_type: str
+    region: str = ""
+    asset_class: str = ""
+    equity_allocation: float = 0.0
+    bond_allocation: float = 0.0
+    gold_allocation: float = 0.0
+    crypto_allocation: float = 0.0
+    real_estate_allocation: float = 0.0
+    cash_allocation: float = 0.0
+    risk_preference_score: float = 0.0
+    macro_view_score: float = 0.0
+    allocation_change_score: float = 0.0
+    portfolio_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_PORTFOLIO_ALLOCATION_DATABASE: Dict[
+    str,
+    GlobalPortfolioAllocationRecord,
+] = {}
+
+
+class GlobalPortfolioAllocationEngine:
+
+    def register(
+        self,
+        record: GlobalPortfolioAllocationRecord,
+    ) -> None:
+
+        GLOBAL_PORTFOLIO_ALLOCATION_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalPortfolioAllocationRecord]:
+
+        return GLOBAL_PORTFOLIO_ALLOCATION_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_PORTFOLIO_ALLOCATION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        defensive_assets = (
+            record.bond_allocation
+            +
+            record.gold_allocation
+            +
+            record.cash_allocation
+        )
+
+        growth_assets = (
+            record.equity_allocation
+            +
+            record.crypto_allocation
+            +
+            record.real_estate_allocation
+        )
+
+        record.allocation_change_score = (
+            growth_assets
+            -
+            defensive_assets
+        )
+
+        portfolio_score = (
+            record.risk_preference_score * 0.25
+            +
+            record.macro_view_score * 0.35
+            +
+            record.allocation_change_score * 0.40
+        )
+
+        if portfolio_score >= 60:
+            record.portfolio_signal = (
+                "RISK_ON_ALLOCATION"
+            )
+
+        elif portfolio_score <= 40:
+            record.portfolio_signal = (
+                "RISK_OFF_ALLOCATION"
+            )
+
+        else:
+            record.portfolio_signal = (
+                "BALANCED_ALLOCATION"
+            )
+
+        record.analysis_text = (
+            f"{record.investor_type}: "
+            f"{record.portfolio_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalPortfolioAllocationRecord]:
+
+        return sorted(
+            GLOBAL_PORTFOLIO_ALLOCATION_DATABASE.values(),
+            key=lambda item:
+            item.allocation_change_score,
+            reverse=True,
+        )
+
+
+GLOBAL_PORTFOLIO_ALLOCATION_ENGINE = (
+    GlobalPortfolioAllocationEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 218
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 219
+# ==========================================================
+
+class GlobalInvestorSentimentRecord(BaseModel):
+    id: str
+    market_name: str
+    asset_class: str = ""
+    retail_sentiment_score: float = 0.0
+    institutional_sentiment_score: float = 0.0
+    social_media_sentiment_score: float = 0.0
+    news_sentiment_score: float = 0.0
+    volatility_fear_score: float = 0.0
+    optimism_score: float = 0.0
+    pessimism_score: float = 0.0
+    overall_sentiment_score: float = 0.0
+    sentiment_state: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_INVESTOR_SENTIMENT_DATABASE: Dict[
+    str,
+    GlobalInvestorSentimentRecord,
+] = {}
+
+
+class GlobalInvestorSentimentEngine:
+
+    def register(
+        self,
+        record: GlobalInvestorSentimentRecord,
+    ) -> None:
+
+        GLOBAL_INVESTOR_SENTIMENT_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalInvestorSentimentRecord]:
+
+        return GLOBAL_INVESTOR_SENTIMENT_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_INVESTOR_SENTIMENT_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.overall_sentiment_score = (
+            record.retail_sentiment_score * 0.15
+            +
+            record.institutional_sentiment_score * 0.25
+            +
+            record.social_media_sentiment_score * 0.15
+            +
+            record.news_sentiment_score * 0.20
+            +
+            record.optimism_score * 0.15
+            -
+            record.volatility_fear_score * 0.05
+            -
+            record.pessimism_score * 0.05
+        )
+
+        if record.overall_sentiment_score >= 70:
+            record.sentiment_state = (
+                "EXTREME_OPTIMISM"
+            )
+
+        elif record.overall_sentiment_score >= 55:
+            record.sentiment_state = (
+                "POSITIVE_SENTIMENT"
+            )
+
+        elif record.overall_sentiment_score >= 40:
+            record.sentiment_state = (
+                "NEUTRAL_SENTIMENT"
+            )
+
+        else:
+            record.sentiment_state = (
+                "NEGATIVE_SENTIMENT"
+            )
+
+        record.analysis_text = (
+            f"{record.market_name}: "
+            f"{record.sentiment_state}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalInvestorSentimentRecord]:
+
+        return sorted(
+            GLOBAL_INVESTOR_SENTIMENT_DATABASE.values(),
+            key=lambda item:
+            item.overall_sentiment_score,
+            reverse=True,
+        )
+
+
+GLOBAL_INVESTOR_SENTIMENT_ENGINE = (
+    GlobalInvestorSentimentEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 219
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 220
+# ==========================================================
+
+class GlobalMarketCorrelationRecord(BaseModel):
+    id: str
+    asset_a: str
+    asset_b: str = ""
+    correlation_period: str = ""
+    price_correlation: float = 0.0
+    volatility_correlation: float = 0.0
+    liquidity_correlation: float = 0.0
+    macro_correlation: float = 0.0
+    flow_correlation: float = 0.0
+    total_correlation_score: float = 0.0
+    relationship_type: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_MARKET_CORRELATION_DATABASE: Dict[
+    str,
+    GlobalMarketCorrelationRecord,
+] = {}
+
+
+class GlobalMarketCorrelationEngine:
+
+    def register(
+        self,
+        record: GlobalMarketCorrelationRecord,
+    ) -> None:
+
+        GLOBAL_MARKET_CORRELATION_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalMarketCorrelationRecord]:
+
+        return GLOBAL_MARKET_CORRELATION_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_MARKET_CORRELATION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.total_correlation_score = (
+            record.price_correlation * 0.25
+            +
+            record.volatility_correlation * 0.15
+            +
+            record.liquidity_correlation * 0.20
+            +
+            record.macro_correlation * 0.20
+            +
+            record.flow_correlation * 0.20
+        )
+
+        if record.total_correlation_score >= 75:
+            record.relationship_type = (
+                "STRONG_RELATIONSHIP"
+            )
+
+        elif record.total_correlation_score >= 50:
+            record.relationship_type = (
+                "MODERATE_RELATIONSHIP"
+            )
+
+        else:
+            record.relationship_type = (
+                "WEAK_RELATIONSHIP"
+            )
+
+        record.analysis_text = (
+            f"{record.asset_a} ↔ "
+            f"{record.asset_b}: "
+            f"{record.relationship_type}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalMarketCorrelationRecord]:
+
+        return sorted(
+            GLOBAL_MARKET_CORRELATION_DATABASE.values(),
+            key=lambda item:
+            item.total_correlation_score,
+            reverse=True,
+        )
+
+
+GLOBAL_MARKET_CORRELATION_ENGINE = (
+    GlobalMarketCorrelationEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 220
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 221
+# ==========================================================
+
+class GlobalMacroSignalRecord(BaseModel):
+    id: str
+    signal_name: str
+    category: str = ""
+    indicator_name: str = ""
+    current_value: float = 0.0
+    previous_value: float = 0.0
+    change_percent: float = 0.0
+    impact_score: float = 0.0
+    confidence_score: float = 0.0
+    market_direction: str = ""
+    affected_assets: List[str] = []
+    signal_strength: float = 0.0
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_MACRO_SIGNAL_DATABASE: Dict[
+    str,
+    GlobalMacroSignalRecord,
+] = {}
+
+
+class GlobalMacroSignalEngine:
+
+    def register(
+        self,
+        record: GlobalMacroSignalRecord,
+    ) -> None:
+
+        GLOBAL_MACRO_SIGNAL_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalMacroSignalRecord]:
+
+        return GLOBAL_MACRO_SIGNAL_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_MACRO_SIGNAL_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        if record.previous_value != 0:
+            record.change_percent = (
+                (
+                    record.current_value
+                    -
+                    record.previous_value
+                )
+                /
+                abs(
+                    record.previous_value
+                )
+            )
+            * 100
+
+        record.signal_strength = (
+            abs(
+                record.change_percent
+            )
+            *
+            0.30
+            +
+            record.impact_score
+            *
+            0.40
+            +
+            record.confidence_score
+            *
+            0.30
+        )
+
+        if record.change_percent > 0:
+            record.market_direction = (
+                "POSITIVE"
+            )
+
+        elif record.change_percent < 0:
+            record.market_direction = (
+                "NEGATIVE"
+            )
+
+        else:
+            record.market_direction = (
+                "NEUTRAL"
+            )
+
+        record.analysis_text = (
+            f"{record.signal_name}: "
+            f"{record.market_direction}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalMacroSignalRecord]:
+
+        return sorted(
+            GLOBAL_MACRO_SIGNAL_DATABASE.values(),
+            key=lambda item:
+            item.signal_strength,
+            reverse=True,
+        )
+
+
+GLOBAL_MACRO_SIGNAL_ENGINE = (
+    GlobalMacroSignalEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 221
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 222
+# ==========================================================
+
+class GlobalEconomicIndicatorRecord(BaseModel):
+    id: str
+    indicator_name: str
+    country: str = ""
+    category: str = ""
+    current_value: float = 0.0
+    previous_value: float = 0.0
+    forecast_value: float = 0.0
+    deviation_from_forecast: float = 0.0
+    market_impact_score: float = 0.0
+    gold_impact_score: float = 0.0
+    dollar_impact_score: float = 0.0
+    stock_market_impact_score: float = 0.0
+    bond_market_impact_score: float = 0.0
+    indicator_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_ECONOMIC_INDICATOR_DATABASE: Dict[
+    str,
+    GlobalEconomicIndicatorRecord,
+] = {}
+
+
+class GlobalEconomicIndicatorEngine:
+
+    def register(
+        self,
+        record: GlobalEconomicIndicatorRecord,
+    ) -> None:
+
+        GLOBAL_ECONOMIC_INDICATOR_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalEconomicIndicatorRecord]:
+
+        return GLOBAL_ECONOMIC_INDICATOR_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_ECONOMIC_INDICATOR_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        if record.forecast_value != 0:
+            record.deviation_from_forecast = (
+                (
+                    record.current_value
+                    -
+                    record.forecast_value
+                )
+                /
+                abs(
+                    record.forecast_value
+                )
+            ) * 100
+
+        record.market_impact_score = (
+            abs(
+                record.deviation_from_forecast
+            )
+            *
+            0.40
+            +
+            record.category != ""
+            *
+            0.10
+            +
+            record.current_value
+            *
+            0.50
+        )
+
+        if record.deviation_from_forecast > 0:
+            record.indicator_signal = (
+                "ABOVE_EXPECTATION"
+            )
+
+        elif record.deviation_from_forecast < 0:
+            record.indicator_signal = (
+                "BELOW_EXPECTATION"
+            )
+
+        else:
+            record.indicator_signal = (
+                "IN_LINE_EXPECTATION"
+            )
+
+        record.analysis_text = (
+            f"{record.indicator_name}: "
+            f"{record.indicator_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalEconomicIndicatorRecord]:
+
+        return sorted(
+            GLOBAL_ECONOMIC_INDICATOR_DATABASE.values(),
+            key=lambda item:
+            item.market_impact_score,
+            reverse=True,
+        )
+
+
+GLOBAL_ECONOMIC_INDICATOR_ENGINE = (
+    GlobalEconomicIndicatorEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 222
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 223
+# ==========================================================
+
+class GlobalEconomicEventRecord(BaseModel):
+    id: str
+    event_name: str
+    country: str = ""
+    event_category: str = ""
+    event_time: str = ""
+    previous_value: float = 0.0
+    forecast_value: float = 0.0
+    actual_value: float = 0.0
+    surprise_score: float = 0.0
+    market_reaction_score: float = 0.0
+    gold_reaction_score: float = 0.0
+    dollar_reaction_score: float = 0.0
+    volatility_impact_score: float = 0.0
+    event_importance: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_ECONOMIC_EVENT_DATABASE: Dict[
+    str,
+    GlobalEconomicEventRecord,
+] = {}
+
+
+class GlobalEconomicEventEngine:
+
+    def register(
+        self,
+        record: GlobalEconomicEventRecord,
+    ) -> None:
+
+        GLOBAL_ECONOMIC_EVENT_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalEconomicEventRecord]:
+
+        return GLOBAL_ECONOMIC_EVENT_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_ECONOMIC_EVENT_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        if record.forecast_value != 0:
+            record.surprise_score = (
+                (
+                    record.actual_value
+                    -
+                    record.forecast_value
+                )
+                /
+                abs(
+                    record.forecast_value
+                )
+            ) * 100
+
+        record.market_reaction_score = (
+            abs(
+                record.surprise_score
+            )
+            *
+            0.35
+            +
+            record.volatility_impact_score
+            *
+            0.35
+            +
+            record.event_category != ""
+            *
+            0.30
+        )
+
+        if record.market_reaction_score >= 70:
+            record.event_importance = (
+                "HIGH_IMPACT"
+            )
+
+        elif record.market_reaction_score >= 40:
+            record.event_importance = (
+                "MEDIUM_IMPACT"
+            )
+
+        else:
+            record.event_importance = (
+                "LOW_IMPACT"
+            )
+
+        record.analysis_text = (
+            f"{record.event_name}: "
+            f"{record.event_importance}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalEconomicEventRecord]:
+
+        return sorted(
+            GLOBAL_ECONOMIC_EVENT_DATABASE.values(),
+            key=lambda item:
+            item.market_reaction_score,
+            reverse=True,
+        )
+
+
+GLOBAL_ECONOMIC_EVENT_ENGINE = (
+    GlobalEconomicEventEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 223
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 224
+# ==========================================================
+
+class GlobalNewsIntelligenceRecord(BaseModel):
+    id: str
+    title: str
+    source_name: str = ""
+    country: str = ""
+    category: str = ""
+    published_time: Optional[datetime] = None
+    sentiment_score: float = 0.0
+    market_relevance_score: float = 0.0
+    gold_relevance_score: float = 0.0
+    dollar_relevance_score: float = 0.0
+    geopolitical_score: float = 0.0
+    economic_score: float = 0.0
+    ai_summary: str = ""
+    news_impact_score: float = 0.0
+    impact_level: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_NEWS_INTELLIGENCE_DATABASE: Dict[
+    str,
+    GlobalNewsIntelligenceRecord,
+] = {}
+
+
+class GlobalNewsIntelligenceEngine:
+
+    def register(
+        self,
+        record: GlobalNewsIntelligenceRecord,
+    ) -> None:
+
+        GLOBAL_NEWS_INTELLIGENCE_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalNewsIntelligenceRecord]:
+
+        return GLOBAL_NEWS_INTELLIGENCE_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_NEWS_INTELLIGENCE_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.news_impact_score = (
+            record.market_relevance_score * 0.25
+            +
+            record.gold_relevance_score * 0.15
+            +
+            record.dollar_relevance_score * 0.15
+            +
+            record.geopolitical_score * 0.20
+            +
+            record.economic_score * 0.25
+        )
+
+        if record.news_impact_score >= 75:
+            record.impact_level = (
+                "MAJOR_MARKET_EVENT"
+            )
+
+        elif record.news_impact_score >= 50:
+            record.impact_level = (
+                "IMPORTANT_EVENT"
+            )
+
+        else:
+            record.impact_level = (
+                "LOW_IMPACT_EVENT"
+            )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalNewsIntelligenceRecord]:
+
+        return sorted(
+            GLOBAL_NEWS_INTELLIGENCE_DATABASE.values(),
+            key=lambda item:
+            item.news_impact_score,
+            reverse=True,
+        )
+
+
+GLOBAL_NEWS_INTELLIGENCE_ENGINE = (
+    GlobalNewsIntelligenceEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 224
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 225
+# ==========================================================
+
+class GlobalSocialMediaMarketSignalRecord(BaseModel):
+    id: str
+    platform: str
+    topic: str = ""
+    region: str = ""
+    mention_volume: int = 0
+    sentiment_positive_score: float = 0.0
+    sentiment_negative_score: float = 0.0
+    influencer_activity_score: float = 0.0
+    retail_attention_score: float = 0.0
+    market_relevance_score: float = 0.0
+    viral_probability_score: float = 0.0
+    social_signal_strength: float = 0.0
+    signal_direction: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_SOCIAL_MEDIA_SIGNAL_DATABASE: Dict[
+    str,
+    GlobalSocialMediaMarketSignalRecord,
+] = {}
+
+
+class GlobalSocialMediaMarketSignalEngine:
+
+    def register(
+        self,
+        record: GlobalSocialMediaMarketSignalRecord,
+    ) -> None:
+
+        GLOBAL_SOCIAL_MEDIA_SIGNAL_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalSocialMediaMarketSignalRecord]:
+
+        return GLOBAL_SOCIAL_MEDIA_SIGNAL_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_SOCIAL_MEDIA_SIGNAL_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        sentiment_balance = (
+            record.sentiment_positive_score
+            -
+            record.sentiment_negative_score
+        )
+
+        mention_score = min(
+            record.mention_volume
+            /
+            100000,
+            100,
+        )
+
+        record.social_signal_strength = (
+            mention_score * 0.20
+            +
+            sentiment_balance * 0.20
+            +
+            record.influencer_activity_score * 0.15
+            +
+            record.retail_attention_score * 0.20
+            +
+            record.market_relevance_score * 0.15
+            +
+            record.viral_probability_score * 0.10
+        )
+
+        if record.social_signal_strength >= 70:
+            record.signal_direction = (
+                "BULLISH_SOCIAL_SIGNAL"
+            )
+
+        elif record.social_signal_strength <= 30:
+            record.signal_direction = (
+                "BEARISH_SOCIAL_SIGNAL"
+            )
+
+        else:
+            record.signal_direction = (
+                "NEUTRAL_SOCIAL_SIGNAL"
+            )
+
+        record.analysis_text = (
+            f"{record.topic}: "
+            f"{record.signal_direction}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalSocialMediaMarketSignalRecord]:
+
+        return sorted(
+            GLOBAL_SOCIAL_MEDIA_SIGNAL_DATABASE.values(),
+            key=lambda item:
+            item.social_signal_strength,
+            reverse=True,
+        )
+
+
+GLOBAL_SOCIAL_MEDIA_SIGNAL_ENGINE = (
+    GlobalSocialMediaMarketSignalEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 225
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 226
+# ==========================================================
+
+class GlobalCommodityFlowRecord(BaseModel):
+    id: str
+    commodity_name: str
+    commodity_type: str = ""
+    producing_regions: List[str] = []
+    consuming_regions: List[str] = []
+    production_volume: float = 0.0
+    consumption_volume: float = 0.0
+    inventory_level: float = 0.0
+    supply_change_score: float = 0.0
+    demand_change_score: float = 0.0
+    price_momentum_score: float = 0.0
+    geopolitical_supply_risk_score: float = 0.0
+    commodity_flow_strength: float = 0.0
+    market_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_COMMODITY_FLOW_DATABASE: Dict[
+    str,
+    GlobalCommodityFlowRecord,
+] = {}
+
+
+class GlobalCommodityFlowEngine:
+
+    def register(
+        self,
+        record: GlobalCommodityFlowRecord,
+    ) -> None:
+
+        GLOBAL_COMMODITY_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalCommodityFlowRecord]:
+
+        return GLOBAL_COMMODITY_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_COMMODITY_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        supply_demand_balance = (
+            record.demand_change_score
+            -
+            record.supply_change_score
+        )
+
+        inventory_pressure = max(
+            0,
+            100 -
+            record.inventory_level
+        )
+
+        record.commodity_flow_strength = (
+            supply_demand_balance * 0.25
+            +
+            record.price_momentum_score * 0.20
+            +
+            inventory_pressure * 0.15
+            +
+            record.geopolitical_supply_risk_score * 0.20
+            +
+            abs(
+                record.production_volume
+                -
+                record.consumption_volume
+            )
+            *
+            0.20
+        )
+
+        if record.commodity_flow_strength >= 70:
+            record.market_signal = (
+                "SUPPLY_STRESS_BULLISH"
+            )
+
+        elif record.commodity_flow_strength <= 30:
+            record.market_signal = (
+                "SUPPLY_RELIEF_BEARISH"
+            )
+
+        else:
+            record.market_signal = (
+                "BALANCED_COMMODITY_FLOW"
+            )
+
+        record.analysis_text = (
+            f"{record.commodity_name}: "
+            f"{record.market_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalCommodityFlowRecord]:
+
+        return sorted(
+            GLOBAL_COMMODITY_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.commodity_flow_strength,
+            reverse=True,
+        )
+
+
+GLOBAL_COMMODITY_FLOW_ENGINE = (
+    GlobalCommodityFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 226
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 227
+# ==========================================================
+
+class GlobalEnergyFlowRecord(BaseModel):
+    id: str
+    energy_type: str
+    producing_country: str = ""
+    consuming_country: str = ""
+    production_volume: float = 0.0
+    consumption_volume: float = 0.0
+    export_volume: float = 0.0
+    import_volume: float = 0.0
+    energy_price: float = 0.0
+    supply_risk_score: float = 0.0
+    demand_growth_score: float = 0.0
+    geopolitical_risk_score: float = 0.0
+    energy_security_score: float = 0.0
+    energy_flow_strength: float = 0.0
+    market_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_ENERGY_FLOW_DATABASE: Dict[
+    str,
+    GlobalEnergyFlowRecord,
+] = {}
+
+
+class GlobalEnergyFlowEngine:
+
+    def register(
+        self,
+        record: GlobalEnergyFlowRecord,
+    ) -> None:
+
+        GLOBAL_ENERGY_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalEnergyFlowRecord]:
+
+        return GLOBAL_ENERGY_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_ENERGY_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        trade_balance = (
+            record.export_volume
+            -
+            record.import_volume
+        )
+
+        production_balance = (
+            record.production_volume
+            -
+            record.consumption_volume
+        )
+
+        record.energy_flow_strength = (
+            abs(trade_balance)
+            *
+            0.20
+            +
+            abs(production_balance)
+            *
+            0.20
+            +
+            record.energy_price
+            *
+            0.15
+            +
+            record.supply_risk_score
+            *
+            0.15
+            +
+            record.demand_growth_score
+            *
+            0.15
+            +
+            record.geopolitical_risk_score
+            *
+            0.10
+            +
+            record.energy_security_score
+            *
+            0.05
+        )
+
+        if record.supply_risk_score >= 70:
+            record.market_signal = (
+                "ENERGY_SUPPLY_RISK"
+            )
+
+        elif record.demand_growth_score >= 70:
+            record.market_signal = (
+                "ENERGY_DEMAND_EXPANSION"
+            )
+
+        else:
+            record.market_signal = (
+                "NORMAL_ENERGY_FLOW"
+            )
+
+        record.analysis_text = (
+            f"{record.energy_type}: "
+            f"{record.market_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalEnergyFlowRecord]:
+
+        return sorted(
+            GLOBAL_ENERGY_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.energy_flow_strength,
+            reverse=True,
+        )
+
+
+GLOBAL_ENERGY_FLOW_ENGINE = (
+    GlobalEnergyFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 227
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 228
+# ==========================================================
+
+class GlobalCurrencyFlowRecord(BaseModel):
+    id: str
+    currency_pair: str
+    base_currency: str = ""
+    quote_currency: str = ""
+    exchange_rate: float = 0.0
+    exchange_rate_change_percent: float = 0.0
+    central_bank_policy_score: float = 0.0
+    interest_rate_difference_score: float = 0.0
+    trade_flow_score: float = 0.0
+    capital_flow_score: float = 0.0
+    reserve_currency_score: float = 0.0
+    currency_strength_score: float = 0.0
+    market_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_CURRENCY_FLOW_DATABASE: Dict[
+    str,
+    GlobalCurrencyFlowRecord,
+] = {}
+
+
+class GlobalCurrencyFlowEngine:
+
+    def register(
+        self,
+        record: GlobalCurrencyFlowRecord,
+    ) -> None:
+
+        GLOBAL_CURRENCY_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalCurrencyFlowRecord]:
+
+        return GLOBAL_CURRENCY_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_CURRENCY_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        record.currency_strength_score = (
+            record.exchange_rate_change_percent
+            *
+            0.15
+            +
+            record.central_bank_policy_score
+            *
+            0.20
+            +
+            record.interest_rate_difference_score
+            *
+            0.20
+            +
+            record.trade_flow_score
+            *
+            0.15
+            +
+            record.capital_flow_score
+            *
+            0.20
+            +
+            record.reserve_currency_score
+            *
+            0.10
+        )
+
+        if record.currency_strength_score >= 70:
+            record.market_signal = (
+                "CURRENCY_STRENGTHENING"
+            )
+
+        elif record.currency_strength_score <= 30:
+            record.market_signal = (
+                "CURRENCY_WEAKENING"
+            )
+
+        else:
+            record.market_signal = (
+                "CURRENCY_BALANCED"
+            )
+
+        record.analysis_text = (
+            f"{record.currency_pair}: "
+            f"{record.market_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalCurrencyFlowRecord]:
+
+        return sorted(
+            GLOBAL_CURRENCY_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.currency_strength_score,
+            reverse=True,
+        )
+
+
+GLOBAL_CURRENCY_FLOW_ENGINE = (
+    GlobalCurrencyFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 228
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 229
+# ==========================================================
+
+class GlobalBondMarketFlowRecord(BaseModel):
+    id: str
+    country: str
+    bond_type: str = ""
+    yield_rate: float = 0.0
+    yield_change_percent: float = 0.0
+    foreign_investment_usd: float = 0.0
+    domestic_demand_score: float = 0.0
+    inflation_expectation_score: float = 0.0
+    interest_rate_expectation_score: float = 0.0
+    credit_risk_score: float = 0.0
+    liquidity_score: float = 0.0
+    bond_flow_strength: float = 0.0
+    market_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_BOND_FLOW_DATABASE: Dict[
+    str,
+    GlobalBondMarketFlowRecord,
+] = {}
+
+
+class GlobalBondMarketFlowEngine:
+
+    def register(
+        self,
+        record: GlobalBondMarketFlowRecord,
+    ) -> None:
+
+        GLOBAL_BOND_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalBondMarketFlowRecord]:
+
+        return GLOBAL_BOND_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_BOND_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        foreign_flow_score = min(
+            record.foreign_investment_usd
+            /
+            10000000000,
+            100,
+        )
+
+        record.bond_flow_strength = (
+            foreign_flow_score * 0.20
+            +
+            record.domestic_demand_score * 0.15
+            +
+            record.inflation_expectation_score * 0.15
+            +
+            record.interest_rate_expectation_score * 0.20
+            +
+            record.liquidity_score * 0.15
+            -
+            record.credit_risk_score * 0.15
+        )
+
+        if record.bond_flow_strength >= 70:
+            record.market_signal = (
+                "BOND_ACCUMULATION"
+            )
+
+        elif record.bond_flow_strength <= 30:
+            record.market_signal = (
+                "BOND_SELLING_PRESSURE"
+            )
+
+        else:
+            record.market_signal = (
+                "BOND_BALANCED_FLOW"
+            )
+
+        record.analysis_text = (
+            f"{record.country} bond market: "
+            f"{record.market_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalBondMarketFlowRecord]:
+
+        return sorted(
+            GLOBAL_BOND_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.bond_flow_strength,
+            reverse=True,
+        )
+
+
+GLOBAL_BOND_MARKET_FLOW_ENGINE = (
+    GlobalBondMarketFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 229
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 230
+# ==========================================================
+
+class GlobalEquityMarketFlowRecord(BaseModel):
+    id: str
+    market_name: str
+    country: str = ""
+    index_name: str = ""
+    market_cap_usd: float = 0.0
+    daily_volume_usd: float = 0.0
+    foreign_inflow_usd: float = 0.0
+    foreign_outflow_usd: float = 0.0
+    earnings_growth_score: float = 0.0
+    valuation_score: float = 0.0
+    liquidity_score: float = 0.0
+    investor_confidence_score: float = 0.0
+    equity_flow_strength: float = 0.0
+    market_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_EQUITY_FLOW_DATABASE: Dict[
+    str,
+    GlobalEquityMarketFlowRecord,
+] = {}
+
+
+class GlobalEquityMarketFlowEngine:
+
+    def register(
+        self,
+        record: GlobalEquityMarketFlowRecord,
+    ) -> None:
+
+        GLOBAL_EQUITY_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalEquityMarketFlowRecord]:
+
+        return GLOBAL_EQUITY_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_EQUITY_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        foreign_net_flow = (
+            record.foreign_inflow_usd
+            -
+            record.foreign_outflow_usd
+        )
+
+        market_size_score = min(
+            record.market_cap_usd
+            /
+            1000000000000,
+            100,
+        )
+
+        volume_score = min(
+            record.daily_volume_usd
+            /
+            50000000000,
+            100,
+        )
+
+        record.equity_flow_strength = (
+            foreign_net_flow
+            /
+            10000000000
+            *
+            0.25
+            +
+            market_size_score
+            *
+            0.15
+            +
+            volume_score
+            *
+            0.10
+            +
+            record.earnings_growth_score
+            *
+            0.20
+            +
+            record.valuation_score
+            *
+            0.10
+            +
+            record.liquidity_score
+            *
+            0.10
+            +
+            record.investor_confidence_score
+            *
+            0.10
+        )
+
+        if record.equity_flow_strength >= 70:
+            record.market_signal = (
+                "EQUITY_ACCUMULATION"
+            )
+
+        elif record.equity_flow_strength <= 30:
+            record.market_signal = (
+                "EQUITY_DISTRIBUTION"
+            )
+
+        else:
+            record.market_signal = (
+                "EQUITY_NEUTRAL"
+            )
+
+        record.analysis_text = (
+            f"{record.market_name}: "
+            f"{record.market_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalEquityMarketFlowRecord]:
+
+        return sorted(
+            GLOBAL_EQUITY_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.equity_flow_strength,
+            reverse=True,
+        )
+
+
+GLOBAL_EQUITY_MARKET_FLOW_ENGINE = (
+    GlobalEquityMarketFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 230
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 231
+# ==========================================================
+
+class GlobalMarketCapitalRotationRecord(BaseModel):
+    id: str
+    from_asset: str
+    to_asset: str
+    region: str = ""
+    capital_shift_usd: float = 0.0
+    shift_speed: float = 0.0
+    institutional_participation_score: float = 0.0
+    retail_participation_score: float = 0.0
+    macro_trigger_score: float = 0.0
+    risk_factor_score: float = 0.0
+    rotation_strength: float = 0.0
+    rotation_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_CAPITAL_ROTATION_DATABASE: Dict[
+    str,
+    GlobalMarketCapitalRotationRecord,
+] = {}
+
+
+class GlobalMarketCapitalRotationEngine:
+
+    def register(
+        self,
+        record: GlobalMarketCapitalRotationRecord,
+    ) -> None:
+
+        GLOBAL_CAPITAL_ROTATION_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalMarketCapitalRotationRecord]:
+
+        return GLOBAL_CAPITAL_ROTATION_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_CAPITAL_ROTATION_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        capital_score = min(
+            abs(
+                record.capital_shift_usd
+            )
+            /
+            10000000000,
+            100,
+        )
+
+        record.rotation_strength = (
+            capital_score * 0.30
+            +
+            record.shift_speed * 0.15
+            +
+            record.institutional_participation_score * 0.20
+            +
+            record.retail_participation_score * 0.10
+            +
+            record.macro_trigger_score * 0.20
+            -
+            record.risk_factor_score * 0.05
+        )
+
+        if record.capital_shift_usd > 0:
+            record.rotation_signal = (
+                "CAPITAL_MOVING_IN"
+            )
+
+        elif record.capital_shift_usd < 0:
+            record.rotation_signal = (
+                "CAPITAL_MOVING_OUT"
+            )
+
+        else:
+            record.rotation_signal = (
+                "NO_CAPITAL_ROTATION"
+            )
+
+        record.analysis_text = (
+            f"{record.from_asset} -> "
+            f"{record.to_asset}: "
+            f"{record.rotation_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalMarketCapitalRotationRecord]:
+
+        return sorted(
+            GLOBAL_CAPITAL_ROTATION_DATABASE.values(),
+            key=lambda item:
+            item.rotation_strength,
+            reverse=True,
+        )
+
+
+GLOBAL_CAPITAL_ROTATION_ENGINE = (
+    GlobalMarketCapitalRotationEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 231
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 232
+# ==========================================================
+
+class GlobalSafeHavenFlowRecord(BaseModel):
+    id: str
+    asset_name: str
+    asset_type: str = ""
+    region: str = ""
+    safe_haven_demand_score: float = 0.0
+    geopolitical_risk_score: float = 0.0
+    financial_stress_score: float = 0.0
+    currency_instability_score: float = 0.0
+    investor_fear_score: float = 0.0
+    capital_inflow_usd: float = 0.0
+    safe_haven_strength_score: float = 0.0
+    market_signal: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_SAFE_HAVEN_FLOW_DATABASE: Dict[
+    str,
+    GlobalSafeHavenFlowRecord,
+] = {}
+
+
+class GlobalSafeHavenFlowEngine:
+
+    def register(
+        self,
+        record: GlobalSafeHavenFlowRecord,
+    ) -> None:
+
+        GLOBAL_SAFE_HAVEN_FLOW_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalSafeHavenFlowRecord]:
+
+        return GLOBAL_SAFE_HAVEN_FLOW_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_SAFE_HAVEN_FLOW_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        capital_score = min(
+            record.capital_inflow_usd
+            /
+            10000000000,
+            100,
+        )
+
+        record.safe_haven_strength_score = (
+            record.safe_haven_demand_score * 0.20
+            +
+            record.geopolitical_risk_score * 0.20
+            +
+            record.financial_stress_score * 0.20
+            +
+            record.currency_instability_score * 0.15
+            +
+            record.investor_fear_score * 0.15
+            +
+            capital_score * 0.10
+        )
+
+        if record.safe_haven_strength_score >= 70:
+            record.market_signal = (
+                "STRONG_SAFE_HAVEN_FLOW"
+            )
+
+        elif record.safe_haven_strength_score >= 40:
+            record.market_signal = (
+                "MODERATE_SAFE_HAVEN_FLOW"
+            )
+
+        else:
+            record.market_signal = (
+                "LOW_SAFE_HAVEN_DEMAND"
+            )
+
+        record.analysis_text = (
+            f"{record.asset_name}: "
+            f"{record.market_signal}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalSafeHavenFlowRecord]:
+
+        return sorted(
+            GLOBAL_SAFE_HAVEN_FLOW_DATABASE.values(),
+            key=lambda item:
+            item.safe_haven_strength_score,
+            reverse=True,
+        )
+
+
+GLOBAL_SAFE_HAVEN_FLOW_ENGINE = (
+    GlobalSafeHavenFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 232
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 233
+# ==========================================================
+
+class GlobalInstitutionalBehaviorRecord(BaseModel):
+    id: str
+    institution_name: str
+    institution_type: str = ""
+    region: str = ""
+    investment_style: str = ""
+    asset_under_management_usd: float = 0.0
+    risk_appetite_score: float = 0.0
+    liquidity_preference_score: float = 0.0
+    growth_preference_score: float = 0.0
+    defensive_preference_score: float = 0.0
+    recent_capital_change_usd: float = 0.0
+    behavior_score: float = 0.0
+    behavior_state: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_INSTITUTIONAL_BEHAVIOR_DATABASE: Dict[
+    str,
+    GlobalInstitutionalBehaviorRecord,
+] = {}
+
+
+class GlobalInstitutionalBehaviorEngine:
+
+    def register(
+        self,
+        record: GlobalInstitutionalBehaviorRecord,
+    ) -> None:
+
+        GLOBAL_INSTITUTIONAL_BEHAVIOR_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalInstitutionalBehaviorRecord]:
+
+        return GLOBAL_INSTITUTIONAL_BEHAVIOR_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_INSTITUTIONAL_BEHAVIOR_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        asset_scale_score = min(
+            record.asset_under_management_usd
+            /
+            100000000000,
+            100,
+        )
+
+        record.behavior_score = (
+            asset_scale_score * 0.20
+            +
+            record.risk_appetite_score * 0.15
+            +
+            record.liquidity_preference_score * 0.15
+            +
+            record.growth_preference_score * 0.15
+            +
+            record.defensive_preference_score * 0.15
+            +
+            abs(
+                record.recent_capital_change_usd
+            )
+            /
+            10000000000
+            *
+            0.20
+        )
+
+        if (
+            record.growth_preference_score
+            >
+            record.defensive_preference_score
+        ):
+            record.behavior_state = (
+                "GROWTH_SEEKING"
+            )
+
+        elif (
+            record.defensive_preference_score
+            >
+            record.growth_preference_score
+        ):
+            record.behavior_state = (
+                "DEFENSIVE_POSITIONING"
+            )
+
+        else:
+            record.behavior_state = (
+                "BALANCED_POSITIONING"
+            )
+
+        record.analysis_text = (
+            f"{record.institution_name}: "
+            f"{record.behavior_state}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalInstitutionalBehaviorRecord]:
+
+        return sorted(
+            GLOBAL_INSTITUTIONAL_BEHAVIOR_DATABASE.values(),
+            key=lambda item:
+            item.behavior_score,
+            reverse=True,
+        )
+
+
+GLOBAL_INSTITUTIONAL_BEHAVIOR_ENGINE = (
+    GlobalInstitutionalBehaviorEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 233
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 234
+# ==========================================================
+
+class GlobalMarketLiquidityFlowRecord(BaseModel):
+    id: str
+    market_name: str
+    asset_class: str = ""
+    available_liquidity_usd: float = 0.0
+    trading_volume_usd: float = 0.0
+    bid_ask_spread_score: float = 0.0
+    institutional_liquidity_score: float = 0.0
+    retail_liquidity_score: float = 0.0
+    central_bank_liquidity_score: float = 0.0
+    liquidity_change_percent: float = 0.0
+    liquidity_strength_score: float = 0.0
+    liquidity_state: str = ""
+    analysis_text: str = ""
+    calculated_time: Optional[datetime] = None
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+GLOBAL_MARKET_LIQUIDITY_DATABASE: Dict[
+    str,
+    GlobalMarketLiquidityFlowRecord,
+] = {}
+
+
+class GlobalMarketLiquidityFlowEngine:
+
+    def register(
+        self,
+        record: GlobalMarketLiquidityFlowRecord,
+    ) -> None:
+
+        GLOBAL_MARKET_LIQUIDITY_DATABASE[
+            record.id
+        ] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[GlobalMarketLiquidityFlowRecord]:
+
+        return GLOBAL_MARKET_LIQUIDITY_DATABASE.get(
+            record_id
+        )
+
+    def remove(
+        self,
+        record_id: str,
+    ) -> None:
+
+        GLOBAL_MARKET_LIQUIDITY_DATABASE.pop(
+            record_id,
+            None,
+        )
+
+    def calculate(
+        self,
+        record_id: str,
+    ) -> None:
+
+        record = self.get(record_id)
+
+        if record is None:
+            return
+
+        volume_score = min(
+            record.trading_volume_usd
+            /
+            50000000000,
+            100,
+        )
+
+        liquidity_score = min(
+            record.available_liquidity_usd
+            /
+            100000000000,
+            100,
+        )
+
+        record.liquidity_strength_score = (
+            liquidity_score * 0.25
+            +
+            volume_score * 0.20
+            +
+            record.bid_ask_spread_score * 0.15
+            +
+            record.institutional_liquidity_score * 0.15
+            +
+            record.retail_liquidity_score * 0.10
+            +
+            record.central_bank_liquidity_score * 0.15
+        )
+
+        if record.liquidity_change_percent > 0:
+            record.liquidity_state = (
+                "LIQUIDITY_EXPANSION"
+            )
+
+        elif record.liquidity_change_percent < 0:
+            record.liquidity_state = (
+                "LIQUIDITY_CONTRACTION"
+            )
+
+        else:
+            record.liquidity_state = (
+                "STABLE_LIQUIDITY"
+            )
+
+        record.analysis_text = (
+            f"{record.market_name}: "
+            f"{record.liquidity_state}"
+        )
+
+        record.calculated_time = utc_now()
+        record.updated_at = utc_now()
+        record.status = DataStatus.REALTIME
+
+    def ranking(
+        self,
+    ) -> List[GlobalMarketLiquidityFlowRecord]:
+
+        return sorted(
+            GLOBAL_MARKET_LIQUIDITY_DATABASE.values(),
+            key=lambda item:
+            item.liquidity_strength_score,
+            reverse=True,
+        )
+
+
+GLOBAL_MARKET_LIQUIDITY_ENGINE = (
+    GlobalMarketLiquidityFlowEngine()
+)
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 234
+# ==========================================================
