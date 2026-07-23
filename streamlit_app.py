@@ -6490,3 +6490,986 @@ TRADE_FLOW_ENGINE = TradeFlowEngine()
 # ==========================================================
 # KẾT THÚC ĐOẠN 100
 # ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 101
+# ==========================================================
+
+class ShippingRecord(BaseModel):
+    id: str
+    vessel_name: str
+    imo_number: str = ""
+    mmsi: str = ""
+    flag_country: str = ""
+    ship_type: str = ""
+    operator: str = ""
+    current_port: str = ""
+    destination_port: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    speed_knots: float = 0.0
+    course_degree: float = 0.0
+    cargo_type: str = ""
+    cargo_capacity_ton: float = 0.0
+    eta: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+SHIPPING_DATABASE: Dict[str, ShippingRecord] = {}
+
+
+class ShippingEngine:
+
+    def register(self, record: ShippingRecord) -> None:
+        SHIPPING_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[ShippingRecord]:
+        return SHIPPING_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        SHIPPING_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        current_port: str,
+        destination_port: str,
+        latitude: float,
+        longitude: float,
+        speed_knots: float,
+        course_degree: float,
+        eta: str,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.current_port = current_port
+        record.destination_port = destination_port
+        record.latitude = latitude
+        record.longitude = longitude
+        record.speed_knots = speed_knots
+        record.course_degree = course_degree
+        record.eta = eta
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[ShippingRecord]:
+        return sorted(
+            SHIPPING_DATABASE.values(),
+            key=lambda item: item.vessel_name,
+        )
+
+
+SHIPPING_ENGINE = ShippingEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 101
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 102
+# ==========================================================
+
+class FlightRecord(BaseModel):
+    id: str
+    flight_number: str
+    airline: str
+    aircraft_type: str = ""
+    aircraft_registration: str = ""
+    departure_airport: str = ""
+    arrival_airport: str = ""
+    latitude: float = 0.0
+    longitude: float = 0.0
+    altitude_ft: float = 0.0
+    ground_speed_kmh: float = 0.0
+    heading_degree: float = 0.0
+    flight_status: str = ""
+    scheduled_departure: str = ""
+    scheduled_arrival: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+FLIGHT_DATABASE: Dict[str, FlightRecord] = {}
+
+
+class FlightEngine:
+
+    def register(self, record: FlightRecord) -> None:
+        FLIGHT_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[FlightRecord]:
+        return FLIGHT_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        FLIGHT_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        latitude: float,
+        longitude: float,
+        altitude_ft: float,
+        ground_speed_kmh: float,
+        heading_degree: float,
+        flight_status: str,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.latitude = latitude
+        record.longitude = longitude
+        record.altitude_ft = altitude_ft
+        record.ground_speed_kmh = ground_speed_kmh
+        record.heading_degree = heading_degree
+        record.flight_status = flight_status
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[FlightRecord]:
+        return sorted(
+            FLIGHT_DATABASE.values(),
+            key=lambda item: item.flight_number,
+        )
+
+
+FLIGHT_ENGINE = FlightEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 102
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 103
+# ==========================================================
+
+class RailwayTrafficRecord(BaseModel):
+    id: str
+    country: str
+    railway_operator: str
+    route_name: str = ""
+    origin_station: str = ""
+    destination_station: str = ""
+    train_type: str = ""
+    train_count: int = 0
+    freight_ton: float = 0.0
+    passenger_count: int = 0
+    average_speed_kmh: float = 0.0
+    route_length_km: float = 0.0
+    report_period: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+RAILWAY_TRAFFIC_DATABASE: Dict[
+    str,
+    RailwayTrafficRecord,
+] = {}
+
+
+class RailwayTrafficEngine:
+
+    def register(self, record: RailwayTrafficRecord) -> None:
+        RAILWAY_TRAFFIC_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[RailwayTrafficRecord]:
+        return RAILWAY_TRAFFIC_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        RAILWAY_TRAFFIC_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        train_count: int,
+        freight_ton: float,
+        passenger_count: int,
+        average_speed_kmh: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.train_count = train_count
+        record.freight_ton = freight_ton
+        record.passenger_count = passenger_count
+        record.average_speed_kmh = average_speed_kmh
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[RailwayTrafficRecord]:
+        return sorted(
+            RAILWAY_TRAFFIC_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.route_name,
+            ),
+        )
+
+
+RAILWAY_TRAFFIC_ENGINE = RailwayTrafficEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 103
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 104
+# ==========================================================
+
+class RoadTrafficRecord(BaseModel):
+    id: str
+    country: str
+    road_name: str
+    road_type: str = ""
+    start_location: str = ""
+    end_location: str = ""
+    vehicle_count: int = 0
+    truck_count: int = 0
+    bus_count: int = 0
+    average_speed_kmh: float = 0.0
+    congestion_percent: float = 0.0
+    freight_ton: float = 0.0
+    report_period: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ROAD_TRAFFIC_DATABASE: Dict[
+    str,
+    RoadTrafficRecord,
+] = {}
+
+
+class RoadTrafficEngine:
+
+    def register(self, record: RoadTrafficRecord) -> None:
+        ROAD_TRAFFIC_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[RoadTrafficRecord]:
+        return ROAD_TRAFFIC_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        ROAD_TRAFFIC_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        vehicle_count: int,
+        truck_count: int,
+        bus_count: int,
+        average_speed_kmh: float,
+        congestion_percent: float,
+        freight_ton: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.vehicle_count = vehicle_count
+        record.truck_count = truck_count
+        record.bus_count = bus_count
+        record.average_speed_kmh = average_speed_kmh
+        record.congestion_percent = congestion_percent
+        record.freight_ton = freight_ton
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[RoadTrafficRecord]:
+        return sorted(
+            ROAD_TRAFFIC_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.road_name,
+            ),
+        )
+
+
+ROAD_TRAFFIC_ENGINE = RoadTrafficEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 104
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 105
+# ==========================================================
+
+class EnergyFlowRecord(BaseModel):
+    id: str
+    exporter: str
+    importer: str
+    energy_type: str
+    pipeline: str = ""
+    transport_method: str = ""
+    quantity: float = 0.0
+    unit: str = ""
+    value_usd: float = 0.0
+    price_per_unit: float = 0.0
+    capacity: float = 0.0
+    utilization_percent: float = 0.0
+    report_period: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+ENERGY_FLOW_DATABASE: Dict[str, EnergyFlowRecord] = {}
+
+
+class EnergyFlowEngine:
+
+    def register(self, record: EnergyFlowRecord) -> None:
+        ENERGY_FLOW_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[EnergyFlowRecord]:
+        return ENERGY_FLOW_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        ENERGY_FLOW_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        quantity: float,
+        value_usd: float,
+        price_per_unit: float,
+        capacity: float,
+        utilization_percent: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.quantity = quantity
+        record.value_usd = value_usd
+        record.price_per_unit = price_per_unit
+        record.capacity = capacity
+        record.utilization_percent = utilization_percent
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[EnergyFlowRecord]:
+        return sorted(
+            ENERGY_FLOW_DATABASE.values(),
+            key=lambda item: (
+                item.exporter,
+                item.importer,
+                item.energy_type,
+            ),
+        )
+
+
+ENERGY_FLOW_ENGINE = EnergyFlowEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 105
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 106
+# ==========================================================
+
+class CommodityFlowRecord(BaseModel):
+    id: str
+    exporter: str
+    importer: str
+    commodity: str
+    category: str = ""
+    quantity: float = 0.0
+    unit: str = ""
+    value_usd: float = 0.0
+    average_price: float = 0.0
+    shipping_method: str = ""
+    origin_port: str = ""
+    destination_port: str = ""
+    report_period: str = ""
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+COMMODITY_FLOW_DATABASE: Dict[
+    str,
+    CommodityFlowRecord,
+] = {}
+
+
+class CommodityFlowEngine:
+
+    def register(self, record: CommodityFlowRecord) -> None:
+        COMMODITY_FLOW_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[CommodityFlowRecord]:
+        return COMMODITY_FLOW_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        COMMODITY_FLOW_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        quantity: float,
+        value_usd: float,
+        average_price: float,
+        shipping_method: str,
+        origin_port: str,
+        destination_port: str,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.quantity = quantity
+        record.value_usd = value_usd
+        record.average_price = average_price
+        record.shipping_method = shipping_method
+        record.origin_port = origin_port
+        record.destination_port = destination_port
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[CommodityFlowRecord]:
+        return sorted(
+            COMMODITY_FLOW_DATABASE.values(),
+            key=lambda item: (
+                item.exporter,
+                item.importer,
+                item.commodity,
+            ),
+        )
+
+
+COMMODITY_FLOW_ENGINE = CommodityFlowEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 106
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 107
+# ==========================================================
+
+class SupplyChainRecord(BaseModel):
+    id: str
+    company: str
+    supplier: str
+    customer: str
+    product: str
+    industry: str = ""
+    origin_country: str = ""
+    destination_country: str = ""
+    production_capacity: float = 0.0
+    inventory_level: float = 0.0
+    lead_time_days: float = 0.0
+    annual_trade_value_usd: float = 0.0
+    risk_score: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+SUPPLY_CHAIN_DATABASE: Dict[
+    str,
+    SupplyChainRecord,
+] = {}
+
+
+class SupplyChainEngine:
+
+    def register(self, record: SupplyChainRecord) -> None:
+        SUPPLY_CHAIN_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[SupplyChainRecord]:
+        return SUPPLY_CHAIN_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        SUPPLY_CHAIN_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        production_capacity: float,
+        inventory_level: float,
+        lead_time_days: float,
+        annual_trade_value_usd: float,
+        risk_score: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.production_capacity = production_capacity
+        record.inventory_level = inventory_level
+        record.lead_time_days = lead_time_days
+        record.annual_trade_value_usd = annual_trade_value_usd
+        record.risk_score = risk_score
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[SupplyChainRecord]:
+        return sorted(
+            SUPPLY_CHAIN_DATABASE.values(),
+            key=lambda item: (
+                item.company,
+                item.product,
+            ),
+        )
+
+
+SUPPLY_CHAIN_ENGINE = SupplyChainEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 107
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 108
+# ==========================================================
+
+class ManufacturingRecord(BaseModel):
+    id: str
+    company: str
+    factory: str
+    country: str
+    city: str = ""
+    product: str = ""
+    industry: str = ""
+    annual_capacity: float = 0.0
+    current_output: float = 0.0
+    capacity_utilization: float = 0.0
+    employee_count: int = 0
+    annual_revenue_usd: float = 0.0
+    export_ratio: float = 0.0
+    carbon_emission_ton: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+MANUFACTURING_DATABASE: Dict[
+    str,
+    ManufacturingRecord,
+] = {}
+
+
+class ManufacturingEngine:
+
+    def register(self, record: ManufacturingRecord) -> None:
+        MANUFACTURING_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[ManufacturingRecord]:
+        return MANUFACTURING_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        MANUFACTURING_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        annual_capacity: float,
+        current_output: float,
+        capacity_utilization: float,
+        employee_count: int,
+        annual_revenue_usd: float,
+        export_ratio: float,
+        carbon_emission_ton: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.annual_capacity = annual_capacity
+        record.current_output = current_output
+        record.capacity_utilization = capacity_utilization
+        record.employee_count = employee_count
+        record.annual_revenue_usd = annual_revenue_usd
+        record.export_ratio = export_ratio
+        record.carbon_emission_ton = carbon_emission_ton
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[ManufacturingRecord]:
+        return sorted(
+            MANUFACTURING_DATABASE.values(),
+            key=lambda item: (
+                item.company,
+                item.factory,
+            ),
+        )
+
+
+MANUFACTURING_ENGINE = ManufacturingEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 108
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 109
+# ==========================================================
+
+class InventoryRecord(BaseModel):
+    id: str
+    company: str
+    warehouse: str
+    country: str
+    city: str = ""
+    product: str = ""
+    category: str = ""
+    quantity: float = 0.0
+    unit: str = ""
+    inventory_value_usd: float = 0.0
+    daily_inflow: float = 0.0
+    daily_outflow: float = 0.0
+    turnover_days: float = 0.0
+    utilization_percent: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+INVENTORY_DATABASE: Dict[
+    str,
+    InventoryRecord,
+] = {}
+
+
+class InventoryEngine:
+
+    def register(self, record: InventoryRecord) -> None:
+        INVENTORY_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[InventoryRecord]:
+        return INVENTORY_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        INVENTORY_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        quantity: float,
+        inventory_value_usd: float,
+        daily_inflow: float,
+        daily_outflow: float,
+        turnover_days: float,
+        utilization_percent: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.quantity = quantity
+        record.inventory_value_usd = inventory_value_usd
+        record.daily_inflow = daily_inflow
+        record.daily_outflow = daily_outflow
+        record.turnover_days = turnover_days
+        record.utilization_percent = utilization_percent
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[InventoryRecord]:
+        return sorted(
+            INVENTORY_DATABASE.values(),
+            key=lambda item: (
+                item.company,
+                item.warehouse,
+            ),
+        )
+
+
+INVENTORY_ENGINE = InventoryEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 109
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 110
+# ==========================================================
+
+class RetailRecord(BaseModel):
+    id: str
+    company: str
+    store: str
+    country: str
+    city: str = ""
+    category: str = ""
+    address: str = ""
+    employee_count: int = 0
+    daily_customer_count: int = 0
+    daily_sales_usd: float = 0.0
+    monthly_sales_usd: float = 0.0
+    annual_sales_usd: float = 0.0
+    inventory_value_usd: float = 0.0
+    average_transaction_usd: float = 0.0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+RETAIL_DATABASE: Dict[
+    str,
+    RetailRecord,
+] = {}
+
+
+class RetailEngine:
+
+    def register(self, record: RetailRecord) -> None:
+        RETAIL_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[RetailRecord]:
+        return RETAIL_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        RETAIL_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        employee_count: int,
+        daily_customer_count: int,
+        daily_sales_usd: float,
+        monthly_sales_usd: float,
+        annual_sales_usd: float,
+        inventory_value_usd: float,
+        average_transaction_usd: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.employee_count = employee_count
+        record.daily_customer_count = daily_customer_count
+        record.daily_sales_usd = daily_sales_usd
+        record.monthly_sales_usd = monthly_sales_usd
+        record.annual_sales_usd = annual_sales_usd
+        record.inventory_value_usd = inventory_value_usd
+        record.average_transaction_usd = average_transaction_usd
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[RetailRecord]:
+        return sorted(
+            RETAIL_DATABASE.values(),
+            key=lambda item: (
+                item.company,
+                item.store,
+            ),
+        )
+
+
+RETAIL_ENGINE = RetailEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 110
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 111
+# ==========================================================
+
+class BankingRecord(BaseModel):
+    id: str
+    bank_name: str
+    country: str
+    headquarters: str = ""
+    total_assets_usd: float = 0.0
+    total_deposits_usd: float = 0.0
+    total_loans_usd: float = 0.0
+    total_equity_usd: float = 0.0
+    net_income_usd: float = 0.0
+    tier1_capital_ratio: float = 0.0
+    liquidity_ratio: float = 0.0
+    nonperforming_loan_ratio: float = 0.0
+    branch_count: int = 0
+    employee_count: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+BANKING_DATABASE: Dict[str, BankingRecord] = {}
+
+
+class BankingEngine:
+
+    def register(self, record: BankingRecord) -> None:
+        BANKING_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[BankingRecord]:
+        return BANKING_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        BANKING_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        total_assets_usd: float,
+        total_deposits_usd: float,
+        total_loans_usd: float,
+        total_equity_usd: float,
+        net_income_usd: float,
+        tier1_capital_ratio: float,
+        liquidity_ratio: float,
+        nonperforming_loan_ratio: float,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.total_assets_usd = total_assets_usd
+        record.total_deposits_usd = total_deposits_usd
+        record.total_loans_usd = total_loans_usd
+        record.total_equity_usd = total_equity_usd
+        record.net_income_usd = net_income_usd
+        record.tier1_capital_ratio = tier1_capital_ratio
+        record.liquidity_ratio = liquidity_ratio
+        record.nonperforming_loan_ratio = nonperforming_loan_ratio
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[BankingRecord]:
+        return sorted(
+            BANKING_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.bank_name,
+            ),
+        )
+
+
+BANKING_ENGINE = BankingEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 111
+# ==========================================================
+# ==========================================================
+# WEOS
+# ĐOẠN 112
+# ==========================================================
+
+class InsuranceRecord(BaseModel):
+    id: str
+    company: str
+    country: str
+    headquarters: str = ""
+    insurance_type: str = ""
+    total_assets_usd: float = 0.0
+    total_premium_usd: float = 0.0
+    total_claims_usd: float = 0.0
+    investment_assets_usd: float = 0.0
+    net_income_usd: float = 0.0
+    solvency_ratio: float = 0.0
+    customer_count: int = 0
+    employee_count: int = 0
+    source: str = ""
+    status: DataStatus = DataStatus.WAITING
+    updated_at: Optional[datetime] = None
+
+
+INSURANCE_DATABASE: Dict[
+    str,
+    InsuranceRecord,
+] = {}
+
+
+class InsuranceEngine:
+
+    def register(self, record: InsuranceRecord) -> None:
+        INSURANCE_DATABASE[record.id] = record
+
+    def get(
+        self,
+        record_id: str,
+    ) -> Optional[InsuranceRecord]:
+        return INSURANCE_DATABASE.get(record_id)
+
+    def remove(self, record_id: str) -> None:
+        INSURANCE_DATABASE.pop(record_id, None)
+
+    def update(
+        self,
+        record_id: str,
+        total_assets_usd: float,
+        total_premium_usd: float,
+        total_claims_usd: float,
+        investment_assets_usd: float,
+        net_income_usd: float,
+        solvency_ratio: float,
+        customer_count: int,
+        employee_count: int,
+    ) -> None:
+        record = self.get(record_id)
+        if record is None:
+            return
+
+        record.total_assets_usd = total_assets_usd
+        record.total_premium_usd = total_premium_usd
+        record.total_claims_usd = total_claims_usd
+        record.investment_assets_usd = investment_assets_usd
+        record.net_income_usd = net_income_usd
+        record.solvency_ratio = solvency_ratio
+        record.customer_count = customer_count
+        record.employee_count = employee_count
+        record.status = DataStatus.REALTIME
+        record.updated_at = utc_now()
+
+    def all(self) -> List[InsuranceRecord]:
+        return sorted(
+            INSURANCE_DATABASE.values(),
+            key=lambda item: (
+                item.country,
+                item.company,
+            ),
+        )
+
+
+INSURANCE_ENGINE = InsuranceEngine()
+
+# ==========================================================
+# KẾT THÚC ĐOẠN 112
+# ==========================================================
