@@ -3409,28 +3409,22 @@ false;
 // STATUS  : COMPLETED
 // ======================================================================
 
-WEOS.events.keyboard??
+WEOS.events.keyboard =
+WEOS.events.keyboard || {};
 
-={};
-
-WEOS.events.pointer??
-
-={};
+WEOS.events.pointer =
+WEOS.events.pointer || {};
 
 WEOS.events.pointer.x=
-
 0;
 
 WEOS.events.pointer.y=
-
 0;
 
 WEOS.events.pointer.down=
-
 false;
 
 WEOS.events.pointer.dragging=
-
 false;
 
 // ======================================================================
