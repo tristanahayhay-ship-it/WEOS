@@ -3346,26 +3346,17 @@ WEOS.utils.listen(
 
 event=>{
 
-WEOS.events
+WEOS.events.keyboard =
+WEOS.events.keyboard || {};
 
-.keyboard??
-
-={};
-
-WEOS.events
-
-.keyboard[
-
+WEOS.events.keyboard[
 event.code
-
-]=
-
-true;
+]=true;
 
 }
 
 );
-
+  
 // ======================================================================
 // END SECTION : 072
 // ======================================================================
