@@ -3001,3 +3001,1595 @@ true;
 // ======================================================================
 // END SECTION : 062
 // ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 063 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.hide(
+
+WEOS.dom.loadingScreen
+
+);
+
+WEOS.utils.setText(
+
+WEOS.dom.connectionStatus,
+
+"READY"
+
+);
+
+WEOS.utils.emit(
+
+"weos-ready",
+
+{
+
+version:
+
+WEOS.version
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 063
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 064 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"weos-ready",
+
+()=>{
+
+console.log(
+
+"%cWEOS READY",
+
+"color:#4CAF50;font-size:16px;font-weight:bold;"
+
+);
+
+console.log(
+
+WEOS
+
+);
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 064
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 065 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"resize",
+
+WEOS.utils.debounce(
+
+()=>{
+
+WEOS.cache.windowWidth=
+
+window.innerWidth;
+
+WEOS.cache.windowHeight=
+
+window.innerHeight;
+
+WEOS.cache.aspect=
+
+WEOS.cache.windowWidth/
+
+WEOS.cache.windowHeight;
+
+},
+
+100
+
+)
+
+);
+
+// ======================================================================
+// END SECTION : 065
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 066 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"resize",
+
+()=>{
+
+if(
+
+!WEOS.renderer
+
+||
+
+!WEOS.camera
+
+){
+
+return;
+
+}
+
+WEOS.renderer.setSize(
+
+WEOS.cache.windowWidth,
+
+WEOS.cache.windowHeight
+
+);
+
+WEOS.camera.aspect=
+
+WEOS.cache.aspect;
+
+WEOS.camera.updateProjectionMatrix();
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 066
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 067 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"resize",
+
+()=>{
+
+WEOS.cache.devicePixelRatio=
+
+Math.min(
+
+window.devicePixelRatio||
+
+1,
+
+2
+
+);
+
+WEOS.renderer
+
+.setPixelRatio(
+
+WEOS.cache.devicePixelRatio
+
+);
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 067
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 068 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"pointermove",
+
+event=>{
+
+WEOS.cache.mouseX=
+
+event.clientX;
+
+WEOS.cache.mouseY=
+
+event.clientY;
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 068
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 069 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"pointerdown",
+
+event=>{
+
+WEOS.cache.pointerDown=
+
+true;
+
+WEOS.cache.mouseX=
+
+event.clientX;
+
+WEOS.cache.mouseY=
+
+event.clientY;
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 069
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 070 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"pointerup",
+
+()=>{
+
+WEOS.cache.pointerDown=
+
+false;
+
+WEOS.cache.hoverObject=
+
+null;
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 070
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 071 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"visibilitychange",
+
+()=>{
+
+WEOS.runtime.running=
+
+!
+
+document.hidden;
+
+if(
+
+WEOS.runtime.running
+
+){
+
+WEOS.runtime.lastFrame=
+
+performance.now();
+
+requestAnimationFrame(
+
+WEOS.animate
+
+);
+
+}
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 071
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 072 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"keydown",
+
+event=>{
+
+WEOS.events
+
+.keyboard??
+
+={};
+
+WEOS.events
+
+.keyboard[
+
+event.code
+
+]=
+
+true;
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 072
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 073 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"keyup",
+
+event=>{
+
+if(
+
+!WEOS.events
+
+.keyboard
+
+){
+
+return;
+
+}
+
+WEOS.events
+
+.keyboard[
+
+event.code
+
+]=
+
+false;
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 073
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 074 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.events.keyboard??
+
+={};
+
+WEOS.events.pointer??
+
+={};
+
+WEOS.events.pointer.x=
+
+0;
+
+WEOS.events.pointer.y=
+
+0;
+
+WEOS.events.pointer.down=
+
+false;
+
+WEOS.events.pointer.dragging=
+
+false;
+
+// ======================================================================
+// END SECTION : 074
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 075 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"pointermove",
+
+event=>{
+
+WEOS.events.pointer.x=
+
+event.clientX;
+
+WEOS.events.pointer.y=
+
+event.clientY;
+
+if(
+
+WEOS.cache.pointerDown
+
+){
+
+WEOS.events.pointer.dragging=
+
+true;
+
+}
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 075
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 076 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"pointerdown",
+
+()=>{
+
+WEOS.events.pointer.down=
+
+true;
+
+WEOS.events.pointer.dragging=
+
+false;
+
+}
+
+);
+
+WEOS.utils.listen(
+
+"pointerup",
+
+()=>{
+
+WEOS.events.pointer.down=
+
+false;
+
+WEOS.events.pointer.dragging=
+
+false;
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 076
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 077 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.events.update=
+
+function(){
+
+WEOS.events.pointer.dragging=
+
+WEOS.events.pointer.down
+
+&&
+
+WEOS.cache.pointerDown;
+
+WEOS.events.pointer.deltaX=
+
+WEOS.events.pointer.x-
+
+WEOS.cache.centerX;
+
+WEOS.events.pointer.deltaY=
+
+WEOS.events.pointer.y-
+
+WEOS.cache.centerY;
+
+};
+
+// ======================================================================
+// END SECTION : 077
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 078 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.events.reset=
+
+function(){
+
+WEOS.events.pointer.deltaX=
+
+0;
+
+WEOS.events.pointer.deltaY=
+
+0;
+
+WEOS.events.pointer.dragging=
+
+false;
+
+WEOS.cache.hoverObject=
+
+null;
+
+};
+
+// ======================================================================
+// END SECTION : 078
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 079 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.events.tick=
+
+function(){
+
+WEOS.events.update();
+
+if(
+
+!WEOS.runtime.running
+
+){
+
+return;
+
+}
+
+WEOS.runtime.frame++;
+
+};
+
+// ======================================================================
+// END SECTION : 079
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 080 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.runtime.update=
+
+function(
+
+time
+
+){
+
+WEOS.runtime.delta=
+
+time-
+
+WEOS.runtime.lastFrame;
+
+WEOS.runtime.lastFrame=
+
+time;
+
+WEOS.events.tick();
+
+};
+
+// ======================================================================
+// END SECTION : 080
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 081 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.runtime.render=
+
+function(){
+
+if(
+
+!WEOS.renderer
+
+||
+
+!WEOS.scene
+
+||
+
+!WEOS.camera
+
+){
+
+return;
+
+}
+
+WEOS.renderer.render(
+
+WEOS.scene,
+
+WEOS.camera
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 081
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 082 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.runtime.loop=
+
+function(
+
+time
+
+){
+
+WEOS.runtime.update(
+
+time
+
+);
+
+WEOS.runtime.render();
+
+requestAnimationFrame(
+
+WEOS.runtime.loop
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 082
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 083 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.runtime.start=
+
+function(){
+
+if(
+
+WEOS.runtime.running
+
+){
+
+return;
+
+}
+
+WEOS.runtime.running=
+
+true;
+
+WEOS.runtime.lastFrame=
+
+performance.now();
+
+requestAnimationFrame(
+
+WEOS.runtime.loop
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 083
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 084 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.runtime.stop=
+
+function(){
+
+WEOS.runtime.running=
+
+false;
+
+};
+
+WEOS.runtime.toggle=
+
+function(){
+
+if(
+
+WEOS.runtime.running
+
+){
+
+WEOS.runtime.stop();
+
+return;
+
+}
+
+WEOS.runtime.start();
+
+};
+
+// ======================================================================
+// END SECTION : 084
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 085 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.runtime.pause=
+
+function(){
+
+WEOS.runtime.running=
+
+false;
+
+};
+
+WEOS.runtime.resume=
+
+function(){
+
+if(
+
+WEOS.runtime.running
+
+){
+
+return;
+
+}
+
+WEOS.runtime.start();
+
+};
+
+// ======================================================================
+// END SECTION : 085
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 086 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.clock={};
+
+WEOS.clock.start=
+
+performance.now();
+
+WEOS.clock.elapsed=
+
+0;
+
+WEOS.clock.delta=
+
+0;
+
+WEOS.clock.update=
+
+function(
+
+time
+
+){
+
+WEOS.clock.delta=
+
+time-
+
+WEOS.clock.start;
+
+WEOS.clock.elapsed+=
+
+WEOS.clock.delta;
+
+WEOS.clock.start=
+
+time;
+
+};
+
+// ======================================================================
+// END SECTION : 086
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 087 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.clock.reset=
+
+function(){
+
+WEOS.clock.start=
+
+performance.now();
+
+WEOS.clock.elapsed=
+
+0;
+
+WEOS.clock.delta=
+
+0;
+
+};
+
+WEOS.clock.seconds=
+
+function(){
+
+return
+
+WEOS.clock.elapsed/
+
+1000;
+
+};
+
+// ======================================================================
+// END SECTION : 087
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 088 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.clock.minutes=
+
+function(){
+
+return
+
+WEOS.clock.seconds()
+
+/
+
+60;
+
+};
+
+WEOS.clock.hours=
+
+function(){
+
+return
+
+WEOS.clock.minutes()
+
+/
+
+60;
+
+};
+
+WEOS.clock.days=
+
+function(){
+
+return
+
+WEOS.clock.hours()
+
+/
+
+24;
+
+};
+
+// ======================================================================
+// END SECTION : 088
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 089 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.fps={};
+
+WEOS.fps.value=
+
+0;
+
+WEOS.fps.frames=
+
+0;
+
+WEOS.fps.last=
+
+performance.now();
+
+WEOS.fps.update=
+
+function(
+
+time
+
+){
+
+WEOS.fps.frames++;
+
+const elapsed=
+
+time-
+
+WEOS.fps.last;
+
+if(
+
+elapsed>=1000
+
+){
+
+WEOS.fps.value=
+
+WEOS.fps.frames;
+
+WEOS.fps.frames=
+
+0;
+
+WEOS.fps.last=
+
+time;
+
+}
+
+};
+
+// ======================================================================
+// END SECTION : 089
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 090 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.fps.reset=
+
+function(){
+
+WEOS.fps.value=
+
+0;
+
+WEOS.fps.frames=
+
+0;
+
+WEOS.fps.last=
+
+performance.now();
+
+};
+
+WEOS.fps.text=
+
+function(){
+
+return
+
+WEOS.fps.value+
+
+" FPS";
+
+};
+
+// ======================================================================
+// END SECTION : 090
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 091 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.time={};
+
+WEOS.time.utc=
+
+function(){
+
+return new
+
+Date();
+
+};
+
+WEOS.time.updateClock=
+
+function(){
+
+if(
+
+!WEOS.dom.utcClock
+
+){
+
+return;
+
+}
+
+WEOS.utils.setText(
+
+WEOS.dom.utcClock,
+
+WEOS.time.utc()
+
+.toUTCString()
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 091
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 092 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.time.startClock=
+
+function(){
+
+WEOS.time.updateClock();
+
+setInterval(
+
+()=>{
+
+WEOS.time.updateClock();
+
+},
+
+1000
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 092
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 093 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.time.stopClock=
+
+function(){
+
+if(
+
+WEOS.time.interval
+
+){
+
+clearInterval(
+
+WEOS.time.interval
+
+);
+
+WEOS.time.interval=
+
+null;
+
+}
+
+};
+
+WEOS.time.interval=
+
+setInterval(
+
+WEOS.time.updateClock,
+
+1000
+
+);
+
+// ======================================================================
+// END SECTION : 093
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 094 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.time.startClock=
+
+function(){
+
+WEOS.time.stopClock();
+
+WEOS.time.updateClock();
+
+WEOS.time.interval=
+
+setInterval(
+
+WEOS.time.updateClock,
+
+1000
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 094
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 095 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.time.initialize=
+
+function(){
+
+WEOS.time.startClock();
+
+WEOS.utils.listen(
+
+"visibilitychange",
+
+()=>{
+
+if(
+
+document.hidden
+
+){
+
+WEOS.time.stopClock();
+
+return;
+
+}
+
+WEOS.time.startClock();
+
+}
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 095
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 096 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initialize=
+
+WEOS.utils.once(
+
+async function(){
+
+await
+
+WEOS.initializeDOM();
+
+await
+
+WEOS.initializeRenderer();
+
+await
+
+WEOS.initializeScene();
+
+await
+
+WEOS.initializeCamera();
+
+await
+
+WEOS.initializeLights();
+
+await
+
+WEOS.initializeGlobe();
+
+await
+
+WEOS.initializeAtmosphere();
+
+WEOS.time.initialize();
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 096
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 097 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initialize=
+
+WEOS.utils.once(
+
+async function(){
+
+await
+
+WEOS.initializeDOM();
+
+await
+
+WEOS.initializeRenderer();
+
+await
+
+WEOS.initializeScene();
+
+await
+
+WEOS.initializeCamera();
+
+await
+
+WEOS.initializeLights();
+
+await
+
+WEOS.initializeGlobe();
+
+await
+
+WEOS.initializeAtmosphere();
+
+await
+
+WEOS.initializeAnimation();
+
+WEOS.time.initialize();
+
+WEOS.ready=
+
+true;
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 097
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 098 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initialize=
+
+WEOS.utils.once(
+
+async function(){
+
+await
+
+WEOS.initializeDOM();
+
+await
+
+WEOS.initializeRenderer();
+
+await
+
+WEOS.initializeScene();
+
+await
+
+WEOS.initializeCamera();
+
+await
+
+WEOS.initializeLights();
+
+await
+
+WEOS.initializeGlobe();
+
+await
+
+WEOS.initializeAtmosphere();
+
+await
+
+WEOS.initializeAnimation();
+
+WEOS.time.initialize();
+
+WEOS.utils.hide(
+
+WEOS.dom.loadingScreen
+
+);
+
+WEOS.ready=
+
+true;
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 098
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 099 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initialize=
+
+WEOS.utils.once(
+
+async function(){
+
+await
+
+WEOS.initializeDOM();
+
+await
+
+WEOS.initializeRenderer();
+
+await
+
+WEOS.initializeScene();
+
+await
+
+WEOS.initializeCamera();
+
+await
+
+WEOS.initializeLights();
+
+await
+
+WEOS.initializeGlobe();
+
+await
+
+WEOS.initializeAtmosphere();
+
+await
+
+WEOS.initializeAnimation();
+
+WEOS.time.initialize();
+
+WEOS.utils.hide(
+
+WEOS.dom.loadingScreen
+
+);
+
+WEOS.utils.setText(
+
+WEOS.dom.connectionStatus,
+
+"READY"
+
+);
+
+WEOS.ready=
+
+true;
+
+WEOS.utils.emit(
+
+"weos-ready"
+
+);
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 099
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 100 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.listen(
+
+"weos-ready",
+
+()=>{
+
+console.log(
+
+"WEOS Version:",
+
+WEOS.version
+
+);
+
+console.log(
+
+"Renderer:",
+
+WEOS.renderer
+
+);
+
+console.log(
+
+"Scene:",
+
+WEOS.scene
+
+);
+
+console.log(
+
+"Camera:",
+
+WEOS.camera
+
+);
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 100
+// ======================================================================
