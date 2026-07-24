@@ -1011,3 +1011,574 @@ color:#66b3ff;
 /* ====================================================================== */
 /* END SECTION : 012                                                      */
 /* ====================================================================== */
+/* ====================================================================== */
+/* PROJECT : WEOS                                                         */
+/* FILE    : style.css                                                    */
+/* SECTION : 013 START                                                    */
+/* STATUS  : COMPLETED                                                    */
+/* ====================================================================== */
+
+#modalContainer{
+
+position:absolute;
+
+inset:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+background:rgba(0,0,0,.55);
+
+backdrop-filter:blur(8px);
+
+opacity:0;
+
+visibility:hidden;
+
+pointer-events:none;
+
+transition:
+opacity .25s,
+visibility .25s;
+
+z-index:500;
+
+}
+
+#modalContainer.active{
+
+opacity:1;
+
+visibility:visible;
+
+pointer-events:auto;
+
+}
+
+.modal{
+
+width:min(720px,90vw);
+
+max-height:80vh;
+
+overflow:auto;
+
+padding:28px;
+
+border:1px solid rgba(255,255,255,.10);
+
+border-radius:20px;
+
+background:rgba(10,15,25,.95);
+
+box-shadow:0 24px 70px rgba(0,0,0,.45);
+
+}
+
+/* ====================================================================== */
+/* END SECTION : 013                                                      */
+/* ====================================================================== */
+/* ====================================================================== */
+/* PROJECT : WEOS                                                         */
+/* FILE    : style.css                                                    */
+/* SECTION : 014 START                                                    */
+/* STATUS  : COMPLETED                                                    */
+/* ====================================================================== */
+
+#particleLayer,
+#effectLayer,
+#selectionLayer,
+#animationLayer,
+#informationLayer,
+#cameraLayer,
+#systemLayer,
+#debugLayer{
+
+position:absolute;
+
+top:0;
+
+left:0;
+
+width:100%;
+
+height:100%;
+
+overflow:hidden;
+
+pointer-events:none;
+
+}
+
+#particleLayer{
+
+z-index:40;
+
+}
+
+#effectLayer{
+
+z-index:45;
+
+}
+
+#selectionLayer{
+
+z-index:50;
+
+}
+
+#animationLayer{
+
+z-index:55;
+
+}
+
+#informationLayer{
+
+z-index:60;
+
+}
+
+#cameraLayer{
+
+z-index:65;
+
+}
+
+#systemLayer{
+
+z-index:70;
+
+}
+
+#debugLayer{
+
+z-index:9999;
+
+display:none;
+
+}
+
+/* ====================================================================== */
+/* END SECTION : 014                                                      */
+/* ====================================================================== */
+/* ====================================================================== */
+/* PROJECT : WEOS                                                         */
+/* FILE    : style.css                                                    */
+/* SECTION : 015 START                                                    */
+/* STATUS  : COMPLETED                                                    */
+/* ====================================================================== */
+
+#systemAssets{
+
+display:none;
+
+}
+
+[hidden]{
+
+display:none!important;
+
+}
+
+:focus-visible{
+
+outline:2px solid #4da3ff;
+
+outline-offset:3px;
+
+}
+
+::selection{
+
+background:rgba(77,163,255,.35);
+
+color:#ffffff;
+
+}
+
+::-webkit-scrollbar{
+
+width:8px;
+
+height:8px;
+
+}
+
+::-webkit-scrollbar-track{
+
+background:rgba(255,255,255,.04);
+
+}
+
+::-webkit-scrollbar-thumb{
+
+background:rgba(255,255,255,.18);
+
+border-radius:999px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+background:rgba(255,255,255,.32);
+
+}
+
+html.loading body{
+
+cursor:progress;
+
+}
+
+/* ====================================================================== */
+/* END SECTION : 015                                                      */
+/* ====================================================================== */
+/* ====================================================================== */
+/* PROJECT : WEOS                                                         */
+/* FILE    : style.css                                                    */
+/* SECTION : 016 START                                                    */
+/* STATUS  : COMPLETED                                                    */
+/* ====================================================================== */
+
+@media (max-width:1600px){
+
+#viewport{
+
+grid-template-columns:280px 1fr 280px;
+
+}
+
+#countryPanel{
+
+width:280px;
+
+}
+
+#notificationContainer{
+
+width:280px;
+
+right:160px;
+
+}
+
+}
+
+@media (max-width:1280px){
+
+#viewport{
+
+grid-template-columns:240px 1fr 240px;
+
+}
+
+#topBar{
+
+padding:0 18px;
+
+}
+
+#quickToolbar{
+
+right:16px;
+
+}
+
+}
+
+/* ====================================================================== */
+/* END SECTION : 016                                                      */
+/* ====================================================================== */
+/* ====================================================================== */
+/* PROJECT : WEOS                                                         */
+/* FILE    : style.css                                                    */
+/* SECTION : 017 START                                                    */
+/* STATUS  : COMPLETED                                                    */
+/* ====================================================================== */
+
+@media (max-width:1024px){
+
+#viewport{
+
+grid-template-columns:1fr;
+
+}
+
+#leftPanel,
+
+#rightPanel{
+
+display:none;
+
+}
+
+#quickToolbar{
+
+top:auto;
+
+right:16px;
+
+bottom:60px;
+
+}
+
+#countryPanel{
+
+left:16px;
+
+top:80px;
+
+width:300px;
+
+max-width:calc(100vw - 32px);
+
+}
+
+#notificationContainer{
+
+top:80px;
+
+right:16px;
+
+width:300px;
+
+max-width:calc(100vw - 32px);
+
+}
+
+#topBar{
+
+height:56px;
+
+}
+
+}
+
+/* ====================================================================== */
+/* END SECTION : 017                                                      */
+/* ====================================================================== */
+/* ====================================================================== */
+/* PROJECT : WEOS                                                         */
+/* FILE    : style.css                                                    */
+/* SECTION : 018 START                                                    */
+/* STATUS  : COMPLETED                                                    */
+/* ====================================================================== */
+
+@media (max-width:768px){
+
+#topBar{
+
+flex-direction:column;
+
+justify-content:center;
+
+align-items:flex-start;
+
+height:88px;
+
+padding:10px 14px;
+
+gap:10px;
+
+}
+
+#brand{
+
+gap:12px;
+
+}
+
+#brandLogo{
+
+width:40px;
+
+height:40px;
+
+font-size:15px;
+
+}
+
+#brandTitle{
+
+font-size:14px;
+
+}
+
+#brandSubtitle{
+
+font-size:10px;
+
+}
+
+#statusArea{
+
+width:100%;
+
+justify-content:space-between;
+
+gap:8px;
+
+flex-wrap:wrap;
+
+}
+
+.statusItem{
+
+min-width:92px;
+
+height:34px;
+
+padding:0 10px;
+
+font-size:11px;
+
+}
+
+}
+
+/* ====================================================================== */
+/* END SECTION : 018                                                      */
+/* ====================================================================== */
+/* ====================================================================== */
+/* PROJECT : WEOS                                                         */
+/* FILE    : style.css                                                    */
+/* SECTION : 019 START                                                    */
+/* STATUS  : COMPLETED                                                    */
+/* ====================================================================== */
+
+@media (max-width:480px){
+
+#topBar{
+
+height:96px;
+
+padding:10px;
+
+}
+
+#viewport{
+
+top:96px;
+
+bottom:48px;
+
+}
+
+#bottomBar{
+
+height:48px;
+
+padding:0 10px;
+
+flex-direction:column;
+
+justify-content:center;
+
+gap:4px;
+
+}
+
+.bottomGroup{
+
+width:100%;
+
+justify-content:space-between;
+
+gap:8px;
+
+}
+
+.bottomItem{
+
+font-size:10px;
+
+letter-spacing:.5px;
+
+}
+
+#quickToolbar{
+
+right:10px;
+
+bottom:56px;
+
+gap:8px;
+
+}
+
+.toolButton{
+
+width:110px;
+
+height:38px;
+
+font-size:11px;
+
+}
+
+}
+
+/* ====================================================================== */
+/* END SECTION : 019                                                      */
+/* ====================================================================== */
+/* ====================================================================== */
+/* PROJECT : WEOS                                                         */
+/* FILE    : style.css                                                    */
+/* SECTION : 020 START                                                    */
+/* STATUS  : COMPLETED                                                    */
+/* ====================================================================== */
+
+@media (prefers-reduced-motion:reduce){
+
+*{
+
+animation:none!important;
+
+transition:none!important;
+
+scroll-behavior:auto!important;
+
+}
+
+}
+
+@media (prefers-color-scheme:dark){
+
+body{
+
+background:#000000;
+
+color:#ffffff;
+
+}
+
+}
+
+@media (orientation:portrait){
+
+#globeViewport{
+
+min-height:420px;
+
+}
+
+}
+
+@media (orientation:landscape){
+
+#globeViewport{
+
+min-height:100%;
+
+}
+
+}
+
+/* ====================================================================== */
+/* END SECTION : 020                                                      */
+/* ====================================================================== */
