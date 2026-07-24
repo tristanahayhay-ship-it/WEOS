@@ -2023,3 +2023,981 @@ value;
 // ======================================================================
 // END SECTION : 040
 // ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 041 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.boot=
+
+async function(){
+
+WEOS.runtime.running=
+
+true;
+
+WEOS.runtime.frame=
+
+0;
+
+WEOS.runtime.lastFrame=
+
+performance.now();
+
+WEOS.utils.setText(
+
+WEOS.dom.connectionStatus,
+
+"BOOTING"
+
+);
+
+await
+
+WEOS.initialize();
+
+};
+
+// ======================================================================
+// END SECTION : 041
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 042 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initialize=
+
+async function(){
+
+await
+
+WEOS.initializeDOM();
+
+await
+
+WEOS.initializeRenderer();
+
+await
+
+WEOS.initializeScene();
+
+await
+
+WEOS.initializeCamera();
+
+await
+
+WEOS.initializeLights();
+
+};
+
+// ======================================================================
+// END SECTION : 042
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 043 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initializeDOM=
+
+async function(){
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"5 %"
+
+);
+
+WEOS.utils.setText(
+
+WEOS.dom.connectionStatus,
+
+"INITIALIZING"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"5%"
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 043
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 044 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initializeRenderer=
+
+async function(){
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"15 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"15%"
+
+);
+
+WEOS.renderer=
+
+new THREE.WebGLRenderer(
+
+{
+
+antialias:
+
+WEOS.settings.antialias,
+
+alpha:
+
+WEOS.settings.alpha,
+
+powerPreference:
+
+WEOS.settings.powerPreference
+
+}
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 044
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 045 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.renderer
+
+.setPixelRatio(
+
+WEOS.cache.devicePixelRatio
+
+);
+
+WEOS.renderer
+
+.setSize(
+
+WEOS.cache.windowWidth,
+
+WEOS.cache.windowHeight
+
+);
+
+WEOS.renderer
+
+.setClearColor(
+
+WEOS.settings.background,
+
+1
+
+);
+
+WEOS.dom.renderer
+
+.appendChild(
+
+WEOS.renderer.domElement
+
+);
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"20 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"20%"
+
+);
+
+// ======================================================================
+// END SECTION : 045
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 046 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initializeScene=
+
+async function(){
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"30 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"30%"
+
+);
+
+WEOS.scene=
+
+new THREE.Scene();
+
+WEOS.scene.background=
+
+new THREE.Color(
+
+WEOS.settings.background
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 046
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 047 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initializeCamera=
+
+async function(){
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"40 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"40%"
+
+);
+
+WEOS.camera=
+
+new THREE.PerspectiveCamera(
+
+45,
+
+WEOS.cache.aspect,
+
+0.1,
+
+5000
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 047
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 048 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.camera.position.set(
+
+0,
+
+0,
+
+WEOS.settings.defaultZoom
+
+);
+
+WEOS.camera.lookAt(
+
+0,
+
+0,
+
+0
+
+);
+
+WEOS.scene.add(
+
+WEOS.camera
+
+);
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"45 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"45%"
+
+);
+
+// ======================================================================
+// END SECTION : 048
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 049 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initializeLights=
+
+async function(){
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"55 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"55%"
+
+);
+
+WEOS.lights={};
+
+WEOS.lights.ambient=
+
+new THREE.AmbientLight(
+
+0xffffff,
+
+0.35
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 049
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 050 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.lights.directional=
+
+new THREE.DirectionalLight(
+
+0xffffff,
+
+2.2
+
+);
+
+WEOS.lights.directional.position.set(
+
+200,
+
+150,
+
+250
+
+);
+
+WEOS.scene.add(
+
+WEOS.lights.ambient
+
+);
+
+WEOS.scene.add(
+
+WEOS.lights.directional
+
+);
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"60 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"60%"
+
+);
+
+// ======================================================================
+// END SECTION : 050
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 051 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initializeGlobe=
+
+async function(){
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"70 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"70%"
+
+);
+
+WEOS.globe.group=
+
+new THREE.Group();
+
+WEOS.scene.add(
+
+WEOS.globe.group
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 051
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 052 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.globe.radius=
+
+100;
+
+WEOS.globe.geometry=
+
+new THREE.SphereGeometry(
+
+WEOS.globe.radius,
+
+128,
+
+128
+
+);
+
+WEOS.globe.material=
+
+new THREE.MeshPhongMaterial(
+
+{
+
+color:0x2b6cff,
+
+shininess:18
+
+}
+
+);
+
+// ======================================================================
+// END SECTION : 052
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 053 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.globe.mesh=
+
+new THREE.Mesh(
+
+WEOS.globe.geometry,
+
+WEOS.globe.material
+
+);
+
+WEOS.globe.group.add(
+
+WEOS.globe.mesh
+
+);
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"75 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"75%"
+
+);
+
+// ======================================================================
+// END SECTION : 053
+// ======================================================================
+// ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 054 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initializeAtmosphere=
+
+async function(){
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"80 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"80%"
+
+);
+
+WEOS.atmosphere={};
+
+WEOS.atmosphere.geometry=
+
+new THREE.SphereGeometry(
+
+WEOS.globe.radius+2,
+
+128,
+
+128
+
+);
+
+// ======================================================================
+// END SECTION : 054
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 055 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.atmosphere.material=
+
+new THREE.MeshPhongMaterial(
+
+{
+
+color:0x66ccff,
+
+transparent:true,
+
+opacity:0.12,
+
+side:THREE.BackSide
+
+}
+
+);
+
+WEOS.atmosphere.mesh=
+
+new THREE.Mesh(
+
+WEOS.atmosphere.geometry,
+
+WEOS.atmosphere.material
+
+);
+
+WEOS.globe.group.add(
+
+WEOS.atmosphere.mesh
+
+);
+
+// ======================================================================
+// END SECTION : 055
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 056 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"85 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"85%"
+
+);
+
+WEOS.scene.add(
+
+WEOS.globe.group
+
+);
+
+await
+
+WEOS.initializeAnimation();
+
+// ======================================================================
+// END SECTION : 056
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 057 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initializeAnimation=
+
+async function(){
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"90 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"90%"
+
+);
+
+WEOS.runtime.running=
+
+true;
+
+requestAnimationFrame(
+
+WEOS.animate
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 057
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 058 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.animate=
+
+function(
+
+time
+
+){
+
+if(
+
+!WEOS.runtime.running
+
+){
+
+return;
+
+}
+
+WEOS.runtime.delta=
+
+time-
+
+WEOS.runtime.lastFrame;
+
+WEOS.runtime.lastFrame=
+
+time;
+
+// ======================================================================
+// END SECTION : 058
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 059 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.runtime.frame++;
+
+WEOS.runtime.fps=
+
+1000/
+
+Math.max(
+
+WEOS.runtime.delta,
+
+1
+
+);
+
+WEOS.globe.group.rotation.y+=
+
+0.0015;
+
+WEOS.renderer.render(
+
+WEOS.scene,
+
+WEOS.camera
+
+);
+
+requestAnimationFrame(
+
+WEOS.animate
+
+);
+
+// ======================================================================
+// END SECTION : 059
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 060 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.utils.setText(
+
+WEOS.dom.fpsCounter,
+
+Math.round(
+
+WEOS.runtime.fps
+
+)
+
++
+
+" FPS"
+
+);
+
+WEOS.utils.setText(
+
+WEOS.dom.connectionStatus,
+
+"ONLINE"
+
+);
+
+};
+
+// ======================================================================
+// END SECTION : 060
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 061 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+document
+
+.addEventListener(
+
+"DOMContentLoaded",
+
+()=>{
+
+WEOS.boot();
+
+}
+
+);
+
+window
+
+.WEOS=
+
+WEOS;
+
+// ======================================================================
+// END SECTION : 061
+// ======================================================================
+  // ======================================================================
+// PROJECT : WEOS
+// FILE    : app.js
+// SECTION : 062 START
+// STATUS  : COMPLETED
+// ======================================================================
+
+WEOS.initialize=
+
+WEOS.utils.once(
+
+WEOS.initialize
+
+);
+
+WEOS.utils.setText(
+
+WEOS.dom.loadingPercent,
+
+"100 %"
+
+);
+
+WEOS.utils.setStyle(
+
+WEOS.dom.loadingProgress,
+
+"width",
+
+"100%"
+
+);
+
+WEOS.ready=
+
+true;
+
+// ======================================================================
+// END SECTION : 062
+// ======================================================================
