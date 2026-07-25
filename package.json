@@ -1,0 +1,21 @@
+{
+  "name": "weos",
+  "version": "1.0.0",
+  "description": "World Economic Observation System",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "live-server --port=8000"
+  },
+  "keywords": [
+    "economics",
+    "visualization",
+    "globe",
+    "real-time",
+    "3d",
+    "global",
+    "finance"
+  ],
+  "author": "tristanahayhay",
+  "license": "MIT"
+}
