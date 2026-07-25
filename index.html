@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Cashflow - Sinh Thể Kinh Tế Vĩ Mô Toàn Cầu</title>
+    <!-- Nhúng thư viện đồ họa WebGL Quả địa cầu sống động -->
+    <script src="//://unpkg.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #00020a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            color: #ffffff;
+        }
+
+        #globe-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Thanh điều khiển thay đổi góc nhìn Bản đồ dạng hình cầu / phẳng */
+        #control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(4, 12, 32, 0.75);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #00ffcc44;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.1);
+        }
+
+        .btn {
+            background: #002244;
+            color: #00ffcc;
+            border: 1px solid #00ffcc;
+            padding: 8px 16px;
+            margin-right: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover, .btn.active {
+            background: #00ffcc;
+            color: #000511;
+            box-shadow: 0 0 12px #00ffcc;
+        }
+
+        /* Bảng điều khiển HUD - Hệ thần kinh chỉ số kinh tế tại Thủ đô */
+        #hud-thudo {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            z-index: 10;
+            width: 320px;
+            background: rgba(2, 6, 18, 0.85);
+            border-left: 4px solid #00ff00;
+            padding: 20px;
+            border-radius: 4px 12px 12px 4px;
+            display: none; /* Chỉ hiện lên khi người dùng nhấn vào Thủ đô */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+        }
+
+        .tieude-hud {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .dong-chiso {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 5px;
+        }
+
+        .gia-tri-duong { color: #00ff66; font-weight: bold; }
+        .gia-tri-am { color: #ff3344; font-weight: bold; }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            color: #00ffcc;
+            z-index: 100;
+            pointer-events: none;
+            text-shadow: 0 0 10px #00ffcc;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading">ĐANG KHỞI TẠO SINH THỂ KINH TẾ...</div>
+    <div id="globe-container"></div>
+
+    <!-- Thanh chuyển đổi cấu trúc dạng nhìn hình cầu/ngang -->
+    <div id="control-panel">
+        <h3 style="margin: 0 0 10px 0; font-size: 1rem; color: #a0aec0;">CHẾ ĐỘ HIỂN THỊ</h3>
+        <button class="btn active" id="btn-sphere" onclick="doiGocNhin('sphere')">HÌNH CẦU (3D)</button>
+        <button class="btn" id="btn-plane" onclick="doiGocNhin('plane')">HÌNH NGANG (2D)</button>
+    </div>
+
+    <!-- Bảng thông tin hệ thần kinh điều khiển (Thủ đô) -->
+    <div id="hud-thudo">
+        <div class="tieude-hud" id="hud-ten-nuoc">VIỆT NAM <span style="font-size: 0.8rem; color: #a0aec0;" id="hud-ten-thudo">(Hà Nội)</span></div>
+        <div class="dong-chiso"><span>GDP (Sản lượng nội địa):</span> <span id="chiso-gdp">--</span></div>
+        <div class="dong-chiso"><span>CPI (Lạm phát):</span> <span id="chiso-cpi">--</span></div>
+        <div class="dong-chiso"><span>UR (Tỷ lệ thất nghiệp):</span> <span id="chiso-ur">--</span></div>
+        <div class="dong-chiso"><span>IR (Lãi suất điều hành):</span> <span id="chiso-ir">--</span></div>
+        <div class="dong-chiso"><span>Dự trữ Vàng:</span> <span id="chiso-gold" style="color: #ffd700;">--</span></div>
+        <div style="font-size: 0.75rem; color: #718096; margin-top: 15px; text-align: center;">Dữ liệu cập nhật thời gian thực từng giây</div>
+    </div>
+
+    <!-- Nhúng logic xử lý mạch máu và thần kinh kinh tế -->
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
