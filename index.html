@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Cashflow - Sinh Thể Kinh Tế Vĩ Mô Toàn Cầu</title>
     
-    <!-- SỬA LỖI ĐƯỜNG TRUYỀN: Đổi sang cụm CDN jsDelivr siêu tốc, chống sập tuyệt đối -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- SỬA LỖI ĐƯỜNG TRUYỀN: Đổi sang Cloudflare CDN - Máy chủ phân phối lớn nhất thế giới, cam kết không bị chặn tại VN -->
+    <script src="https://cloudflare.com"></script>
     
     <style>
         body {
@@ -93,23 +93,10 @@
 
         .gia-tri-duong { color: #00ff66; font-weight: bold; }
         .gia-tri-am { color: #ff3344; font-weight: bold; }
-        
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.5rem;
-            color: #00ffcc;
-            z-index: 100;
-            pointer-events: none;
-            text-shadow: 0 0 10px #00ffcc;
-        }
     </style>
 </head>
 <body>
 
-    <div id="loading">ĐANG KHỞI TẠO SINH THỂ KINH TẾ...</div>
     <div id="globe-container"></div>
 
     <div id="control-panel">
@@ -147,30 +134,34 @@
             { startLat: 10.8231, startLng: 106.6297, endLat: 21.0285, endLng: 105.8542, nganh: "Vàng Vật Chất Trú Ẩn", volume: 320000000, loaiDongTien: "THAO_TUNG", tocDo: "BINH_THUONG" }
         ];
 
-        // --- KHỞI TẠO BẢN ĐỒ ĐỒ HỌA 3D (CHỐNG CHẶN CORS) ---
+        // --- KHỞI TẠO BẢN ĐỒ KHÔNG CẦN TẢI ẢNH NGOÀI - CHỐNG LỖI MẠNG ---
         const container = document.getElementById('globe-container');
         const SieuBanDoKinhTe = Globe()(container)
-            .globeImageUrl('https://jsdelivr.net') 
-            .bumpImageUrl('https://jsdelivr.net')
-            .backgroundImageUrl('https://jsdelivr.net') 
             .showAtmosphere(true)
-            .atmosphereColor("#001133")
+            .atmosphereColor("#002266")
             .atmospherePower(2.5);
 
+        // Tạo màu không gian sâu cho hệ sinh thái vĩ mô
+        if (SieuBanDoKinhTe.scene) {
+            // Sử dụng thư viện ThreeJS tích hợp sẵn bên trong để dựng màu nền
+            const THREE = window.THREE || SieuBanDoKinhTe.scene().__proto__.constructor;
+            if (THREE) SieuBanDoKinhTe.scene().background = new THREE.Color('#00030f');
+        }
         // --- ĐỒ HỌA HỆ THẦN KINH (THỦ ĐÔ) ---
         SieuBanDoKinhTe
             .labelsData(duLieuHeThanKinhThuDo)
             .labelLat(d => d.lat)
             .labelLng(d => d.lng)
             .labelText(d => `📍 ${d.thudo}`)
-            .labelSize(1.5)
+            .labelSize(1.6)
             .labelDotRadius(0.8)
             .labelColor(d => d.trangThai === 'XANH' ? '#00ffcc' : (d.trangThai === 'CAM' ? '#ffaa00' : '#ff3344'))
             .labelResolution(3)
             .onLabelClick((nutThudo) => {
                 hienThiBangChisoHUD(nutThudo);
             });
-        // --- ĐỒ HỌA HỆ MẠCH MÁU (DÒNG TIỀN) ---
+
+        // --- ĐỒ HỌA HỆ MẠCH MÁU (DÒNG TIỀN PHÌNH TO/CHẠY NHANH) ---
         function capNhatDoHoaMachMau() {
             SieuBanDoKinhTe
                 .arcsData(duLieuMachMauDongTien)
@@ -179,12 +170,12 @@
                 .arcEndLat(d => d.endLat)
                 .arcEndLng(d => d.endLng)
                 .arcColor(d => d.loaiDongTien === 'DAU_TU' ? '#00ff66' : '#ff2233')
-                .arcStroke(d => Math.max(0.4, Math.min(d.volume / 1000000000, 4.5)))
+                .arcStroke(d => Math.max(0.6, Math.min(d.volume / 1000000000, 4.0)))
                 .arcDashLength(0.5)
                 .arcDashGap(0.3)
-                .arcDashAnimateTime(d => d.tocDo === 'GAP_RUT' ? 600 : 2200)
+                .arcDashAnimateTime(d => d.tocDo === 'GAP_RUT' ? 500 : 2000)
                 .arcLabel(d => `
-                    <div style="background: rgba(0,2,10,0.9); padding: 10px; border: 1px solid #00ffcc; border-radius: 6px; font-family: sans-serif;">
+                    <div style="background: rgba(0,2,10,0.9); padding: 10px; border: 1px solid #00ffcc; border-radius: 6px; font-family: sans-serif; pointer-events: none;">
                         <b style="color: #00ffcc;">📊 NGÀNH: ${d.nganh}</b><br/>
                         <span style="color: #fff;">Trạng thái: ${d.loaiDongTien === 'DAU_TU' ? '🎯 ĐANG ĐẦU TƯ' : '🚨 THÁO VỐN PHÒNG THỦ'}</span><br/>
                         <b style="color: #ffd700;">Khối lượng: $${Math.round(d.volume).toLocaleString()} USD</b>
@@ -192,7 +183,10 @@
                 `);
         }
 
-        // Vòng lặp cập nhật dữ liệu tự động từng giây (Code thật chạy thực tế)
+        // Thực thi hiển thị mạch máu ngay khi mở trang web
+        capNhatDoHoaMachMau();
+
+        // Vòng lặp liên tục đẩy dòng tiền nhảy số thời gian thực từng giây
         setInterval(() => {
             duLieuMachMauDongTien.forEach(machmau => {
                 const bienDong = (Math.random() - 0.5) * 20000000;
@@ -209,7 +203,7 @@
             }
         }, 1000);
 
-        // --- LOGIC ĐIỀU KHIỂN HUD VÀ CHẾ ĐỘ XEM ---
+        // --- LOGIC ĐIỀU KHIỂN HUD VÀ CHẾ ĐỘ XEM MAP ---
         function hienThiBangChisoHUD(data) {
             const hud = document.getElementById('hud-thudo');
             hud.setAttribute('data-country-id', data.id);
@@ -238,12 +232,6 @@
                 SieuBanDoKinhTe.globeMode('earth');
             }
         }
-
-        // Tắt màn hình chờ sau khi dựng xong phần cứng địa cầu
-        setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-            capNhatDoHoaMachMau();
-        }, 1500);
     </script>
 </body>
 </html>
