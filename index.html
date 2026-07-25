@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEOS - World Economic Observation System</title>
+    <script src="https://unpkg.com/three@r128/build/three.min.js"></script>
+    <script src="https://unpkg.com/globe.gl@2.24.0/dist/globe.gl.min.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@3/dist/lightweight-charts.standalone.production.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Left -->
+        <aside class="sidebar left-sidebar">
+            <div class="logo">
+                <h1>WEOS</h1>
+                <p>World Economic Observation System</p>
+            </div>
+
+            <nav class="menu">
+                <button class="menu-item active" data-page="home">
+                    <span class="icon">🏠</span>
+                    <span>HOME</span>
+                </button>
+                <button class="menu-item" data-page="world">
+                    <span class="icon">🌍</span>
+                    <span>WORLD</span>
+                </button>
+                <button class="menu-item" data-page="macro">
+                    <span class="icon">📊</span>
+                    <span>MACRO</span>
+                </button>
+                <button class="menu-item" data-page="market">
+                    <span class="icon">📈</span>
+                    <span>MARKET</span>
+                </button>
+                <button class="menu-item" data-page="flow">
+                    <span class="icon">💰</span>
+                    <span>FLOW</span>
+                </button>
+                <button class="menu-item" data-page="settings">
+                    <span class="icon">⚙️</span>
+                    <span>SETTINGS</span>
+                </button>
+            </nav>
+
+            <div class="description">
+                <h3>1. Ý TƯỞNG CHÍNH</h3>
+                <ul>
+                    <li>WEOS là hệ thống quan sát kinh tế thế giới theo thời gian thực</li>
+                    <li>Trái Đất 3D là trung tâm, người dùng có thể xoay, phóng to, chọn quốc gia để xem dự liệu</li>
+                    <li>Cung cấp dữ liệu thông tin: kinh tế vi mô, thị trường tài chính, dòng kinh tế...</li>
+                    <li>Giao diện hiện đại, trực quan, dễ giãi bản đồ ở trên cùng</li>
+                </ul>
+
+                <h3>2. TRẠNG CHỦ - GIAO DIỆN CHÍNH</h3>
+                <ul>
+                    <li>Trái Đất 3D (globe.gl) ở giữa màn hình</li>
+                    <li>Hiển thị hiệu ứng động: mây, khí quyển, đêm - ngày, sao, mặt trăng</li>
+                    <li>Có thể xoay tự động hoặc điều khiển bằng chuột</li>
+                    <li>Khi click vào quốc gia → hiển thị chi tiết ở panel bên phải</li>
+                </ul>
+
+                <h3>3. CÁC CHỀ ĐỘ CHÍNH</h3>
+                <ul>
+                    <li><strong>HOME:</strong> Trang chủ với Trái Đất 3D</li>
+                    <li><strong>WORLD:</strong> Thế giới - chọn quốc gia, xem thông tin bản đồ</li>
+                    <li><strong>MACRO:</strong> Dữ liệu kinh tế vĩ mô toàn cầu (GDP, CPI, lạm suất...)</li>
+                    <li><strong>MARKET:</strong> Thị trường tài chính (Chứng khoán, Forex, Crypto, Vàng, Dầu...)</li>
+                    <li><strong>FLOW:</strong> Dòng tiền - vốn FDI, thương mại, dòng vốn quốc tế...</li>
+                    <li><strong>SETTINGS:</strong> Cài đặt giao diện, ngôn ngữ, dơn vị tiền tệ...</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <span class="time" id="currentTime">14:32:45 UTC</span>
+                    <span class="date" id="currentDate">24/05/2025</span>
+                </div>
+                <div class="header-right">
+                    <span class="status-indicator">🟢 ONLINE</span>
+                    <span class="fps-counter">FPS: 60</span>
+                    <span class="connection-status">🔗 CONNECTED</span>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-container">
+                <!-- HOME Page -->
+                <div class="page" id="home-page" data-page="home" style="display: flex;">
+                    <div id="globeContainer" class="globe-container"></div>
+                </div>
+
+                <!-- WORLD Page -->
+                <div class="page" id="world-page" data-page="world" style="display: none;">
+                    <div id="worldContent" class="world-content">
+                        <h2>Bản Đồ Thế Giới</h2>
+                        <div id="worldGlobeContainer" class="world-globe-container"></div>
+                        <div class="countries-grid" id="countriesGrid"></div>
+                    </div>
+                </div>
+
+                <!-- MACRO Page -->
+                <div class="page" id="macro-page" data-page="macro" style="display: none;">
+                    <div id="macroContent" class="macro-content">
+                        <h2>Dữ Liệu Kinh Tế Vĩ Mô Toàn Cầu</h2>
+                        <div class="macro-grid">
+                            <div class="macro-card">
+                                <h3>GDP Toàn Cầu</h3>
+                                <div class="macro-value" id="globalGDP">$96.7T</div>
+                                <div id="gdpChart" class="chart-container"></div>
+                            </div>
+                            <div class="macro-card">
+                                <h3>Lạm Suất Trung Bình</h3>
+                                <div class="macro-value" id="globalInflation">3.45%</div>
+                                <div id="inflationChart" class="chart-container"></div>
+                            </div>
+                            <div class="macro-card">
+                                <h3>Thất Nghiệp Trung Bình</h3>
+                                <div class="macro-value" id="globalUnemployment">4.2%</div>
+                                <div id="unemploymentChart" class="chart-container"></div>
+                            </div>
+                            <div class="macro-card">
+                                <h3>Tổng Dân Số Thế Giới</h3>
+                                <div class="macro-value" id="globalPopulation">8.0B</div>
+                                <div id="populationChart" class="chart-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MARKET Page -->
+                <div class="page" id="market-page" data-page="market" style="display: none;">
+                    <div id="marketContent" class="market-content">
+                        <h2>Thị Trường Tài Chính</h2>
+                        <div class="market-tabs">
+                            <button class="tab-btn active" data-market="stocks">📈 Chứng Khoán</button>
+                            <button class="tab-btn" data-market="forex">💱 Forex</button>
+                            <button class="tab-btn" data-market="crypto">₿ Crypto</button>
+                            <button class="tab-btn" data-market="commodities">🥇 Hàng Hóa</button>
+                        </div>
+                        <div class="market-data" id="marketData">
+                            <div class="market-item">
+                                <span class="symbol">S&P 500</span>
+                                <span class="value">5,480.16</span>
+                                <span class="change positive">+2.45%</span>
+                            </div>
+                            <div class="market-item">
+                                <span class="symbol">NASDAQ</span>
+                                <span class="value">17,894.32</span>
+                                <span class="change positive">+3.12%</span>
+                            </div>
+                            <div class="market-item">
+                                <span class="symbol">DAX</span>
+                                <span class="value">18,456.78</span>
+                                <span class="change negative">-1.23%</span>
+                            </div>
+                            <div class="market-item">
+                                <span class="symbol">USD/EUR</span>
+                                <span class="value">0.9234</span>
+                                <span class="change positive">+0.34%</span>
+                            </div>
+                            <div class="market-item">
+                                <span class="symbol">BTC/USD</span>
+                                <span class="value">67,245.10</span>
+                                <span class="change positive">+5.67%</span>
+                            </div>
+                            <div class="market-item">
+                                <span class="symbol">Gold (USD/oz)</span>
+                                <span class="value">2,336.21</span>
+                                <span class="change positive">+1.23%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FLOW Page -->
+                <div class="page" id="flow-page" data-page="flow" style="display: none;">
+                    <div id="flowContent" class="flow-content">
+                        <h2>Dòng Tiền Toàn Cầu</h2>
+                        <div class="flow-visualization">
+                            <canvas id="flowCanvas"></canvas>
+                        </div>
+                        <div class="flow-stats">
+                            <div class="flow-stat">
+                                <label>FDI Toàn Cầu:</label>
+                                <span class="value">$1.98T</span>
+                            </div>
+                            <div class="flow-stat">
+                                <label>Thương Mại Quốc Tế:</label>
+                                <span class="value">$32.5T</span>
+                            </div>
+                            <div class="flow-stat">
+                                <label>Dòng Vốn Nóng:</label>
+                                <span class="value">$456B</span>
+                            </div>
+                            <div class="flow-stat">
+                                <label>Dự Trữ Vàng Toàn Cầu:</label>
+                                <span class="value">$87.5T</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS Page -->
+                <div class="page" id="settings-page" data-page="settings" style="display: none;">
+                    <div id="settingsContent" class="settings-content">
+                        <h2>Cài Đặt</h2>
+                        <div class="settings-group">
+                            <h3>Giao Diện</h3>
+                            <label>
+                                <input type="checkbox" checked> Chế độ Tối
+                            </label>
+                            <label>
+                                <input type="checkbox" checked> Hiệu ứng 3D
+                            </label>
+                            <label>
+                                <input type="checkbox" checked> Âm Thanh Thông Báo
+                            </label>
+                        </div>
+                        <div class="settings-group">
+                            <h3>Dữ Liệu</h3>
+                            <label>Tần Suất Cập Nhật:
+                                <select>
+                                    <option>Thời Gian Thực (1s)</option>
+                                    <option>Hàng 5 Giây</option>
+                                    <option>Hàng Phút</option>
+                                    <option>Hàng Giờ</option>
+                                </select>
+                            </label>
+                            <label>Loại Tiền Tệ:
+                                <select>
+                                    <option>USD - Đô La Mỹ</option>
+                                    <option>EUR - Euro</option>
+                                    <option>CNY - Nhân Dân Tệ</option>
+                                    <option>VND - Đồng Việt Nam</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar Right - Info Panel -->
+        <aside class="sidebar right-sidebar">
+            <div class="info-panel">
+                <div class="close-panel">✕</div>
+                <div id="countryInfo" class="country-info">
+                    <div class="country-header">
+                        <h2 id="countryName">Chọn Một Quốc Gia</h2>
+                        <span id="countryFlag" class="flag">🌍</span>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Tổng Quan</h3>
+                        <div class="info-item">
+                            <label>GDP:</label>
+                            <span id="infGDP">--</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Tăng Trưởng GDP:</label>
+                            <span id="infGDPGrowth">--</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Lạm Suất:</label>
+                            <span id="infInflation">--</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Dân Số:</label>
+                            <span id="infPopulation">--</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Thất Nghiệp:</label>
+                            <span id="infUnemployment">--</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Thị Trường</h3>
+                        <div class="market-list" id="countryMarkets">
+                            <div class="market-item">
+                                <span class="symbol">--</span>
+                                <span class="value">--</span>
+                                <span class="change">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>Tin Tức</h3>
+                        <div class="news-list" id="countryNews">
+                            <p class="placeholder">Chưa có tin tức</p>
+                        </div>
+                    </div>
+
+                    <button class="btn-view-details">XEM CHI TIẾT</button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/dataManager.js"></script>
+    <script src="js/countryData.js"></script>
+    <script src="js/visualization.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
