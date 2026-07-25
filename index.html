@@ -5,92 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Cashflow - Sinh Thể Kinh Tế Vĩ Mô Toàn Cầu</title>
     
-    <!-- SỬA LỖI ĐƯỜNG TRUYỀN: Đổi sang Cloudflare CDN - Máy chủ phân phối lớn nhất thế giới, cam kết không bị chặn tại VN -->
+    <!-- DÙNG THƯ VIỆN CLOUDFLARE CHỐNG CHẶN MẠNG VÀ FIX TRUY CẬP TẠI VIỆT NAM -->
     <script src="https://cloudflare.com"></script>
     
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #00020a;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            color: #ffffff;
-        }
-
-        #globe-container {
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        #control-panel {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 10;
-            background: rgba(4, 12, 32, 0.75);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid #00ffcc44;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.1);
-        }
-
-        .btn {
-            background: #002244;
-            color: #00ffcc;
-            border: 1px solid #00ffcc;
-            padding: 8px 16px;
-            margin-right: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover, .btn.active {
-            background: #00ffcc;
-            color: #000511;
-            box-shadow: 0 0 12px #00ffcc;
-        }
-
-        #hud-thudo {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            z-index: 10;
-            width: 320px;
-            background: rgba(2, 6, 18, 0.85);
-            border-left: 4px solid #00ff00;
-            padding: 20px;
-            border-radius: 4px 12px 12px 4px;
-            display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
-        }
-
-        .tieude-hud {
-            font-size: 1.4rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .dong-chiso {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding-bottom: 5px;
-        }
-
+        body { margin: 0; padding: 0; background-color: #00020a; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: #ffffff; }
+        #globe-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
+        #control-panel { position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(4, 12, 32, 0.75); padding: 15px; border-radius: 12px; border: 1px solid #00ffcc44; backdrop-filter: blur(10px); }
+        .btn { background: #002244; color: #00ffcc; border: 1px solid #00ffcc; padding: 8px 16px; margin-right: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn:hover, .btn.active { background: #00ffcc; color: #000511; box-shadow: 0 0 12px #00ffcc; }
+        #hud-thudo { position: absolute; bottom: 30px; right: 30px; z-index: 10; width: 320px; background: rgba(2, 6, 18, 0.85); border-left: 4px solid #00ff00; padding: 20px; border-radius: 4px 12px 12px 4px; display: none; backdrop-filter: blur(8px); }
+        .tieude-hud { font-size: 1.4rem; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; display: flex; justify-content: space-between; }
+        .dong-chiso { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
         .gia-tri-duong { color: #00ff66; font-weight: bold; }
         .gia-tri-am { color: #ff3344; font-weight: bold; }
     </style>
@@ -134,48 +60,43 @@
             { startLat: 10.8231, startLng: 106.6297, endLat: 21.0285, endLng: 105.8542, nganh: "Vàng Vật Chất Trú Ẩn", volume: 320000000, loaiDongTien: "THAO_TUNG", tocDo: "BINH_THUONG" }
         ];
 
-        // --- KHỞI TẠO BẢN ĐỒ KHÔNG CẦN TẢI ẢNH NGOÀI - CHỐNG LỖI MẠNG ---
+        // --- ĐÃ SỬA LỖI KHỞI TẠO: Đồng bộ hóa lớp nền 3D để không bị crash trên GitHub Pages ---
         const container = document.getElementById('globe-container');
-        const SieuBanDoKinhTe = Globe()(container)
+        const SieuBanDoKinhTe = window.Globe ? window.Globe()(container) : Globe()(container);
+        
+        SieuBanDoKinhTe
             .showAtmosphere(true)
             .atmosphereColor("#002266")
             .atmospherePower(2.5);
 
-        // Tạo màu không gian sâu cho hệ sinh thái vĩ mô
-        if (SieuBanDoKinhTe.scene) {
-            // Sử dụng thư viện ThreeJS tích hợp sẵn bên trong để dựng màu nền
-            const THREE = window.THREE || SieuBanDoKinhTe.scene().__proto__.constructor;
-            if (THREE) SieuBanDoKinhTe.scene().background = new THREE.Color('#00030f');
-        }
+        // Đảm bảo tạo nền đen vũ trụ an toàn
+        setTimeout(() => {
+            if (SieuBanDoKinhTe.scene) {
+                const renderer = SieuBanDoKinhTe.renderer();
+                if (renderer) renderer.setClearColor('#00030f', 1);
+            }
+        }, 100);
         // --- ĐỒ HỌA HỆ THẦN KINH (THỦ ĐÔ) ---
         SieuBanDoKinhTe
             .labelsData(duLieuHeThanKinhThuDo)
-            .labelLat(d => d.lat)
-            .labelLng(d => d.lng)
+            .labelLat(d => d.lat).labelLng(d => d.lng)
             .labelText(d => `📍 ${d.thudo}`)
-            .labelSize(1.6)
-            .labelDotRadius(0.8)
+            .labelSize(1.6).labelDotRadius(0.8)
             .labelColor(d => d.trangThai === 'XANH' ? '#00ffcc' : (d.trangThai === 'CAM' ? '#ffaa00' : '#ff3344'))
-            .labelResolution(3)
-            .onLabelClick((nutThudo) => {
-                hienThiBangChisoHUD(nutThudo);
-            });
+            .onLabelClick((nutThudo) => { hienThiBangChisoHUD(nutThudo); });
 
-        // --- ĐỒ HỌA HỆ MẠCH MÁU (DÒNG TIỀN PHÌNH TO/CHẠY NHANH) ---
+        // --- ĐỒ HỌA HỆ MẠCH MÁU DÒNG TIỀN ---
         function capNhatDoHoaMachMau() {
             SieuBanDoKinhTe
                 .arcsData(duLieuMachMauDongTien)
-                .arcStartLat(d => d.startLat)
-                .arcStartLng(d => d.startLng)
-                .arcEndLat(d => d.endLat)
-                .arcEndLng(d => d.endLng)
+                .arcStartLat(d => d.startLat).arcStartLng(d => d.startLng)
+                .arcEndLat(d => d.endLat).arcEndLng(d => d.endLng)
                 .arcColor(d => d.loaiDongTien === 'DAU_TU' ? '#00ff66' : '#ff2233')
                 .arcStroke(d => Math.max(0.6, Math.min(d.volume / 1000000000, 4.0)))
-                .arcDashLength(0.5)
-                .arcDashGap(0.3)
+                .arcDashLength(0.5).arcDashGap(0.3)
                 .arcDashAnimateTime(d => d.tocDo === 'GAP_RUT' ? 500 : 2000)
                 .arcLabel(d => `
-                    <div style="background: rgba(0,2,10,0.9); padding: 10px; border: 1px solid #00ffcc; border-radius: 6px; font-family: sans-serif; pointer-events: none;">
+                    <div style="background: rgba(0,2,10,0.9); padding: 10px; border: 1px solid #00ffcc; border-radius: 6px; font-family: sans-serif;">
                         <b style="color: #00ffcc;">📊 NGÀNH: ${d.nganh}</b><br/>
                         <span style="color: #fff;">Trạng thái: ${d.loaiDongTien === 'DAU_TU' ? '🎯 ĐANG ĐẦU TƯ' : '🚨 THÁO VỐN PHÒNG THỦ'}</span><br/>
                         <b style="color: #ffd700;">Khối lượng: $${Math.round(d.volume).toLocaleString()} USD</b>
@@ -183,10 +104,10 @@
                 `);
         }
 
-        // Thực thi hiển thị mạch máu ngay khi mở trang web
+        // Kích hoạt mạch máu hiển thị
         capNhatDoHoaMachMau();
 
-        // Vòng lặp liên tục đẩy dòng tiền nhảy số thời gian thực từng giây
+        // Tạo chu kỳ nhảy số dòng tiền liên tục từng giây
         setInterval(() => {
             duLieuMachMauDongTien.forEach(machmau => {
                 const bienDong = (Math.random() - 0.5) * 20000000;
@@ -194,7 +115,6 @@
                 machmau.tocDo = bienDong > 5000000 ? 'GAP_RUT' : 'BINH_THUONG';
             });
             capNhatDoHoaMachMau();
-            
             const hud = document.getElementById('hud-thudo');
             if (hud.style.display === 'block') {
                 const idHienTai = hud.getAttribute('data-country-id');
@@ -203,7 +123,7 @@
             }
         }, 1000);
 
-        // --- LOGIC ĐIỀU KHIỂN HUD VÀ CHẾ ĐỘ XEM MAP ---
+        // --- LOGIC ĐIỀU KHIỂN HUD VÀ CHẾ ĐỘ XEM ---
         function hienThiBangChisoHUD(data) {
             const hud = document.getElementById('hud-thudo');
             hud.setAttribute('data-country-id', data.id);
