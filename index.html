@@ -9,7 +9,7 @@
 
   <!-- globe.gl CDN -->
   <script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
-  <!-- three.js CDN (included with globe.gl but explicit for extras) -->
+  <!-- three.js CDN -->
   <script src="https://unpkg.com/three@0.167.1/build/three.min.js"></script>
   <!-- d3.js CDN -->
   <script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script>
@@ -35,70 +35,76 @@
 
   <!-- Dashboard panel top-right -->
   <div id="dashboard">
-    <div class="panel-title">
+    <!-- Header luôn hiện - click để thu gọn/mở rộng -->
+    <div class="panel-title" id="dashboard-header" onclick="toggleDashboard()" style="cursor:pointer;user-select:none;">
       <span class="pulse-dot"></span>
       WEOS <span class="title-sub">LIVE</span>
+      <span id="dashboard-toggle-btn" style="margin-left:auto;font-size:12px;opacity:0.7;">▼</span>
     </div>
-    <div id="usd-meter">
-      <div class="meter-label">📊 CHỈ SỐ DXY (USD)</div>
-      <div id="dxy-value" class="dxy-number">--</div>
-      <div id="dxy-gauge" class="dxy-gauge">
-        <div class="gauge-track">
-          <div id="gauge-fill" class="gauge-fill"></div>
+
+    <!-- Nội dung có thể thu gọn -->
+    <div id="dashboard-body">
+      <div id="usd-meter">
+        <div class="meter-label">📊 CHỈ SỐ DXY (USD)</div>
+        <div id="dxy-value" class="dxy-number">--</div>
+        <div id="dxy-gauge" class="dxy-gauge">
+          <div class="gauge-track">
+            <div id="gauge-fill" class="gauge-fill"></div>
+          </div>
+          <div class="gauge-labels">
+            <span>YẾU</span><span>TRUNG TÍNH</span><span>MẠNH</span>
+          </div>
         </div>
-        <div class="gauge-labels">
-          <span>YẾU</span><span>TRUNG TÍNH</span><span>MẠNH</span>
+        <div id="usd-status" class="usd-status-badge">Đang tải...</div>
+      </div>
+      <div id="global-indicators">
+        <div class="indicators-title">📡 CHỈ SỐ TOÀN CẦU</div>
+        <div class="indicator-row" id="ind-gold">
+          <span class="ind-icon">🥇</span>
+          <span class="ind-name">Vàng</span>
+          <span class="ind-value" id="val-gold">--</span>
+          <span class="ind-change" id="chg-gold">--</span>
         </div>
-      </div>
-      <div id="usd-status" class="usd-status-badge">Đang tải...</div>
-    </div>
-    <div id="global-indicators">
-      <div class="indicators-title">📡 CHỈ SỐ TOÀN CẦU</div>
-      <div class="indicator-row" id="ind-gold">
-        <span class="ind-icon">🥇</span>
-        <span class="ind-name">Vàng</span>
-        <span class="ind-value" id="val-gold">--</span>
-        <span class="ind-change" id="chg-gold">--</span>
-      </div>
-      <div class="indicator-row" id="ind-btc">
-        <span class="ind-icon">₿</span>
-        <span class="ind-name">Bitcoin</span>
-        <span class="ind-value" id="val-btc">--</span>
-        <span class="ind-change" id="chg-btc">--</span>
-      </div>
-      <div class="indicator-row" id="ind-oil">
-        <span class="ind-icon">🛢️</span>
-        <span class="ind-name">Dầu WTI</span>
-        <span class="ind-value" id="val-oil">--</span>
-        <span class="ind-change" id="chg-oil">--</span>
-      </div>
-      <div class="indicator-row" id="ind-eth">
-        <span class="ind-icon">Ξ</span>
-        <span class="ind-name">Ethereum</span>
-        <span class="ind-value" id="val-eth">--</span>
-        <span class="ind-change" id="chg-eth">--</span>
-      </div>
-      <div class="indicator-row" id="ind-sp500">
-        <span class="ind-icon">📈</span>
-        <span class="ind-name">S&amp;P 500</span>
-        <span class="ind-value" id="val-sp500">--</span>
-        <span class="ind-change" id="chg-sp500">--</span>
-      </div>
-    </div>
-    <div id="flow-status">
-      <div class="flow-title">🩸 DÒNG TIỀN ĐANG CHẢY</div>
-      <div id="flow-direction" class="flow-direction-text">Đang phân tích...</div>
-      <div class="flow-stats">
-        <div class="flow-stat">
-          <span class="flow-in-icon">●</span>
-          <span id="inflow-count">0</span> nước nhận
+        <div class="indicator-row" id="ind-btc">
+          <span class="ind-icon">₿</span>
+          <span class="ind-name">Bitcoin</span>
+          <span class="ind-value" id="val-btc">--</span>
+          <span class="ind-change" id="chg-btc">--</span>
         </div>
-        <div class="flow-stat">
-          <span class="flow-out-icon">●</span>
-          <span id="outflow-count">0</span> nước tháo
+        <div class="indicator-row" id="ind-oil">
+          <span class="ind-icon">🛢️</span>
+          <span class="ind-name">Dầu WTI</span>
+          <span class="ind-value" id="val-oil">--</span>
+          <span class="ind-change" id="chg-oil">--</span>
+        </div>
+        <div class="indicator-row" id="ind-eth">
+          <span class="ind-icon">Ξ</span>
+          <span class="ind-name">Ethereum</span>
+          <span class="ind-value" id="val-eth">--</span>
+          <span class="ind-change" id="chg-eth">--</span>
+        </div>
+        <div class="indicator-row" id="ind-sp500">
+          <span class="ind-icon">📈</span>
+          <span class="ind-name">S&amp;P 500</span>
+          <span class="ind-value" id="val-sp500">--</span>
+          <span class="ind-change" id="chg-sp500">--</span>
         </div>
       </div>
-      <div class="last-update">Cập nhật: <span id="last-update-time">--</span></div>
+      <div id="flow-status">
+        <div class="flow-title">🩸 DÒNG TIỀN ĐANG CHẢY</div>
+        <div id="flow-direction" class="flow-direction-text">Đang phân tích...</div>
+        <div class="flow-stats">
+          <div class="flow-stat">
+            <span class="flow-in-icon">●</span>
+            <span id="inflow-count">0</span> nước nhận
+          </div>
+          <div class="flow-stat">
+            <span class="flow-out-icon">●</span>
+            <span id="outflow-count">0</span> nước tháo
+          </div>
+        </div>
+        <div class="last-update">Cập nhật: <span id="last-update-time">--</span></div>
+      </div>
     </div>
   </div>
 
@@ -159,5 +165,25 @@
   <script src="js/ui/countryPopup.js"></script>
   <script src="js/ui/controls.js"></script>
   <script src="js/app.js"></script>
+
+  <script>
+    // Toggle dashboard thu gon / mo rong
+    let _dashboardOpen = true;
+    function toggleDashboard() {
+      const body = document.getElementById('dashboard-body');
+      const btn  = document.getElementById('dashboard-toggle-btn');
+      const dash = document.getElementById('dashboard');
+      _dashboardOpen = !_dashboardOpen;
+      if (_dashboardOpen) {
+        body.style.display = 'block';
+        btn.textContent = '▼';
+        dash.style.minWidth = '290px';
+      } else {
+        body.style.display = 'none';
+        btn.textContent = '▶';
+        dash.style.minWidth = '0';
+      }
+    }
+  </script>
 </body>
 </html>
