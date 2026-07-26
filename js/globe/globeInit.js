@@ -73,10 +73,10 @@ async function initGlobe(containerId) {
     // Arcs - mạch máu dòng tiền
     .arcsData(initialArcs)
     .arcColor(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcColor(d) : '#00ff88')
-    .arcAltitude(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcAltitude(d) : 0.2)
-    .arcStroke(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcStroke(d) : 1)
-    .arcDashLength(0.35)
-    .arcDashGap(0.15)
+    .arcAltitude(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcAltitude(d) : 0.1)
+    .arcStroke(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcStroke(d) : 0.4)
+    .arcDashLength(0.25)
+    .arcDashGap(0.75)
     .arcDashAnimateTime(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcDashAnimateTime(d) : 2000)
     .arcLabel(d => `<div class="arc-tooltip">${d.label || ''}</div>`)
     // Points tại thủ đô

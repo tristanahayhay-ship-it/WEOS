@@ -51,7 +51,7 @@ function buildGroupArcs(flowGroup, dxy, existingCountries) {
           endLat:   toCountry.lat,
           endLng:   toCountry.lng,
           flowType: isInflow ? 'in' : 'out',
-          magnitude: Math.max(1, Math.min(magnitude, 10)),
+          magnitude: Math.max(1, Math.min(magnitude * 0.5, 5)),
           asset:     flowDef.asset,
           fromCode,
           toCode,
@@ -147,8 +147,8 @@ function calculateFlowArcs(dxy) {
   // Sắp xếp theo magnitude giảm dần
   allArcs.sort((a, b) => b.magnitude - a.magnitude);
 
-  // Giới hạn tối đa 200 arcs để performance
-  return allArcs.slice(0, 200);
+  // Giới hạn top 70 arcs có magnitude cao nhất để không che địa cầu
+  return allArcs.slice(0, 70);
 }
 
 // --- Get current arcs ---
@@ -204,12 +204,12 @@ function getArcColor(arc) {
 
 // Độ cao arc theo magnitude
 function getArcAltitude(arc) {
-  return Math.max(0.05, (arc.magnitude || 5) * 0.04);
+  return Math.max(0.05, (arc.magnitude || 5) * 0.02);
 }
 
 // Độ dày arc theo magnitude
 function getArcStroke(arc) {
-  return Math.max(0.3, (arc.magnitude || 5) * 0.4);
+  return Math.max(0.2, (arc.magnitude || 5) * 0.08);
 }
 
 // Tốc độ animate (ms)
