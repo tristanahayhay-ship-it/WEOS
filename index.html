@@ -4,64 +4,660 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WEOS - Hệ Thống Kinh Tế Toàn Cầu</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #e0e0e0;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .ui-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 450px;
+            height: 100vh;
+            background: rgba(10, 14, 39, 0.98);
+            border-left: 2px solid #00d4ff;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: -5px 0 25px rgba(0, 212, 255, 0.3);
+            z-index: 1000;
+        }
+
+        .header {
+            margin-bottom: 25px;
+            border-bottom: 2px solid #00d4ff;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+            color: #00d4ff;
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+        }
+
+        .header p {
+            font-size: 12px;
+            color: #a0a0a0;
+            margin-bottom: 12px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background: rgba(0, 212, 255, 0.25);
+            box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+        }
+
+        .btn.active {
+            background: #00d4ff;
+            color: #0a0e27;
+            font-weight: bold;
+        }
+
+        .panel-section {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.25);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+
+        .panel-section h3 {
+            color: #00d4ff;
+            margin-bottom: 12px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .country-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+            font-size: 12px;
+        }
+
+        .country-stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #a0a0a0;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .stat-value.negative {
+            color: #ff3333;
+        }
+
+        .indicator-item {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #00d4ff;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+
+        .indicator-name {
+            color: #a0a0a0;
+            text-transform: uppercase;
+            font-size: 10px;
+            margin-bottom: 4px;
+        }
+
+        .indicator-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+
+        .indicator-change {
+            font-size: 10px;
+            margin-top: 3px;
+            color: #00ff88;
+        }
+
+        .indicator-change.negative {
+            color: #ff3333;
+        }
+
+        .settings label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .settings input[type="checkbox"],
+        .settings select {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .settings select {
+            padding: 4px 8px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 212, 255, 0.5);
+        }
+
+        .flow-info {
+            background: rgba(0, 150, 200, 0.1);
+            border-left: 3px solid #00ff88;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .flow-info strong {
+            color: #00d4ff;
+        }
+
+        .flow-info .amount {
+            color: #00ff88;
+        }
+    </style>
 </head>
 <body>
-    <div id="canvas-container"></div>
-    <div id="ui-panel" class="ui-panel">
+    <canvas id="canvas"></canvas>
+    
+    <div class="ui-panel">
         <div class="header">
-            <h1>WEOS - Bản Đồ Kinh Tế Toàn Cầu</h1>
+            <h1>🌍 WEOS</h1>
+            <p>Bản Đồ Kinh Tế Toàn Cầu - Theo Dõi Dòng Tiền USD</p>
             <div class="controls">
-                <button id="view-globe" class="btn active">Chế Độ Cầu</button>
-                <button id="view-flat" class="btn">Chế Độ Phẳng</button>
-                <button id="view-zoom" class="btn">Phóng To Chi Tiết</button>
+                <button class="btn active" onclick="changeView('globe')">Cầu 3D</button>
+                <button class="btn" onclick="changeView('map')">Bản Đồ Phẳng</button>
+                <button class="btn" onclick="changeView('zoom')">Phóng To</button>
             </div>
         </div>
-        
-        <div class="info-panel">
-            <h2 id="selected-country">Chọn Quốc Gia</h2>
-            <div id="country-info"></div>
-            <div id="money-flow" class="money-flow-chart">
-                <canvas id="flowChart"></canvas>
+
+        <div class="panel-section">
+            <h3>💰 Chỉ Số Kinh Tế Toàn Cầu</h3>
+            <div id="indicators"></div>
+        </div>
+
+        <div class="panel-section">
+            <h3>🏙️ Quốc Gia Được Chọn</h3>
+            <div id="country-info" style="font-size: 12px; line-height: 1.6; color: #a0a0a0;">
+                💡 Nhấn vào một quốc gia trên bản đồ để xem chi tiết
             </div>
         </div>
-        
-        <div class="indicators-panel">
-            <h3>Chỉ Số Kinh Tế USD</h3>
-            <div id="indicators-list" class="indicators-list"></div>
+
+        <div class="panel-section">
+            <h3>📊 Dòng Tiền Quốc Tế</h3>
+            <div id="money-flows" style="font-size: 11px; line-height: 1.8;"></div>
         </div>
-        
-        <div class="settings-panel">
-            <h3>Cài Đặt</h3>
+
+        <div class="panel-section settings">
+            <h3>⚙️ Cài Đặt</h3>
             <label>
                 <input type="checkbox" id="toggle-flow" checked>
-                Hiển Thị Dòng Tiền
+                Hiển thị dòng tiền
             </label>
             <label>
                 <input type="checkbox" id="toggle-indicators" checked>
-                Hiển Thị Chỉ Số Kinh Tế
+                Hiển thị chỉ số USD
             </label>
             <label>
-                <input type="checkbox" id="toggle-gold-reserves" checked>
-                Hiển Thị Dự Trữ Vàng
+                <input type="checkbox" id="toggle-gold" checked>
+                Dự trữ vàng
             </label>
             <label>
-                Tốc Độ Cập Nhật:
-                <select id="update-speed">
+                Tốc độ cập nhật:
+                <select id="speed-select">
                     <option value="1000">1 giây</option>
+                    <option value="3000" selected>3 giây</option>
                     <option value="5000">5 giây</option>
-                    <option value="30000">30 giây</option>
-                    <option value="60000">1 phút</option>
+                    <option value="10000">10 giây</option>
                 </select>
             </label>
         </div>
     </div>
-    
-    <script src="js/data.js"></script>
-    <script src="js/globe.js"></script>
-    <script src="js/economicEngine.js"></script>
-    <script src="js/app.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ========== DỮ LIỆU QUỐC GIA ==========
+        const countries = [
+            { id: 'US', name: 'Hoa Kỳ', lat: 37.0902, lng: -95.7129, gdp: 27360, pop: 338, unemployment: 3.9, gold: 8133, color: 0x1f77b4 },
+            { id: 'CN', name: 'Trung Quốc', lat: 35.8617, lng: 104.1954, gdp: 17734, pop: 1426, unemployment: 5.2, gold: 2191, color: 0xff7f0e },
+            { id: 'JP', name: 'Nhật Bản', lat: 36.2048, lng: 138.2529, gdp: 4231, pop: 123, unemployment: 2.5, gold: 765, color: 0x2ca02c },
+            { id: 'DE', name: 'Đức', lat: 51.1657, lng: 10.4515, gdp: 4081, pop: 83, unemployment: 3.0, gold: 3710, color: 0xd62728 },
+            { id: 'IN', name: 'Ấn Độ', lat: 20.5937, lng: 78.9629, gdp: 3737, pop: 1417, unemployment: 4.1, gold: 794, color: 0x9467bd },
+            { id: 'UK', name: 'Anh', lat: 55.3781, lng: -3.4360, gdp: 3332, pop: 67, unemployment: 4.0, gold: 310, color: 0x8c564b },
+            { id: 'FR', name: 'Pháp', lat: 46.2276, lng: 2.2137, gdp: 3030, pop: 68, unemployment: 7.4, gold: 2436, color: 0xe377c2 },
+            { id: 'BR', name: 'Brazil', lat: -14.2350, lng: -51.9253, gdp: 2117, pop: 215, unemployment: 7.9, gold: 42, color: 0x7f7f0f },
+            { id: 'CA', name: 'Canada', lat: 56.1304, lng: -106.3468, gdp: 2139, pop: 39, unemployment: 5.8, gold: 429, color: 0xc5b0d5 },
+            { id: 'VN', name: 'Việt Nam', lat: 14.0583, lng: 108.2772, gdp: 429, pop: 97, unemployment: 2.3, gold: 20, color: 0xc49c94 },
+            { id: 'SG', name: 'Singapore', lat: 1.3521, lng: 103.8198, gdp: 501, pop: 5, unemployment: 1.9, gold: 127, color: 0xff9896 },
+            { id: 'KR', name: 'Hàn Quốc', lat: 35.9078, lng: 127.7669, gdp: 1784, pop: 52, unemployment: 2.6, gold: 393, color: 0xfb9a99 },
+            { id: 'MX', name: 'Mexico', lat: 23.6345, lng: -102.5528, gdp: 1287, pop: 128, unemployment: 3.4, gold: 137, color: 0xffbb78 },
+            { id: 'ID', name: 'Indonesia', lat: -0.7893, lng: 113.9213, gdp: 1319, pop: 273, unemployment: 5.7, gold: 77, color: 0xbeaed4 },
+            { id: 'TH', name: 'Thái Lan', lat: 15.8700, lng: 100.9925, gdp: 504, pop: 71, unemployment: 1.2, gold: 152, color: 0xfdb462 }
+        ];
+
+        // ========== DỮ LIỆU CHỈ SỐ ==========
+        const globalIndicators = {
+            usdIndex: { value: 103.5, change: 0.5 },
+            oilPrice: { value: 82.4, change: -1.2 },
+            goldPrice: { value: 2045, change: 15.3 },
+            sp500: { value: 5478, change: 58.3 },
+            bitcoin: { value: 42580, change: 850 },
+            vix: { value: 14.2, change: -0.8 }
+        };
+
+        // ========== DỮ LIỆU DÒNG TIỀN ==========
+        const moneyFlows = [
+            { from: 'US', to: 'CN', amount: 450, type: 'Thương mại' },
+            { from: 'CN', to: 'US', amount: 520, type: 'Thương mại' },
+            { from: 'US', to: 'DE', amount: 350, type: 'Đầu tư' },
+            { from: 'JP', to: 'US', amount: 200, type: 'Tài chính' },
+            { from: 'VN', to: 'US', amount: 150, type: 'Xuất khẩu' }
+        ];
+
+        // ========== THREE.JS SETUP ==========
+        let scene, camera, renderer;
+        let globe, countryMeshes = {};
+        let selectedCountry = null;
+        let autoRotate = true;
+        let currentViewMode = 'globe';
+
+        function initThreeJS() {
+            const canvas = document.getElementById('canvas');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0e27);
+
+            camera = new THREE.PerspectiveCamera(
+                75, 
+                (window.innerWidth - 450) / window.innerHeight, 
+                0.1, 
+                10000
+            );
+            camera.position.z = 2.5;
+
+            renderer = new THREE.WebGLRenderer({ 
+                canvas, 
+                antialias: true, 
+                alpha: true,
+                precision: 'highp'
+            });
+            
+            renderer.setSize(window.innerWidth - 450, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            createGlobe();
+            addLights();
+            addCountries();
+            addMoneyFlows();
+
+            window.addEventListener('resize', onWindowResize);
+            canvas.addEventListener('click', onCanvasClick);
+
+            animate();
+        }
+
+        function createGlobe() {
+            const geometry = new THREE.IcosahedronGeometry(1, 40);
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            // Vẽ gradient nền
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#1a3a52');
+            gradient.addColorStop(0.5, '#0d1f2d');
+            gradient.addColorStop(1, '#051219');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.MeshPhongMaterial({ 
+                map: texture,
+                shininess: 5
+            });
+            globe = new THREE.Mesh(geometry, material);
+            scene.add(globe);
+        }
+
+        function addLights() {
+            const light = new THREE.DirectionalLight(0xffffff, 1.2);
+            light.position.set(5, 3, 5);
+            scene.add(light);
+
+            const light2 = new THREE.DirectionalLight(0x0088ff, 0.5);
+            light2.position.set(-5, -3, -5);
+            scene.add(light2);
+
+            const ambient = new THREE.AmbientLight(0x606060);
+            scene.add(ambient);
+        }
+
+        function addCountries() {
+            countries.forEach(country => {
+                // Chuyển đổi tọa độ địa lý sang 3D
+                const phi = (90 - country.lat) * Math.PI / 180;
+                const theta = (country.lng + 180) * Math.PI / 180;
+
+                const x = Math.sin(phi) * Math.cos(theta);
+                const y = Math.cos(phi);
+                const z = Math.sin(phi) * Math.sin(theta);
+
+                // Tạo marker cho quốc gia
+                const geo = new THREE.SphereGeometry(0.04, 16, 16);
+                const mat = new THREE.MeshBasicMaterial({ color: country.color });
+                const mesh = new THREE.Mesh(geo, mat);
+
+                mesh.position.set(x, y, z);
+                mesh.userData = country;
+                mesh.name = country.id;
+
+                globe.add(mesh);
+                countryMeshes[country.id] = mesh;
+            });
+        }
+
+        function addMoneyFlows() {
+            moneyFlows.forEach(flow => {
+                const from = countries.find(c => c.id === flow.from);
+                const to = countries.find(c => c.id === flow.to);
+
+                if (!from || !to) return;
+
+                // Tính toán vị trí 3D
+                const phi1 = (90 - from.lat) * Math.PI / 180;
+                const theta1 = (from.lng + 180) * Math.PI / 180;
+                const p1 = new THREE.Vector3(
+                    Math.sin(phi1) * Math.cos(theta1),
+                    Math.cos(phi1),
+                    Math.sin(phi1) * Math.sin(theta1)
+                );
+
+                const phi2 = (90 - to.lat) * Math.PI / 180;
+                const theta2 = (to.lng + 180) * Math.PI / 180;
+                const p2 = new THREE.Vector3(
+                    Math.sin(phi2) * Math.cos(theta2),
+                    Math.cos(phi2),
+                    Math.sin(phi2) * Math.sin(theta2)
+                );
+
+                // Tạo cung cấp
+                const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5).normalize().multiplyScalar(1.3);
+
+                const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
+                const points = curve.getPoints(50);
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({ 
+                    color: 0x00ff88, 
+                    linewidth: 2,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const line = new THREE.Line(geometry, material);
+
+                globe.add(line);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Quay cầu tự động
+            if (autoRotate && selectedCountry === null) {
+                globe.rotation.y += 0.00005;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onCanvasClick(event) {
+            const canvas = document.getElementById('canvas');
+            const rect = canvas.getBoundingClientRect();
+            const mouse = new THREE.Vector2();
+            
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+
+            const intersects = raycaster.intersectObjects(globe.children);
+            
+            if (intersects.length > 0) {
+                const mesh = intersects[0].object;
+                if (mesh.userData && mesh.userData.id) {
+                    selectedCountry = mesh.userData.id;
+                    updateCountryInfo(mesh.userData);
+                    autoRotate = false;
+                }
+            }
+        }
+
+        function onWindowResize() {
+            const width = window.innerWidth - 450;
+            const height = window.innerHeight;
+            
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        // ========== CẬP NHẬT UI ==========
+        function updateIndicators() {
+            const ind = globalIndicators;
+            const html = `
+                <div class="indicator-item">
+                    <div class="indicator-name">USD Index</div>
+                    <div class="indicator-value">${ind.usdIndex.value.toFixed(1)}</div>
+                    <div class="indicator-change ${ind.usdIndex.change > 0 ? '' : 'negative'}">
+                        ${ind.usdIndex.change > 0 ? '▲' : '▼'} ${Math.abs(ind.usdIndex.change).toFixed(2)}
+                    </div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">Giá Dầu (Brl)</div>
+                    <div class="indicator-value">$${ind.oilPrice.value.toFixed(1)}</div>
+                    <div class="indicator-change ${ind.oilPrice.change > 0 ? '' : 'negative'}">
+                        ${ind.oilPrice.change > 0 ? '▲' : '▼'} ${Math.abs(ind.oilPrice.change).toFixed(1)}
+                    </div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">Giá Vàng (oz)</div>
+                    <div class="indicator-value">$${ind.goldPrice.value.toFixed(0)}</div>
+                    <div class="indicator-change ${ind.goldPrice.change > 0 ? '' : 'negative'}">
+                        ${ind.goldPrice.change > 0 ? '▲' : '▼'} ${Math.abs(ind.goldPrice.change).toFixed(1)}
+                    </div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">S&P 500</div>
+                    <div class="indicator-value">${ind.sp500.value.toFixed(0)}</div>
+                    <div class="indicator-change ${ind.sp500.change > 0 ? '' : 'negative'}">
+                        ${ind.sp500.change > 0 ? '▲' : '▼'} ${Math.abs(ind.sp500.change).toFixed(0)}
+                    </div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">Bitcoin</div>
+                    <div class="indicator-value">$${ind.bitcoin.value.toFixed(0)}</div>
+                    <div class="indicator-change ${ind.bitcoin.change > 0 ? '' : 'negative'}">
+                        ${ind.bitcoin.change > 0 ? '▲' : '▼'} ${Math.abs(ind.bitcoin.change).toFixed(0)}
+                    </div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-name">VIX Index</div>
+                    <div class="indicator-value">${ind.vix.value.toFixed(1)}</div>
+                    <div class="indicator-change ${ind.vix.change < 0 ? '' : 'negative'}">
+                        ${ind.vix.change < 0 ? '▼' : '▲'} ${Math.abs(ind.vix.change).toFixed(2)}
+                    </div>
+                </div>
+            `;
+            document.getElementById('indicators').innerHTML = html;
+        }
+
+        function updateCountryInfo(country) {
+            const html = `
+                <div class="country-stat">
+                    <span class="stat-label">Quốc Gia:</span>
+                    <span class="stat-value">${country.name}</span>
+                </div>
+                <div class="country-stat">
+                    <span class="stat-label">GDP:</span>
+                    <span class="stat-value">\$${country.gdp}B</span>
+                </div>
+                <div class="country-stat">
+                    <span class="stat-label">Dân Số:</span>
+                    <span class="stat-value">${country.pop}M</span>
+                </div>
+                <div class="country-stat">
+                    <span class="stat-label">Thất Nghiệp:</span>
+                    <span class="stat-value">${country.unemployment}%</span>
+                </div>
+                <div class="country-stat">
+                    <span class="stat-label">Dự Trữ Vàng:</span>
+                    <span class="stat-value">${country.gold}M oz</span>
+                </div>
+                <div class="country-stat">
+                    <span class="stat-label">Sức Mạnh:</span>
+                    <span class="stat-value">${(country.gdp / 27360 * 100).toFixed(0)}%</span>
+                </div>
+            `;
+            document.getElementById('country-info').innerHTML = html;
+        }
+
+        function updateMoneyFlows() {
+            let html = '';
+            moneyFlows.forEach(flow => {
+                const from = countries.find(c => c.id === flow.from);
+                const to = countries.find(c => c.id === flow.to);
+                if (from && to) {
+                    html += `
+                        <div class="flow-info">
+                            <strong>${from.name}</strong> → <strong>${to.name}</strong><br>
+                            <span class="amount">💰 \$${flow.amount}B</span> (${flow.type})
+                        </div>
+                    `;
+                }
+            });
+            document.getElementById('money-flows').innerHTML = html;
+        }
+
+        // ========== ĐIỀU KHIỂN ==========
+        function changeView(mode) {
+            currentViewMode = mode;
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (mode === 'globe') {
+                camera.position.z = 2.5;
+            } else if (mode === 'map') {
+                camera.position.z = 1.8;
+            } else if (mode === 'zoom') {
+                camera.position.z = 1.0;
+            }
+        }
+
+        document.getElementById('speed-select').addEventListener('change', (e) => {
+            const speed = parseInt(e.target.value);
+            console.log('Tốc độ cập nhật:', speed + 'ms');
+        });
+
+        // ========== MÔ PHỎNG CẬP NHẬT REAL-TIME ==========
+        function simulateUpdates() {
+            setInterval(() => {
+                globalIndicators.usdIndex.value += (Math.random() - 0.5) * 1;
+                globalIndicators.usdIndex.change = (Math.random() - 0.5) * 2;
+                
+                globalIndicators.oilPrice.value += (Math.random() - 0.5) * 0.5;
+                globalIndicators.oilPrice.change = (Math.random() - 0.5) * 3;
+                
+                globalIndicators.goldPrice.value += (Math.random() - 0.5) * 3;
+                globalIndicators.goldPrice.change = (Math.random() - 0.5) * 20;
+                
+                globalIndicators.sp500.value += (Math.random() - 0.5) * 20;
+                globalIndicators.sp500.change = (Math.random() - 0.5) * 100;
+                
+                globalIndicators.bitcoin.value += (Math.random() - 0.5) * 500;
+                globalIndicators.bitcoin.change = (Math.random() - 0.5) * 1000;
+                
+                globalIndicators.vix.value += (Math.random() - 0.5) * 0.3;
+                globalIndicators.vix.change = (Math.random() - 0.5) * 1;
+
+                updateIndicators();
+                updateMoneyFlows();
+            }, parseInt(document.getElementById('speed-select').value));
+        }
+
+        // ========== KHỞI ĐỘNG ỨNG DỤNG ==========
+        window.addEventListener('load', () => {
+            initThreeJS();
+            updateIndicators();
+            updateMoneyFlows();
+            simulateUpdates();
+        });
+
+        window.addEventListener('resize', onWindowResize);
+    </script>
 </body>
 </html>
