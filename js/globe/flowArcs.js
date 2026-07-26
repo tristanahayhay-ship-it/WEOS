@@ -16,9 +16,7 @@ function buildGroupArcs(flowGroup, dxy, existingCountries) {
   function resolveGroup(groupId) {
     const groups = logic.COUNTRY_GROUPS;
     if (groups[groupId]) return groups[groupId];
-    // Single country code
     if (typeof COUNTRY_MAP !== 'undefined' && COUNTRY_MAP[groupId]) return [groupId];
-    // Comma separated
     if (groupId.includes(',')) return groupId.split(',').map(s => s.trim());
     return [];
   }
@@ -33,11 +31,12 @@ function buildGroupArcs(flowGroup, dxy, existingCountries) {
     const fromCodes = resolveGroup(flowDef.from);
     const toCodes   = resolveGroup(flowDef.to);
 
-    fromCodes.slice(0, 8).forEach(fromCode => {
+    // Giảm số lượng: chỉ lấy 3 nước từ mỗi group, 1 đích
+    fromCodes.slice(0, 3).forEach(fromCode => {
       const fromCountry = COUNTRY_MAP[fromCode];
       if (!fromCountry || !fromCountry.lat) return;
 
-      toCodes.slice(0, 3).forEach(toCode => {
+      toCodes.slice(0, 1).forEach(toCode => {
         const toCountry = COUNTRY_MAP[toCode];
         if (!toCountry || !toCountry.lat) return;
         if (fromCode === toCode) return;
@@ -51,7 +50,7 @@ function buildGroupArcs(flowGroup, dxy, existingCountries) {
           endLat:   toCountry.lat,
           endLng:   toCountry.lng,
           flowType: isInflow ? 'in' : 'out',
-          magnitude: Math.max(1, Math.min(magnitude * 0.5, 5)),
+          magnitude: Math.max(1, Math.min(magnitude * 0.4, 4)),
           asset:     flowDef.asset,
           fromCode,
           toCode,
@@ -80,15 +79,15 @@ function buildCountryArcs(dxy) {
     const direction = logic.getCountryFlowDirection(country, dxy);
     if (direction === 'neutral') return;
 
-    const MIN_FLOW_MAGNITUDE = 3; // Bỏ qua flows nhỏ để tránh quá tải
+    // Tăng ngưỡng lọc để chỉ hiển thị các nước dòng tiền mạnh
+    const MIN_FLOW_MAGNITUDE = 5;
     const magnitude = logic.getFlowMagnitude(country, dxy);
     if (magnitude < MIN_FLOW_MAGNITUDE) return;
 
     const isIn = direction === 'in';
     const color = isIn ? '#00ff88' : '#ff3344';
 
-    // Thêm jitter nhỏ để arcs không chồng nhau hoàn toàn
-    const jitter = 0.5;
+    const jitter = 0.3;
     arcs.push({
       startLat: isIn ? country.lat + (Math.random()-0.5)*jitter : US_LAT,
       startLng: isIn ? country.lng + (Math.random()-0.5)*jitter : US_LNG,
@@ -113,14 +112,11 @@ function getFlowAssetLabel(country, dxy, direction) {
   const logic = window.USD_LOGIC;
   if (!logic) return 'Vốn';
 
-  const mode = logic.getUsdMode(dxy);
   if (direction === 'out') {
-    // EM tháo vốn
     if (country.gdpTier >= 3) return 'EM Bonds/Stocks';
     return 'Safe Assets';
   }
 
-  // Inflow
   const assets = logic.getSafeHavenAssets(dxy);
   if (window.COUNTRY_GROUPS && window.COUNTRY_GROUPS.OIL_NATIONS &&
       window.COUNTRY_GROUPS.OIL_NATIONS.includes(country.code)) return 'Dầu thô';
@@ -141,14 +137,13 @@ function calculateFlowArcs(dxy) {
   const countryArcs = buildCountryArcs(dxy);
   const groupArcs   = buildGroupArcs({}, dxy, typeof COUNTRY_MAP !== 'undefined' ? COUNTRY_MAP : {});
 
-  // Merge & limit total
   const allArcs = [...countryArcs, ...groupArcs];
 
   // Sắp xếp theo magnitude giảm dần
   allArcs.sort((a, b) => b.magnitude - a.magnitude);
 
-  // Giới hạn top 70 arcs có magnitude cao nhất để không che địa cầu
-  return allArcs.slice(0, 70);
+  // Giới hạn tối đa 60 arcs - đủ đẹp mà không che địa cầu
+  return allArcs.slice(0, 60);
 }
 
 // --- Get current arcs ---
@@ -160,7 +155,6 @@ function getCurrentArcs() {
 function updateFlowArcs(dxy, globeInstance) {
   _currentArcs = calculateFlowArcs(dxy);
 
-  // Update counters
   const inCount  = _currentArcs.filter(a => a.flowType === 'in').length;
   const outCount = _currentArcs.filter(a => a.flowType === 'out').length;
   const inEl  = document.getElementById('arc-in-count');
@@ -202,21 +196,22 @@ function getArcColor(arc) {
   return arc.color || (arc.flowType === 'in' ? '#00ff88' : '#ff3344');
 }
 
-// Độ cao arc theo magnitude
+// Độ cao arc - thấp, cong nhẹ như airline routes
 function getArcAltitude(arc) {
-  return Math.max(0.05, (arc.magnitude || 5) * 0.02);
+  // magnitude 5-10 → altitude 0.1-0.2 (thấp, không bay quá cao)
+  return Math.max(0.08, Math.min((arc.magnitude || 5) * 0.018, 0.22));
 }
 
-// Độ dày arc theo magnitude
+// Độ dày arc - mỏng như sợi chỉ
 function getArcStroke(arc) {
-  return Math.max(0.2, (arc.magnitude || 5) * 0.08);
+  // magnitude 5-10 → stroke 0.25-0.55 (rất mỏng)
+  return Math.max(0.15, Math.min((arc.magnitude || 5) * 0.055, 0.6));
 }
 
 // Tốc độ animate (ms)
 function getArcDashAnimateTime(arc) {
   const speed = arc.magnitude || 5;
-  // Magnitude cao = chảy nhanh
-  return Math.round(6000 / (speed / 5));
+  return Math.round(4000 / (speed / 5));
 }
 
 window.FLOW_ARCS = {
