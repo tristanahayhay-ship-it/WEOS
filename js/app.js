@@ -91,11 +91,15 @@
     window.USD_METER_UI.updateMeter(dxy);
   });
 
-  // 10. Live DXY update every 8 seconds (with slight variation for realism)
+// Random walk constants for DXY live simulation
+const DXY_NOISE_CENTER    = 0.495; // Slight downward bias (USD mean-reverts)
+const DXY_NOISE_AMPLITUDE = 0.15;  // Max tick size per interval (±0.15 DXY)
+
+  // Live DXY update every 8 seconds (with slight variation for realism)
   setInterval(() => {
     const currentDxy = window.DATA_MANAGER.getDxy();
     // Add small random walk
-    const noise = (Math.random() - 0.495) * 0.15;
+    const noise = (Math.random() - DXY_NOISE_CENTER) * DXY_NOISE_AMPLITUDE;
     const newDxy = Math.max(88, Math.min(112, currentDxy + noise));
     window.DATA_MANAGER.setDxy(newDxy);
   }, 8000);

@@ -80,8 +80,9 @@ function buildCountryArcs(dxy) {
     const direction = logic.getCountryFlowDirection(country, dxy);
     if (direction === 'neutral') return;
 
+    const MIN_FLOW_MAGNITUDE = 3; // Bỏ qua flows nhỏ để tránh quá tải
     const magnitude = logic.getFlowMagnitude(country, dxy);
-    if (magnitude < 3) return; // Bỏ qua flows nhỏ để tránh quá tải
+    if (magnitude < MIN_FLOW_MAGNITUDE) return;
 
     const isIn = direction === 'in';
     const color = isIn ? '#00ff88' : '#ff3344';

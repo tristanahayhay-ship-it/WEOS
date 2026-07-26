@@ -76,6 +76,14 @@ function getUsdChange(currency) {
   return ((Math.random() - 0.5) * 0.5).toFixed(2) * 1;
 }
 
+// DXY estimation constants (based on ICE DXY formula weights)
+// EUR: 57.6%, JPY: 13.6%, GBP: 11.9%, CAD: 9.1%, SEK: 4.2%, CHF: 3.6%
+const DXY_BASE = 101.0;
+const EUR_WEIGHT = -30;      // EUR/USD inversely correlated with DXY
+const JPY_WEIGHT = 50;       // JPY strength vs USD baseline
+const EUR_BASELINE = 1.08;   // EUR/USD midpoint baseline
+const JPY_BASELINE = 0.0067; // USD/JPY 100-unit baseline
+
 function getDxyEstimate() {
   // Ước tính DXY từ các cặp tiền chính
   // DXY = 0.576*EUR + 0.136*JPY + 0.119*GBP + 0.091*CAD + 0.042*SEK + 0.036*CHF
@@ -86,18 +94,12 @@ function getDxyEstimate() {
   const r = _forexData.rates;
   if (!r.EUR || !r.JPY) return 101.2;
 
-  const eurUsd = 1 / r.EUR;  // EUR/USD
-  const jpyUsd = r.JPY / 100; // JPY strength
-  const gbpUsd = 1 / r.GBP;
-  const cadUsd = 1 / r.CAD;
-  const sekUsd = 1 / r.SEK;
-  const chfUsd = 1 / r.CHF;
+  const eurUsd = 1 / r.EUR;   // EUR/USD rate
+  const jpyUsd = r.JPY / 100; // Normalize JPY per 100 units
 
-  // Simplified DXY formula (index base ~100 means these are relative)
-  // Just use deviation from expected values
-  const baseDxy = 101.0;
-  const deviation = (eurUsd - 1.08) * (-30) + (jpyUsd - 0.0067) * 50;
-  return Math.max(85, Math.min(115, baseDxy + deviation));
+  // Simplified DXY: deviation from expected baseline using dominant EUR and JPY components
+  const deviation = (eurUsd - EUR_BASELINE) * EUR_WEIGHT + (jpyUsd - JPY_BASELINE) * JPY_WEIGHT;
+  return Math.max(85, Math.min(115, DXY_BASE + deviation));
 }
 
 function startForexAutoUpdate(intervalMs) {

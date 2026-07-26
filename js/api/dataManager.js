@@ -68,8 +68,13 @@ const DATA_MANAGER = {
       newDxy = window.MOCK_DATA ? window.MOCK_DATA.markets.dxy.value : 101.2;
     }
 
+  // DXY smoothing constants (exponential moving average)
+  // Keeps 70% of previous value + 30% of new estimate for stability
+  const DXY_PREV_WEIGHT = 0.7;
+  const DXY_NEW_WEIGHT  = 0.3;
+
     // Smoothing - không để DXY nhảy quá nhiều
-    this._state.dxy = (this._state.dxy * 0.7 + newDxy * 0.3);
+    this._state.dxy = (this._state.dxy * DXY_PREV_WEIGHT + newDxy * DXY_NEW_WEIGHT);
     return this._state.dxy;
   },
 
