@@ -87,7 +87,7 @@ function updateArcsForZoom(zoomLevel) {
     if (currentCountry) {
       const detailArcs = getCountryDetailArcs(
         currentCountry,
-        window.DATA_MANAGER ? window.DATA_MANAGER.getDxy() : DEFAULT_DXY_INDEX
+        window.DATA_MANAGER?.getDxy?.() ?? DEFAULT_DXY_INDEX
       );
       const globalArcs = window.FLOW_ARCS ? window.FLOW_ARCS.getCurrentArcs() : [];
       globe.arcsData([...globalArcs, ...detailArcs]);
@@ -269,13 +269,13 @@ function getFinancialCenters(country) {
       lng: country.lng + getDeterministicOffset(country, 'lng'),
       type: 'stock',
       importance: 4,
-      description: `GDP: $${country.gdpUSD}B`,
+      description: `GDP: $${country.gdpUSD ?? 'N/A'}B`,
     }
   ];
 }
 
 function getDeterministicOffset(country, axis) {
-  const code = (country && country.code) || 'XX';
+  const code = country?.code ?? 'XX';
   const seed = `${code}:${axis}`;
   let hash = 0;
   for (let i = 0; i < seed.length; i += 1) {

@@ -154,6 +154,7 @@ function applyCountryPolygons(globe, geoJson) {
     })
     .polygonSideColor(() => 'rgba(0,0,0,0.2)')
     .polygonStrokeColor(() => '#223344')
+    // Flat altitude để giảm animation/geometry load, giúp mượt hơn trên thiết bị yếu
     .polygonAltitude(() => 0.001)
     .polygonLabel(feat => {
       const code = getFeatureCode(feat);
