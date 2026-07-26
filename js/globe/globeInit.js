@@ -9,6 +9,9 @@ let _flowMap = {};
 let _geoJsonData = null;
 let _pointsData = [];
 let _isGlobeView = true;
+const MAX_PIXEL_RATIO = 1.5;
+const POLYGON_LOAD_DELAY_MS = 2000;
+const AUTO_ROTATE_SPEED = 0.2;
 
 // --- Tạo points cho thủ đô ---
 function buildCapitalPoints(dxy) {
@@ -39,20 +42,6 @@ async function initGlobe(containerId) {
     return null;
   }
 
-  setLoadingStatus('Đang tải bản đồ địa lý...', 40);
-
-  // Lấy GeoJSON cho polygons (countries)
-  let geoJson = null;
-  try {
-    const res = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson');
-    geoJson = await res.json();
-    _geoJsonData = geoJson;
-    setLoadingStatus('Đã tải bản đồ 195 quốc gia...', 60);
-  } catch(e) {
-    console.warn('WEOS: Could not load GeoJSON, using simple globe', e);
-    setLoadingStatus('Dùng chế độ globe đơn giản...', 60);
-  }
-
   setLoadingStatus('Khởi tạo Globe 3D...', 70);
 
   _flowMap = window.COUNTRY_COLORS
@@ -68,15 +57,20 @@ async function initGlobe(containerId) {
   // --- Tạo Globe instance ---
   const globe = Globe()
     .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
-    .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
     .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
     // Arcs - mạch máu dòng tiền
     .arcsData(initialArcs)
-    .arcColor(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcColor(d) : '#00ff88')
-    .arcAltitude(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcAltitude(d) : 0.1)
-    .arcStroke(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcStroke(d) : 0.4)
-    .arcDashLength(0.25)
-    .arcDashGap(0.75)
+    .arcColor(d => {
+      if (d && d.isDetailArc && d.color) return d.color;
+      const alpha = Math.max(0.3, Math.min(0.8, (d?.magnitude || 5) / 10));
+      return d && d.flowType === 'in'
+        ? `rgba(0,255,136,${alpha})`
+        : `rgba(255,51,68,${alpha})`;
+    })
+    .arcAltitude(d => Math.max(0.1, Math.min((d?.magnitude || 5) * 0.025, 0.35)))
+    .arcStroke(d => Math.max(0.15, Math.min((d?.magnitude || 5) * 0.05, 0.5)))
+    .arcDashLength(0.6)
+    .arcDashGap(0.4)
     .arcDashAnimateTime(d => window.FLOW_ARCS ? window.FLOW_ARCS.getArcDashAnimateTime(d) : 2000)
     .arcLabel(d => `<div class="arc-tooltip">${d.label || ''}</div>`)
     // Points tại thủ đô
@@ -104,48 +98,9 @@ async function initGlobe(containerId) {
     })
     (container);
 
-  // Thêm country polygons nếu có GeoJSON
-  if (geoJson) {
-    globe
-      .polygonsData(geoJson.features || [])
-      .polygonCapColor(feat => {
-        const code = getFeatureCode(feat);
-        if (!code || typeof COUNTRY_MAP === 'undefined') return 'rgba(30,40,80,0.6)';
-        const c = COUNTRY_MAP[code];
-        if (!c) return 'rgba(30,40,80,0.6)';
-        const dir = _flowMap[code] || 'neutral';
-        if (dir === 'in')  return 'rgba(0,60,30,0.7)';
-        if (dir === 'out') return 'rgba(60,10,10,0.7)';
-        // Tier color
-        const tiers = {1:'rgba(20,50,110,0.7)',2:'rgba(15,80,45,0.7)',3:'rgba(90,70,15,0.7)',4:'rgba(80,15,15,0.7)'};
-        return tiers[c.gdpTier] || 'rgba(30,40,80,0.6)';
-      })
-      .polygonSideColor(() => 'rgba(0,0,0,0.2)')
-      .polygonStrokeColor(() => '#223344')
-      .polygonAltitude(feat => {
-        const code = getFeatureCode(feat);
-        const c = code && COUNTRY_MAP ? COUNTRY_MAP[code] : null;
-        if (!c) return 0.001;
-        return c.gdpTier === 1 ? 0.004 : 0.001;
-      })
-      .polygonLabel(feat => {
-        const code = getFeatureCode(feat);
-        const c = code && COUNTRY_MAP ? COUNTRY_MAP[code] : null;
-        if (!c) return '';
-        return `<div class="poly-tooltip"><strong>${c.flag} ${c.name}</strong><br>GDP: $${(c.gdpUSD/1000).toFixed(1)}T | Vàng: ${c.goldReserves}t</div>`;
-      })
-      .onPolygonClick(feat => {
-        const code = getFeatureCode(feat);
-        const c = code && COUNTRY_MAP ? COUNTRY_MAP[code] : null;
-        if (c && window.COUNTRY_POPUP) {
-          window.COUNTRY_POPUP.showCountryPopup(c, _currentDxy);
-        }
-      });
-  }
-
   // --- Globe settings ---
   globe.controls().autoRotate = true;
-  globe.controls().autoRotateSpeed = 0.3;
+  globe.controls().autoRotateSpeed = AUTO_ROTATE_SPEED;
   globe.controls().enableDamping = true;
   globe.controls().dampingFactor = 0.05;
 
@@ -155,9 +110,65 @@ async function initGlobe(containerId) {
   }
 
   _globe = globe;
+  // Tối ưu renderer
+  try {
+    const renderer = globe.renderer();
+    if (renderer) {
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
+      renderer.shadowMap.enabled = false;
+    }
+  } catch (e) {}
+
+  // Lazy load polygons để giảm giật lúc khởi tạo
+  setTimeout(async () => {
+    if (!_globe) return;
+    setLoadingStatus('Đang tải bản đồ địa lý...', 80);
+    try {
+      const res = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson');
+      const geoJson = await res.json();
+      _geoJsonData = geoJson;
+      applyCountryPolygons(_globe, geoJson);
+    } catch (e) {
+      console.warn('WEOS: Could not lazy-load GeoJSON polygons', e);
+    }
+  }, POLYGON_LOAD_DELAY_MS);
 
   setLoadingStatus('Globe sẵn sàng!', 90);
   return globe;
+}
+
+function applyCountryPolygons(globe, geoJson) {
+  if (!globe || !geoJson) return;
+  globe
+    .polygonsData(geoJson.features || [])
+    .polygonCapColor(feat => {
+      const code = getFeatureCode(feat);
+      if (!code || typeof COUNTRY_MAP === 'undefined') return 'rgba(30,40,80,0.6)';
+      const c = COUNTRY_MAP[code];
+      if (!c) return 'rgba(30,40,80,0.6)';
+      const dir = _flowMap[code] || 'neutral';
+      if (dir === 'in') return 'rgba(0,60,30,0.7)';
+      if (dir === 'out') return 'rgba(60,10,10,0.7)';
+      const tiers = { 1: 'rgba(20,50,110,0.7)', 2: 'rgba(15,80,45,0.7)', 3: 'rgba(90,70,15,0.7)', 4: 'rgba(80,15,15,0.7)' };
+      return tiers[c.gdpTier] || 'rgba(30,40,80,0.6)';
+    })
+    .polygonSideColor(() => 'rgba(0,0,0,0.2)')
+    .polygonStrokeColor(() => '#223344')
+    // Flat altitude để giảm animation/geometry load, giúp mượt hơn trên thiết bị yếu
+    .polygonAltitude(() => 0.001)
+    .polygonLabel(feat => {
+      const code = getFeatureCode(feat);
+      const c = code && COUNTRY_MAP ? COUNTRY_MAP[code] : null;
+      if (!c) return '';
+      return `<div class="poly-tooltip"><strong>${c.flag} ${c.name}</strong><br>GDP: $${(c.gdpUSD/1000).toFixed(1)}T | Vàng: ${c.goldReserves}t</div>`;
+    })
+    .onPolygonClick(feat => {
+      const code = getFeatureCode(feat);
+      const c = code && COUNTRY_MAP ? COUNTRY_MAP[code] : null;
+      if (c && window.COUNTRY_POPUP) {
+        window.COUNTRY_POPUP.showCountryPopup(c, _currentDxy);
+      }
+    });
 }
 
 // --- Helper lấy country code từ GeoJSON feature ---

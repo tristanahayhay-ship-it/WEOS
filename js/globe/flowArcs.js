@@ -5,6 +5,10 @@
 
 let _currentArcs = [];
 let _arcUpdateTimer = null;
+// Hạ ngưỡng để hiện thêm quốc gia có dòng vốn nhỏ, tăng độ phủ arc toàn cầu
+const MIN_FLOW_MAGNITUDE = 2;
+const MAX_VISIBLE_ARCS = 150;
+const ARC_UPDATE_INTERVAL_MS = 8000;
 
 // --- Tạo arcs từ nhóm flow ---
 function buildGroupArcs(flowGroup, dxy, existingCountries) {
@@ -80,12 +84,11 @@ function buildCountryArcs(dxy) {
     if (direction === 'neutral') return;
 
     // Tăng ngưỡng lọc để chỉ hiển thị các nước dòng tiền mạnh
-    const MIN_FLOW_MAGNITUDE = 5;
     const magnitude = logic.getFlowMagnitude(country, dxy);
     if (magnitude < MIN_FLOW_MAGNITUDE) return;
 
     const isIn = direction === 'in';
-    const color = isIn ? '#00ff88' : '#ff3344';
+    const color = isIn ? 'rgba(0,255,136,0.6)' : 'rgba(255,51,68,0.6)';
 
     const jitter = 0.3;
     arcs.push({
@@ -142,8 +145,8 @@ function calculateFlowArcs(dxy) {
   // Sắp xếp theo magnitude giảm dần
   allArcs.sort((a, b) => b.magnitude - a.magnitude);
 
-  // Giới hạn tối đa 60 arcs - đủ đẹp mà không che địa cầu
-  return allArcs.slice(0, 60);
+  // Giới hạn tối đa 150 arcs để đủ thấy toàn cầu
+  return allArcs.slice(0, MAX_VISIBLE_ARCS);
 }
 
 // --- Get current arcs ---
@@ -181,7 +184,7 @@ function startArcAutoUpdate(getGlobeInstance, getDxy) {
     const globe = getGlobeInstance ? getGlobeInstance() : null;
     const dxy   = getDxy ? getDxy() : 101;
     updateFlowArcs(dxy, globe);
-  }, 5000);
+  }, ARC_UPDATE_INTERVAL_MS);
 }
 
 function stopArcAutoUpdate() {
@@ -193,13 +196,12 @@ function stopArcAutoUpdate() {
 
 // Màu arc theo flowType
 function getArcColor(arc) {
-  return arc.color || (arc.flowType === 'in' ? '#00ff88' : '#ff3344');
+  return arc.color || (arc.flowType === 'in' ? 'rgba(0,255,136,0.6)' : 'rgba(255,51,68,0.6)');
 }
 
 // Độ cao arc - thấp, cong nhẹ như airline routes
 function getArcAltitude(arc) {
-  // magnitude 5-10 → altitude 0.1-0.2 (thấp, không bay quá cao)
-  return Math.max(0.08, Math.min((arc.magnitude || 5) * 0.018, 0.22));
+  return Math.max(0.1, Math.min((arc.magnitude || 5) * 0.025, 0.35));
 }
 
 // Độ dày arc - mỏng như sợi chỉ
