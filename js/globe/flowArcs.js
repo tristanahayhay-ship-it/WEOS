@@ -1,74 +1,17 @@
 /* =============================================
    WEOS - flowArcs.js
-   Tính toán và tạo animated arc lines (mạch máu dòng tiền)
+   Dòng tiền = mạch máu địa cầu
    ============================================= */
 
 let _currentArcs = [];
 let _arcUpdateTimer = null;
-// Hạ ngưỡng để hiện thêm quốc gia có dòng vốn nhỏ, tăng độ phủ arc toàn cầu
-const MIN_FLOW_MAGNITUDE = 2;
-const MAX_VISIBLE_ARCS = 150;
-const ARC_UPDATE_INTERVAL_MS = 8000;
 
-// --- Tạo arcs từ nhóm flow ---
-function buildGroupArcs(flowGroup, dxy, existingCountries) {
-  const arcs = [];
-  const logic = window.USD_LOGIC;
-  if (!logic || !existingCountries) return arcs;
+// Ngưỡng thấp để hiện đủ 195 nước
+const MIN_FLOW_MAGNITUDE = 1;
+const MAX_VISIBLE_ARCS = 195;
+const ARC_UPDATE_INTERVAL_MS = 10000;
 
-  // Map group name -> list of country codes
-  function resolveGroup(groupId) {
-    const groups = logic.COUNTRY_GROUPS;
-    if (groups[groupId]) return groups[groupId];
-    if (typeof COUNTRY_MAP !== 'undefined' && COUNTRY_MAP[groupId]) return [groupId];
-    if (groupId.includes(',')) return groupId.split(',').map(s => s.trim());
-    return [];
-  }
-
-  const flowDefs = dxy >= 104
-    ? [...logic.USD_STRONG_FLOWS.inflows, ...logic.USD_STRONG_FLOWS.outflows]
-    : dxy < 100
-      ? [...logic.USD_WEAK_FLOWS.inflows, ...logic.USD_WEAK_FLOWS.outflows]
-      : [...logic.USD_NEUTRAL_FLOWS.inflows, ...logic.USD_NEUTRAL_FLOWS.outflows];
-
-  flowDefs.forEach(flowDef => {
-    const fromCodes = resolveGroup(flowDef.from);
-    const toCodes   = resolveGroup(flowDef.to);
-
-    // Giảm số lượng: chỉ lấy 3 nước từ mỗi group, 1 đích
-    fromCodes.slice(0, 3).forEach(fromCode => {
-      const fromCountry = COUNTRY_MAP[fromCode];
-      if (!fromCountry || !fromCountry.lat) return;
-
-      toCodes.slice(0, 1).forEach(toCode => {
-        const toCountry = COUNTRY_MAP[toCode];
-        if (!toCountry || !toCountry.lat) return;
-        if (fromCode === toCode) return;
-
-        const magnitude = flowDef.magnitude + (Math.random() - 0.5);
-        const isInflow = flowDef.color === '#00ff88';
-
-        arcs.push({
-          startLat: fromCountry.lat + (Math.random() - 0.5) * 2,
-          startLng: fromCountry.lng + (Math.random() - 0.5) * 2,
-          endLat:   toCountry.lat,
-          endLng:   toCountry.lng,
-          flowType: isInflow ? 'in' : 'out',
-          magnitude: Math.max(1, Math.min(magnitude * 0.4, 4)),
-          asset:     flowDef.asset,
-          fromCode,
-          toCode,
-          label: `${fromCountry.name} → ${toCountry.name}: ${flowDef.asset}`,
-          color: flowDef.color,
-        });
-      });
-    });
-  });
-
-  return arcs;
-}
-
-// --- Arc chính: từng quốc gia → Washington DC ---
+// --- Tính arc cho từng quốc gia → Washington DC ---
 function buildCountryArcs(dxy) {
   const arcs = [];
   const logic = window.USD_LOGIC;
@@ -83,14 +26,20 @@ function buildCountryArcs(dxy) {
     const direction = logic.getCountryFlowDirection(country, dxy);
     if (direction === 'neutral') return;
 
-    // Tăng ngưỡng lọc để chỉ hiển thị các nước dòng tiền mạnh
-    const magnitude = logic.getFlowMagnitude(country, dxy);
-    if (magnitude < MIN_FLOW_MAGNITUDE) return;
-
+    const magnitude = Math.max(MIN_FLOW_MAGNITUDE, logic.getFlowMagnitude(country, dxy));
     const isIn = direction === 'in';
-    const color = isIn ? 'rgba(0,255,136,0.6)' : 'rgba(255,51,68,0.6)';
 
-    const jitter = 0.3;
+    // Alpha theo GDP tier: nước lớn đậm hơn, nước nhỏ mờ hơn
+    const alpha = country.gdpTier === 1 ? 0.75
+                : country.gdpTier === 2 ? 0.6
+                : country.gdpTier === 3 ? 0.45
+                : 0.3;
+
+    const color = isIn
+      ? `rgba(0,255,136,${alpha})`
+      : `rgba(255,51,68,${alpha})`;
+
+    const jitter = 0.4;
     arcs.push({
       startLat: isIn ? country.lat + (Math.random()-0.5)*jitter : US_LAT,
       startLng: isIn ? country.lng + (Math.random()-0.5)*jitter : US_LNG,
@@ -98,55 +47,21 @@ function buildCountryArcs(dxy) {
       endLng:   isIn ? US_LNG : country.lng + (Math.random()-0.5)*jitter,
       flowType:  direction,
       magnitude: magnitude,
-      asset:     logic.getSafeHavenAssets(dxy)[0],
-      fromCode:  isIn ? country.code : 'US',
-      toCode:    isIn ? 'US' : country.code,
-      country:   country.code,
+      gdpTier:   country.gdpTier,
       color:     color,
-      label:     `${country.name} ${isIn ? '→ Hoa Kỳ' : '← Hoa Kỳ'}: ${getFlowAssetLabel(country, dxy, direction)}`,
+      country:   country.code,
+      label: `${country.flag || ''} ${country.name} ${isIn ? '→' : '←'} Hoa Kỳ`,
     });
   });
 
   return arcs;
 }
 
-// --- Label asset cho arc ---
-function getFlowAssetLabel(country, dxy, direction) {
-  const logic = window.USD_LOGIC;
-  if (!logic) return 'Vốn';
-
-  if (direction === 'out') {
-    if (country.gdpTier >= 3) return 'EM Bonds/Stocks';
-    return 'Safe Assets';
-  }
-
-  const assets = logic.getSafeHavenAssets(dxy);
-  if (window.COUNTRY_GROUPS && window.COUNTRY_GROUPS.OIL_NATIONS &&
-      window.COUNTRY_GROUPS.OIL_NATIONS.includes(country.code)) return 'Dầu thô';
-  if (window.COUNTRY_GROUPS && window.COUNTRY_GROUPS.GOLD_CENTERS &&
-      window.COUNTRY_GROUPS.GOLD_CENTERS.includes(country.code)) return 'Vàng';
-  if (window.COUNTRY_GROUPS && window.COUNTRY_GROUPS.BTC_NODES &&
-      window.COUNTRY_GROUPS.BTC_NODES.includes(country.code)) return 'Bitcoin';
-  return assets[0] || 'EM Stocks';
-}
-
-// Expose COUNTRY_GROUPS globally
-if (typeof window.COUNTRY_GROUPS === 'undefined' && window.USD_LOGIC) {
-  window.COUNTRY_GROUPS = window.USD_LOGIC.COUNTRY_GROUPS;
-}
-
 // --- Tính toán tất cả arcs ---
 function calculateFlowArcs(dxy) {
-  const countryArcs = buildCountryArcs(dxy);
-  const groupArcs   = buildGroupArcs({}, dxy, typeof COUNTRY_MAP !== 'undefined' ? COUNTRY_MAP : {});
-
-  const allArcs = [...countryArcs, ...groupArcs];
-
-  // Sắp xếp theo magnitude giảm dần
-  allArcs.sort((a, b) => b.magnitude - a.magnitude);
-
-  // Giới hạn tối đa 150 arcs để đủ thấy toàn cầu
-  return allArcs.slice(0, MAX_VISIBLE_ARCS);
+  const arcs = buildCountryArcs(dxy);
+  arcs.sort((a, b) => b.magnitude - a.magnitude);
+  return arcs.slice(0, MAX_VISIBLE_ARCS);
 }
 
 // --- Get current arcs ---
@@ -160,24 +75,21 @@ function updateFlowArcs(dxy, globeInstance) {
 
   const inCount  = _currentArcs.filter(a => a.flowType === 'in').length;
   const outCount = _currentArcs.filter(a => a.flowType === 'out').length;
-  const inEl  = document.getElementById('arc-in-count');
-  const outEl = document.getElementById('arc-out-count');
-  if (inEl)  inEl.textContent  = `${inCount} ↑ VÀO`;
-  if (outEl) outEl.textContent = `${outCount} ↓ RA`;
 
-  const inflowCountEl  = document.getElementById('inflow-count');
-  const outflowCountEl = document.getElementById('outflow-count');
-  if (inflowCountEl)  inflowCountEl.textContent  = inCount;
-  if (outflowCountEl) outflowCountEl.textContent = outCount;
+  ['arc-in-count','inflow-count'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = id === 'arc-in-count' ? `${inCount} ↑ VÀO` : inCount;
+  });
+  ['arc-out-count','outflow-count'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = id === 'arc-out-count' ? `${outCount} ↓ RA` : outCount;
+  });
 
-  if (globeInstance) {
-    globeInstance.arcsData(_currentArcs);
-  }
-
+  if (globeInstance) globeInstance.arcsData(_currentArcs);
   return _currentArcs;
 }
 
-// --- Auto-update arcs ---
+// --- Auto-update ---
 function startArcAutoUpdate(getGlobeInstance, getDxy) {
   if (_arcUpdateTimer) clearInterval(_arcUpdateTimer);
   _arcUpdateTimer = setInterval(() => {
@@ -188,32 +100,32 @@ function startArcAutoUpdate(getGlobeInstance, getDxy) {
 }
 
 function stopArcAutoUpdate() {
-  if (_arcUpdateTimer) {
-    clearInterval(_arcUpdateTimer);
-    _arcUpdateTimer = null;
-  }
+  if (_arcUpdateTimer) { clearInterval(_arcUpdateTimer); _arcUpdateTimer = null; }
 }
 
-// Màu arc theo flowType
+// --- Helpers cho globeInit ---
 function getArcColor(arc) {
-  return arc.color || (arc.flowType === 'in' ? 'rgba(0,255,136,0.6)' : 'rgba(255,51,68,0.6)');
+  return arc.color || (arc.flowType === 'in' ? 'rgba(0,255,136,0.5)' : 'rgba(255,51,68,0.5)');
 }
 
-// Độ cao arc - thấp, cong nhẹ như airline routes
+// Cong cao giống airline routes — đủ để nhìn thấy đường cong rõ
 function getArcAltitude(arc) {
-  return Math.max(0.1, Math.min((arc.magnitude || 5) * 0.025, 0.35));
+  const tier = arc.gdpTier || 3;
+  // G7 bay cao hơn (dòng tiền lớn), frontier thấp hơn
+  const base = tier === 1 ? 0.4 : tier === 2 ? 0.3 : tier === 3 ? 0.2 : 0.15;
+  return base;
 }
 
-// Độ dày arc - mỏng như sợi chỉ
+// Rất mỏng — stroke theo tier
 function getArcStroke(arc) {
-  // magnitude 5-10 → stroke 0.25-0.55 (rất mỏng)
-  return Math.max(0.15, Math.min((arc.magnitude || 5) * 0.055, 0.6));
+  const tier = arc.gdpTier || 3;
+  return tier === 1 ? 0.5 : tier === 2 ? 0.35 : tier === 3 ? 0.25 : 0.15;
 }
 
-// Tốc độ animate (ms)
+// Tốc độ: nước lớn chảy nhanh
 function getArcDashAnimateTime(arc) {
-  const speed = arc.magnitude || 5;
-  return Math.round(4000 / (speed / 5));
+  const tier = arc.gdpTier || 3;
+  return tier === 1 ? 1500 : tier === 2 ? 2000 : tier === 3 ? 2800 : 3500;
 }
 
 window.FLOW_ARCS = {
