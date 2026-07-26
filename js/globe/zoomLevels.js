@@ -87,7 +87,7 @@ function updateArcsForZoom(zoomLevel) {
     if (currentCountry) {
       const detailArcs = getCountryDetailArcs(
         currentCountry,
-        window.DATA_MANAGER?.getDxy?.() ?? DEFAULT_DXY_INDEX
+        getCurrentDxyOrDefault()
       );
       const globalArcs = window.FLOW_ARCS ? window.FLOW_ARCS.getCurrentArcs() : [];
       globe.arcsData([...globalArcs, ...detailArcs]);
@@ -156,6 +156,7 @@ function getCountryDetailArcs(country, dxy) {
 
 // Trung tâm tài chính / kinh tế chính của quốc gia
 function getFinancialCenters(country) {
+  if (!country || !Number.isFinite(country.lat) || !Number.isFinite(country.lng)) return [];
   const CENTERS = {
     US: [
       { name: 'NYSE - Phố Wall', lat: 40.7069, lng: -74.0089, type: 'stock', importance: 10, description: 'Sàn CK lớn nhất TG' },
@@ -269,7 +270,7 @@ function getFinancialCenters(country) {
       lng: country.lng + getDeterministicOffset(country, 'lng'),
       type: 'stock',
       importance: 4,
-      description: `GDP: $${country.gdpUSD ?? 'N/A'}B`,
+      description: country.gdpUSD != null ? `GDP: $${country.gdpUSD}B` : 'GDP: N/A',
     }
   ];
 }
@@ -278,11 +279,16 @@ function getDeterministicOffset(country, axis) {
   const code = country?.code ?? 'XX';
   const seed = `${code}:${axis}`;
   let hash = 0;
-  for (let i = 0; i < seed.length; i += 1) {
+  for (let i = 0; i < seed.length; i++) {
     hash = ((hash << 5) - hash) + seed.charCodeAt(i);
     hash |= 0;
   }
   return ((Math.abs(hash) % 3000) / 1000) - 1.5;
+}
+
+function getCurrentDxyOrDefault() {
+  const dxy = window.DATA_MANAGER?.getDxy?.();
+  return Number.isFinite(dxy) && dxy > 0 ? dxy : DEFAULT_DXY_INDEX;
 }
 
 window.ZOOM_LEVELS_MGR = {

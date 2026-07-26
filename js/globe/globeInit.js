@@ -114,7 +114,7 @@ async function initGlobe(containerId) {
   try {
     const renderer = globe.renderer();
     if (renderer) {
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
       renderer.shadowMap.enabled = false;
     }
   } catch (e) {}
