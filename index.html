@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WEOS - Bản Đồ Kinh Tế Thế Giới</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- globe.gl CDN -->
+  <script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
+  <!-- three.js CDN (included with globe.gl but explicit for extras) -->
+  <script src="https://unpkg.com/three@0.167.1/build/three.min.js"></script>
+  <!-- d3.js CDN -->
+  <script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script>
+
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/panels.css">
+</head>
+<body>
+  <!-- Globe container full screen -->
+  <div id="globe-container"></div>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-logo">WEOS</div>
+      <div class="loading-sub">World Economic Operating System</div>
+      <div class="loading-bar-wrap">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+      <div class="loading-status" id="loading-status">Đang khởi tạo hệ thống...</div>
+    </div>
+  </div>
+
+  <!-- Dashboard panel top-right -->
+  <div id="dashboard">
+    <div class="panel-title">
+      <span class="pulse-dot"></span>
+      WEOS <span class="title-sub">LIVE</span>
+    </div>
+    <div id="usd-meter">
+      <div class="meter-label">📊 CHỈ SỐ DXY (USD)</div>
+      <div id="dxy-value" class="dxy-number">--</div>
+      <div id="dxy-gauge" class="dxy-gauge">
+        <div class="gauge-track">
+          <div id="gauge-fill" class="gauge-fill"></div>
+        </div>
+        <div class="gauge-labels">
+          <span>YẾU</span><span>TRUNG TÍNH</span><span>MẠNH</span>
+        </div>
+      </div>
+      <div id="usd-status" class="usd-status-badge">Đang tải...</div>
+    </div>
+    <div id="global-indicators">
+      <div class="indicators-title">📡 CHỈ SỐ TOÀN CẦU</div>
+      <div class="indicator-row" id="ind-gold">
+        <span class="ind-icon">🥇</span>
+        <span class="ind-name">Vàng</span>
+        <span class="ind-value" id="val-gold">--</span>
+        <span class="ind-change" id="chg-gold">--</span>
+      </div>
+      <div class="indicator-row" id="ind-btc">
+        <span class="ind-icon">₿</span>
+        <span class="ind-name">Bitcoin</span>
+        <span class="ind-value" id="val-btc">--</span>
+        <span class="ind-change" id="chg-btc">--</span>
+      </div>
+      <div class="indicator-row" id="ind-oil">
+        <span class="ind-icon">🛢️</span>
+        <span class="ind-name">Dầu WTI</span>
+        <span class="ind-value" id="val-oil">--</span>
+        <span class="ind-change" id="chg-oil">--</span>
+      </div>
+      <div class="indicator-row" id="ind-eth">
+        <span class="ind-icon">Ξ</span>
+        <span class="ind-name">Ethereum</span>
+        <span class="ind-value" id="val-eth">--</span>
+        <span class="ind-change" id="chg-eth">--</span>
+      </div>
+      <div class="indicator-row" id="ind-sp500">
+        <span class="ind-icon">📈</span>
+        <span class="ind-name">S&amp;P 500</span>
+        <span class="ind-value" id="val-sp500">--</span>
+        <span class="ind-change" id="chg-sp500">--</span>
+      </div>
+    </div>
+    <div id="flow-status">
+      <div class="flow-title">🩸 DÒNG TIỀN ĐANG CHẢY</div>
+      <div id="flow-direction" class="flow-direction-text">Đang phân tích...</div>
+      <div class="flow-stats">
+        <div class="flow-stat">
+          <span class="flow-in-icon">●</span>
+          <span id="inflow-count">0</span> nước nhận
+        </div>
+        <div class="flow-stat">
+          <span class="flow-out-icon">●</span>
+          <span id="outflow-count">0</span> nước tháo
+        </div>
+      </div>
+      <div class="last-update">Cập nhật: <span id="last-update-time">--</span></div>
+    </div>
+  </div>
+
+  <!-- Country popup (hidden by default) -->
+  <div id="country-popup" class="hidden">
+    <div id="popup-close" class="popup-close" onclick="closeCountryPopup()">✕</div>
+    <div id="popup-content"></div>
+  </div>
+
+  <!-- Bottom controls -->
+  <div id="controls">
+    <button id="btn-globe" class="ctrl-btn active" onclick="setGlobeView()">🌍 Địa Cầu</button>
+    <button id="btn-flat" class="ctrl-btn" onclick="setFlatView()">🗺️ Bản Đồ Phẳng</button>
+    <div id="usd-toggle">
+      <span class="toggle-label weak">USD YẾU</span>
+      <input type="range" id="usd-slider" min="85" max="115" value="100" oninput="onDxySlider(this.value)">
+      <span class="toggle-label strong">USD MẠNH</span>
+    </div>
+    <div id="slider-val">DXY: <span id="slider-dxy-display">100</span></div>
+  </div>
+
+  <!-- Legend -->
+  <div id="legend">
+    <div class="legend-title">DÒNG TIỀN</div>
+    <div class="legend-item green">● Tiền VÀO (Đầu tư)</div>
+    <div class="legend-item red">● Tiền RA (Tháo chạy)</div>
+    <div class="legend-sep"></div>
+    <div class="legend-title">SỨC MẠNH KINH TẾ</div>
+    <div class="legend-item tier1">■ G7 / Tier 1</div>
+    <div class="legend-item tier2">■ Phát triển / BRICS</div>
+    <div class="legend-item tier3">■ Mới nổi</div>
+    <div class="legend-item tier4">■ Biên giới</div>
+  </div>
+
+  <!-- Info tooltip on hover -->
+  <div id="hover-tooltip" class="hidden"></div>
+
+  <!-- Arc stats counter -->
+  <div id="arc-stats">
+    <span class="arc-stat-in" id="arc-in-count">0 ↑</span>
+    <span class="arc-stat-out" id="arc-out-count">0 ↓</span>
+  </div>
+
+  <!-- JS modules -->
+  <script src="js/data/countries.js"></script>
+  <script src="js/data/usdLogic.js"></script>
+  <script src="js/data/mockData.js"></script>
+  <script src="js/globe/countryColors.js"></script>
+  <script src="js/globe/flowArcs.js"></script>
+  <script src="js/globe/zoomLevels.js"></script>
+  <script src="js/globe/globeInit.js"></script>
+  <script src="js/api/forex.js"></script>
+  <script src="js/api/crypto.js"></script>
+  <script src="js/api/commodities.js"></script>
+  <script src="js/api/dataManager.js"></script>
+  <script src="js/ui/usdMeter.js"></script>
+  <script src="js/ui/dashboard.js"></script>
+  <script src="js/ui/countryPopup.js"></script>
+  <script src="js/ui/controls.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
