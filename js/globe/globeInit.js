@@ -11,6 +11,7 @@ let _pointsData = [];
 let _isGlobeView = true;
 const MAX_PIXEL_RATIO = 1.5;
 const POLYGON_LOAD_DELAY_MS = 2000;
+const AUTO_ROTATE_SPEED = 0.2;
 
 // --- Tạo points cho thủ đô ---
 function buildCapitalPoints(dxy) {
@@ -99,7 +100,7 @@ async function initGlobe(containerId) {
 
   // --- Globe settings ---
   globe.controls().autoRotate = true;
-  globe.controls().autoRotateSpeed = 0.2;
+  globe.controls().autoRotateSpeed = AUTO_ROTATE_SPEED;
   globe.controls().enableDamping = true;
   globe.controls().dampingFactor = 0.05;
 

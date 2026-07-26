@@ -10,7 +10,7 @@ const ZOOM_LEVELS = {
   CITY:    { altitude: 0.3,  label: 'Thành Phố',  description: 'Trung tâm tài chính, khu công nghiệp' },
   MICRO:   { altitude: 0.1,  label: 'Vi Mô',      description: 'Doanh nghiệp, sàn giao dịch, quỹ đầu tư' },
 };
-const DEFAULT_DXY = 101;
+const DEFAULT_DXY_INDEX = 101;
 
 let _currentZoom = 'GLOBAL';
 let _zoomAltitude = 2.5;
@@ -87,7 +87,7 @@ function updateArcsForZoom(zoomLevel) {
     if (currentCountry) {
       const detailArcs = getCountryDetailArcs(
         currentCountry,
-        window.DATA_MANAGER ? window.DATA_MANAGER.getDxy() : DEFAULT_DXY
+        window.DATA_MANAGER ? window.DATA_MANAGER.getDxy() : DEFAULT_DXY_INDEX
       );
       const globalArcs = window.FLOW_ARCS ? window.FLOW_ARCS.getCurrentArcs() : [];
       globe.arcsData([...globalArcs, ...detailArcs]);

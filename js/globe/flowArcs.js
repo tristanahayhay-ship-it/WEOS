@@ -5,6 +5,9 @@
 
 let _currentArcs = [];
 let _arcUpdateTimer = null;
+const MIN_FLOW_MAGNITUDE = 2;
+const MAX_VISIBLE_ARCS = 150;
+const ARC_UPDATE_INTERVAL_MS = 8000;
 
 // --- Tạo arcs từ nhóm flow ---
 function buildGroupArcs(flowGroup, dxy, existingCountries) {
@@ -80,7 +83,6 @@ function buildCountryArcs(dxy) {
     if (direction === 'neutral') return;
 
     // Tăng ngưỡng lọc để chỉ hiển thị các nước dòng tiền mạnh
-    const MIN_FLOW_MAGNITUDE = 2;
     const magnitude = logic.getFlowMagnitude(country, dxy);
     if (magnitude < MIN_FLOW_MAGNITUDE) return;
 
@@ -143,7 +145,7 @@ function calculateFlowArcs(dxy) {
   allArcs.sort((a, b) => b.magnitude - a.magnitude);
 
   // Giới hạn tối đa 150 arcs để đủ thấy toàn cầu
-  return allArcs.slice(0, 150);
+  return allArcs.slice(0, MAX_VISIBLE_ARCS);
 }
 
 // --- Get current arcs ---
@@ -181,7 +183,7 @@ function startArcAutoUpdate(getGlobeInstance, getDxy) {
     const globe = getGlobeInstance ? getGlobeInstance() : null;
     const dxy   = getDxy ? getDxy() : 101;
     updateFlowArcs(dxy, globe);
-  }, 8000);
+  }, ARC_UPDATE_INTERVAL_MS);
 }
 
 function stopArcAutoUpdate() {
