@@ -9,6 +9,8 @@ let _flowMap = {};
 let _geoJsonData = null;
 let _pointsData = [];
 let _isGlobeView = true;
+const MAX_PIXEL_RATIO = 1.5;
+const POLYGON_LOAD_DELAY_MS = 2000;
 
 // --- Tạo points cho thủ đô ---
 function buildCapitalPoints(dxy) {
@@ -111,7 +113,7 @@ async function initGlobe(containerId) {
   try {
     const renderer = globe.renderer();
     if (renderer) {
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
       renderer.shadowMap.enabled = false;
     }
   } catch (e) {}
@@ -128,7 +130,7 @@ async function initGlobe(containerId) {
     } catch (e) {
       console.warn('WEOS: Could not lazy-load GeoJSON polygons', e);
     }
-  }, 2000);
+  }, POLYGON_LOAD_DELAY_MS);
 
   setLoadingStatus('Globe sẵn sàng!', 90);
   return globe;

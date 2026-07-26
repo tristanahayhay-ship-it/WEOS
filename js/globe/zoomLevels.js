@@ -10,6 +10,7 @@ const ZOOM_LEVELS = {
   CITY:    { altitude: 0.3,  label: 'Thành Phố',  description: 'Trung tâm tài chính, khu công nghiệp' },
   MICRO:   { altitude: 0.1,  label: 'Vi Mô',      description: 'Doanh nghiệp, sàn giao dịch, quỹ đầu tư' },
 };
+const DEFAULT_DXY = 101;
 
 let _currentZoom = 'GLOBAL';
 let _zoomAltitude = 2.5;
@@ -86,7 +87,7 @@ function updateArcsForZoom(zoomLevel) {
     if (currentCountry) {
       const detailArcs = getCountryDetailArcs(
         currentCountry,
-        window.DATA_MANAGER ? window.DATA_MANAGER.getDxy() : 101
+        window.DATA_MANAGER ? window.DATA_MANAGER.getDxy() : DEFAULT_DXY
       );
       const globalArcs = window.FLOW_ARCS ? window.FLOW_ARCS.getCurrentArcs() : [];
       globe.arcsData([...globalArcs, ...detailArcs]);
@@ -264,13 +265,24 @@ function getFinancialCenters(country) {
   return CENTERS[country.code] || [
     {
       name: `Trung tâm tài chính ${country.name}`,
-      lat: country.lat + (Math.random() - 0.5) * 3,
-      lng: country.lng + (Math.random() - 0.5) * 3,
+      lat: country.lat + getDeterministicOffset(country, 'lat'),
+      lng: country.lng + getDeterministicOffset(country, 'lng'),
       type: 'stock',
       importance: 4,
       description: `GDP: $${country.gdpUSD}B`,
     }
   ];
+}
+
+function getDeterministicOffset(country, axis) {
+  const code = (country && country.code) || 'XX';
+  const seed = `${code}:${axis}`;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  return ((Math.abs(hash) % 3000) / 1000) - 1.5;
 }
 
 window.ZOOM_LEVELS_MGR = {
