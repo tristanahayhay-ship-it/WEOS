@@ -204,7 +204,7 @@ function getArcColor(arc) {
 
 // Độ cao arc theo magnitude
 function getArcAltitude(arc) {
-  return Math.max(0.1, (arc.magnitude || 5) * 0.02);
+  return Math.max(0.05, (arc.magnitude || 5) * 0.02);
 }
 
 // Độ dày arc theo magnitude
