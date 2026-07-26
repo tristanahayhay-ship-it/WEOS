@@ -5,9 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus Cashflow - Sinh Thể Kinh Tế Vĩ Mô Toàn Cầu</title>
     
-    <!-- DÙNG THƯ VIỆN CLOUDFLARE CHỐNG CHẶN MẠNG VÀ FIX TRUY CẬP TẠI VIỆT NAM -->
-    <script src="https://cloudflare.com"></script>
-    
+<!-- ÉP TẢI THƯ VIỆN QUA CDN UNPKG BẢN KHÔNG BỊ CHẶN VÀ KIỂM TRA ĐỒNG BỘ -->
+<script src="https://unpkg.com" crossorigin="anonymous"></script>
+<script>
+  // Đoạn mã kiểm tra dự phòng nếu trình duyệt gặp lỗi tải chậm
+  window.addEventListener('DOMContentLoaded', () => {
+    if (!window.Globe && typeof Globe === 'undefined') {
+      console.warn("Đang thử tải lại thư viện quả cầu qua nguồn dự phòng...");
+      const scriptBackup = document.createElement('script');
+      scriptBackup.src = "https://jsdelivr.net";
+      document.head.appendChild(scriptBackup);
+    }
+  });
+</script>
+
     <style>
         body { margin: 0; padding: 0; background-color: #00020a; font-family: 'Segoe UI', sans-serif; overflow: hidden; color: #ffffff; }
         #globe-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
