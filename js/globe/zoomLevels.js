@@ -10,7 +10,7 @@ const ZOOM_LEVELS = {
   CITY:    { altitude: 0.3,  label: 'Thành Phố',  description: 'Trung tâm tài chính, khu công nghiệp' },
   MICRO:   { altitude: 0.1,  label: 'Vi Mô',      description: 'Doanh nghiệp, sàn giao dịch, quỹ đầu tư' },
 };
-const DEFAULT_DXY_INDEX = 101;
+const DEFAULT_DXY_VALUE = 101;
 
 let _currentZoom = 'GLOBAL';
 let _zoomAltitude = 2.5;
@@ -237,7 +237,7 @@ function getFinancialCenters(country) {
     ],
     VN: [
       { name: 'TP. Hồ Chí Minh - HoSE', lat: 10.8231, lng: 106.6297, type: 'stock', importance: 7, description: 'Sàn CK lớn nhất VN' },
-      { name: 'Bình Dương - KCN', lat: 11.0686, lng: 106.6297, type: 'industry', importance: 7, description: 'Samsung, Foxconn' },
+      { name: 'Bình Dương - KCN', lat: 11.0686, lng: 106.6522, type: 'industry', importance: 7, description: 'Samsung, Foxconn' },
       { name: 'Hải Phòng - Cảng', lat: 20.8449, lng: 106.6881, type: 'port', importance: 7, description: 'Xuất khẩu điện tử' },
       { name: 'Đà Nẵng', lat: 16.0544, lng: 108.2022, type: 'industry', importance: 5, description: 'Du lịch - Dịch vụ' },
     ],
@@ -288,7 +288,7 @@ function getDeterministicOffset(country, axis) {
 
 function getCurrentDxyOrDefault() {
   const dxy = window.DATA_MANAGER?.getDxy?.();
-  return Number.isFinite(dxy) && dxy > 0 ? dxy : DEFAULT_DXY_INDEX;
+  return Number.isFinite(dxy) && dxy > 0 ? dxy : DEFAULT_DXY_VALUE;
 }
 
 window.ZOOM_LEVELS_MGR = {

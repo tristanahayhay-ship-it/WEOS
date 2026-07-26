@@ -5,6 +5,7 @@
 
 let _currentArcs = [];
 let _arcUpdateTimer = null;
+// Hạ ngưỡng để hiện thêm quốc gia có dòng vốn nhỏ, tăng độ phủ arc toàn cầu
 const MIN_FLOW_MAGNITUDE = 2;
 const MAX_VISIBLE_ARCS = 150;
 const ARC_UPDATE_INTERVAL_MS = 8000;
@@ -83,7 +84,6 @@ function buildCountryArcs(dxy) {
     if (direction === 'neutral') return;
 
     // Tăng ngưỡng lọc để chỉ hiển thị các nước dòng tiền mạnh
-    // Hạ ngưỡng để hiện thêm quốc gia có dòng vốn nhỏ, đảm bảo bao phủ rộng hơn gần đủ 195 nước
     const magnitude = logic.getFlowMagnitude(country, dxy);
     if (magnitude < MIN_FLOW_MAGNITUDE) return;
 
