@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEOS - Hệ Thống Kinh Tế Toàn Cầu</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="ui-panel" class="ui-panel">
+        <div class="header">
+            <h1>WEOS - Bản Đồ Kinh Tế Toàn Cầu</h1>
+            <div class="controls">
+                <button id="view-globe" class="btn active">Chế Độ Cầu</button>
+                <button id="view-flat" class="btn">Chế Độ Phẳng</button>
+                <button id="view-zoom" class="btn">Phóng To Chi Tiết</button>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h2 id="selected-country">Chọn Quốc Gia</h2>
+            <div id="country-info"></div>
+            <div id="money-flow" class="money-flow-chart">
+                <canvas id="flowChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="indicators-panel">
+            <h3>Chỉ Số Kinh Tế USD</h3>
+            <div id="indicators-list" class="indicators-list"></div>
+        </div>
+        
+        <div class="settings-panel">
+            <h3>Cài Đặt</h3>
+            <label>
+                <input type="checkbox" id="toggle-flow" checked>
+                Hiển Thị Dòng Tiền
+            </label>
+            <label>
+                <input type="checkbox" id="toggle-indicators" checked>
+                Hiển Thị Chỉ Số Kinh Tế
+            </label>
+            <label>
+                <input type="checkbox" id="toggle-gold-reserves" checked>
+                Hiển Thị Dự Trữ Vàng
+            </label>
+            <label>
+                Tốc Độ Cập Nhật:
+                <select id="update-speed">
+                    <option value="1000">1 giây</option>
+                    <option value="5000">5 giây</option>
+                    <option value="30000">30 giây</option>
+                    <option value="60000">1 phút</option>
+                </select>
+            </label>
+        </div>
+    </div>
+    
+    <script src="js/data.js"></script>
+    <script src="js/globe.js"></script>
+    <script src="js/economicEngine.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
