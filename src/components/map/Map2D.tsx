@@ -230,7 +230,7 @@ export function Map2D({ onError }: Map2DProps) {
             isSyncingZoomRef.current = false
             return
           }
-          setZoomLevel(normalizedLevel as ZoomLevel)
+          setZoomLevel(normalizedLevel)
         })
         isCreatingMapRef.current = false
       } catch {

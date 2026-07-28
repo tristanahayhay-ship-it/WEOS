@@ -249,7 +249,7 @@ export function Map3D({ onError }: Map3DProps) {
       overlayRef.current = null
       isCreatingRef.current = false
     }
-  }, [layers, onError, setZoomLevel]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [layers, onError, setZoomLevel])
 
   useEffect(() => {
     const map = mapRef.current

@@ -4,6 +4,10 @@ import { alerts, capitalFlows, defaultEntity } from '../data/mockData'
 import type { AlertItem, GeoEntity, MapMode } from '../types'
 import { ZoomLevel } from '../types'
 
+export const FLOW_SPEED_MIN = 0.4
+export const FLOW_SPEED_MAX = 2.5
+export const FLOW_SPEED_STEP = 0.1
+
 interface WEOSState {
   zoomLevel: ZoomLevel
   selectedEntity: GeoEntity | null
@@ -41,7 +45,10 @@ export const useStore = create<WEOSState>((set) => ({
   selectEntity: (entity) => set({ selectedEntity: entity }),
   toggleMapMode: () => set((state) => ({ mapMode: state.mapMode === '2D' ? '3D' : '2D' })),
   setMapMode: (mode) => set({ mapMode: mode }),
-  setFlowSpeed: (speed) => set({ flowSpeed: Math.max(0.4, Math.min(2.5, Number(speed.toFixed(1)))) }),
+  setFlowSpeed: (speed) =>
+    set({
+      flowSpeed: Math.max(FLOW_SPEED_MIN, Math.min(FLOW_SPEED_MAX, Number(speed.toFixed(1)))),
+    }),
   acknowledgeAlert: (id) =>
     set((state) => ({
       alerts: state.alerts.map((alert) => (alert.id === id ? { ...alert, acknowledged: true } : alert)),

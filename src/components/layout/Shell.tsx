@@ -5,7 +5,7 @@ import { Topbar } from './Topbar'
 import { MapContainer } from '../map/MapContainer'
 import { FlowAnimation } from '../map/FlowAnimation'
 import { zoomLevelLabels } from '../../data/mockData'
-import { useStore } from '../../store/useStore'
+import { FLOW_SPEED_MAX, FLOW_SPEED_MIN, useStore } from '../../store/useStore'
 
 export function Shell() {
   const mapMode = useStore((state) => state.mapMode)
@@ -41,8 +41,8 @@ export function Shell() {
             <span>REAL-TIME FLOW ANIMATION</span>
             <input
               type="range"
-              min={4}
-              max={25}
+              min={FLOW_SPEED_MIN * 10}
+              max={FLOW_SPEED_MAX * 10}
               step={1}
               value={Math.round(flowSpeed * 10)}
               aria-label="Flow animation speed"
