@@ -4,6 +4,7 @@ import Footer from './Footer'
 import GlobeEngine from '../globe/GlobeEngine'
 import CountryPanel from '../panels/CountryPanel'
 import { OverlayCanvas, OverlayPanel, OverlayLegend } from '../overlay'
+import { FlowCanvas, FlowPanel } from '../flow'
 import { DebugCanvas } from '../debug'
 import { useDebugStore } from '../../stores/debugStore'
 
@@ -83,6 +84,8 @@ export default function Shell({ children }: ShellProps) {
           <OverlayCanvas />
           <OverlayPanel />
           <OverlayLegend />
+          <FlowCanvas />
+          <FlowPanel />
           <CountryPanel />
           <DebugCanvas />
         </AppErrorBoundary>
