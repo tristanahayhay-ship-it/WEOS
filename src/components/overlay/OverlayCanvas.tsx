@@ -8,6 +8,18 @@ import type { OverlayMetric } from '../../overlays/types'
 import type { CountryEconomicData } from '../../types/country'
 
 /**
+ * Dot radius in canvas pixels for each country marker.
+ */
+const DOT_RADIUS = 3.5
+
+/**
+ * Fraction of Math.min(width, height) used as the projected globe radius.
+ * Must approximate GlobeEngine's sphere rendering area (the globe sphere fills
+ * roughly 84 % of the shorter canvas dimension).
+ */
+const GLOBE_RADIUS_FACTOR = 0.42
+
+/**
  * Convert geographic coordinates to an approximate screen position.
  *
  * The globe is a unit sphere rendered with a Z-rotation of 23.4° (axial tilt)
@@ -64,7 +76,7 @@ function drawDots(
   ctx.clearRect(0, 0, w, h)
 
   const overlay     = OVERLAYS[activeMetric]
-  const globeRadius = Math.min(w, h) * 0.42
+  const globeRadius = Math.min(w, h) * GLOBE_RADIUS_FACTOR
   const cx          = w / 2
   const cy          = h / 2
 
@@ -77,7 +89,7 @@ function drawDots(
     const result = overlayEngine.getColor(overlay, econ)
 
     ctx.beginPath()
-    ctx.arc(pos.x, pos.y, 3.5, 0, Math.PI * 2)
+    ctx.arc(pos.x, pos.y, DOT_RADIUS, 0, Math.PI * 2)
     ctx.fillStyle   = result.color
     ctx.globalAlpha = result.hasData ? 0.82 : 0.35
     ctx.fill()

@@ -1,7 +1,8 @@
 import type { EconomicOverlay, ColorStop } from '../types'
 import type { CountryEconomicData } from '../../types/country'
 
-const BILLION = 1_000
+// GDP values are stored in USD billions; 1 000 B = 1 T
+const TRILLION_THRESHOLD = 1_000
 
 const COLOR_SCALE: ColorStop[] = [
   { position: 0,    color: '#0f172a', label: '< $1 B' },
@@ -32,7 +33,7 @@ export const gdpOverlay: EconomicOverlay = {
 
   formatValue(value: number | null): string {
     if (value === null) return 'No Data'
-    if (value >= BILLION) return `$${(value / BILLION).toFixed(2)} T`
+    if (value >= TRILLION_THRESHOLD) return `$${(value / TRILLION_THRESHOLD).toFixed(2)} T`
     return `$${value.toFixed(1)} B`
   },
 }
