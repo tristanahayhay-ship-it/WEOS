@@ -9,7 +9,7 @@ interface MapRenderBoundaryProps {
   children: ReactNode
 }
 
-const MAP_3D_FALLBACK_MESSAGE = 'Không thể hiển thị 3D, đã chuyển sang bản đồ 2D.'
+const MAP_3D_FALLBACK_MESSAGE = '3D globe unavailable — switched to 2D map.'
 
 interface MapRenderBoundaryState {
   hasError: boolean
@@ -45,9 +45,8 @@ export function MapContainer() {
   const [mapErrorMessage, setMapErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (mapMode === '3D') {
-      setMapErrorMessage(null)
-    }
+    // Clear stale error when the user switches map modes
+    setMapErrorMessage(null)
   }, [mapMode])
 
   const handle3DMapError = () => {
@@ -56,7 +55,7 @@ export function MapContainer() {
   }
 
   const handle2DMapError = () => {
-    setMapErrorMessage('Không thể tải bản đồ toàn cầu. Vui lòng thử lại.')
+    setMapErrorMessage('Basemap unavailable — displaying overlays only.')
   }
 
   return (

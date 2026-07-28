@@ -24,6 +24,12 @@ const DEFAULT_MAP_CENTER: [number, number] = [8, 20]
 const DEFAULT_MAP_ZOOM = 1.2
 const MAP_INIT_TIMEOUT_MS = 1500
 
+/** CARTO dark-matter raster tiles — no API key required, matches WEOS neon theme */
+const BASEMAP_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+const BASEMAP_ATTRIBUTION =
+  '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors ' +
+  '© <a href="https://carto.com/" target="_blank">CARTO</a>'
+
 const projectBox = (lat: number, lon: number, scale = 4.5) => {
   const lngDelta = Math.max(3, scale * Math.cos((lat * Math.PI) / 180))
   const latDelta = 3.8
@@ -123,8 +129,19 @@ export function Map2D({ onError }: Map2DProps) {
           container: host,
           style: {
             version: 8,
-            sources: {},
-            layers: [{ id: 'weos-background', type: 'background', paint: { 'background-color': '#07111e' } }],
+            sources: {
+              /** CARTO dark-matter raster tiles provide the Earth basemap */
+              'carto-dark': {
+                type: 'raster',
+                tiles: [BASEMAP_TILE_URL],
+                tileSize: 256,
+                attribution: BASEMAP_ATTRIBUTION,
+              },
+            },
+            layers: [
+              { id: 'weos-background', type: 'background', paint: { 'background-color': '#07111e' } },
+              { id: 'basemap-tiles', type: 'raster', source: 'carto-dark', paint: { 'raster-opacity': 0.72 } },
+            ],
           },
           center: DEFAULT_MAP_CENTER,
           zoom: DEFAULT_MAP_ZOOM,
@@ -134,7 +151,9 @@ export function Map2D({ onError }: Map2DProps) {
         mapRef.current = map
         map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
 
+        let styleLoaded = false
         map.on('load', () => {
+          styleLoaded = true
           map.addSource('countries-weos', {
             type: 'geojson',
             data: countryGeoJson as never,
@@ -194,7 +213,16 @@ export function Map2D({ onError }: Map2DProps) {
           })
         })
 
-        map.on('error', reportMapError)
+        map.on('error', (e) => {
+          if (!styleLoaded) {
+            // Style/source failed to load — this is a critical error, trigger fallback
+            console.error('[WEOS Map2D] Style failed to load; activating fallback:', e.error.message)
+            reportMapError()
+          } else {
+            // Post-load error — likely a tile fetch issue. Log for diagnostics but keep map alive.
+            console.warn('[WEOS Map2D] Tile or source error (map still functional):', e.error.message)
+          }
+        })
         map.on('moveend', () => {
           const normalizedLevel = Math.max(
             0,
@@ -231,9 +259,6 @@ export function Map2D({ onError }: Map2DProps) {
 
     return () => {
       window.clearTimeout(invalidSizeTimer)
-      if (mapRef.current) {
-        mapRef.current.off('error', reportMapError)
-      }
       resizeObserver.disconnect()
       isCreatingMapRef.current = false
       mapRef.current?.remove()
