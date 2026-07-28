@@ -6,6 +6,7 @@ export type EconomicFrequency = 'realtime' | 'daily' | 'monthly' | 'quarterly' |
 
 export type EconomicIndicatorCode =
   | 'gdp'
+  | 'gdpPerCapita'
   | 'inflation'
   | 'interestRate'
   | 'population'
