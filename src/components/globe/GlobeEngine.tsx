@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { useCountryStore } from '../../stores/countryStore'
+import { useCountryInteraction } from '../../hooks/useCountryInteraction'
 import {
   AdditiveBlending,
   BackSide,
@@ -137,6 +139,12 @@ export default function GlobeEngine() {
   const worldRef = useRef<Group | null>(null)
   const focusTarget = useMemo(() => new Vector3(0, 0, 0), [])
 
+  // Country interaction layer (hover + click + highlight)
+  useCountryInteraction(containerRef, cameraRef, worldRef)
+
+  const hoveredCountry = useCountryStore((s) => s.hoveredCountry)
+  const tooltipPos = useCountryStore((s) => s.tooltipScreenPos)
+
   useEffect(() => {
     const container = containerRef.current
 
@@ -255,6 +263,23 @@ export default function GlobeEngine() {
       >
         Rotate • Zoom • Pan
       </div>
+
+      {hoveredCountry && tooltipPos && (
+        <div
+          className="pointer-events-none absolute z-10 rounded border px-2 py-1 text-xs"
+          style={{
+            left: tooltipPos.x + 14,
+            top: tooltipPos.y - 32,
+            background: 'rgba(8, 13, 24, 0.9)',
+            borderColor: 'rgba(121, 196, 255, 0.4)',
+            color: '#d9efff',
+            backdropFilter: 'blur(6px)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {hoveredCountry.name}
+        </div>
+      )}
     </section>
   )
 }
