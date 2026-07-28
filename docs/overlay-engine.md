@@ -174,12 +174,12 @@ The `OverlayEngine` normalises the raw value into 0–1 and linearly interpolate
 
 ## Visual overlay (OverlayCanvas)
 
-`OverlayCanvas` renders a transparent HTML5 canvas on top of the Three.js canvas.  For each country in `COUNTRIES` it:
+`OverlayCanvas` renders a transparent HTML5 canvas on top of the Three.js canvas. For each country in `COUNTRIES` it:
 
 1. Reads the country's geographic centre `[lon, lat]`.
-2. Projects it to screen coordinates using an **orthographic approximation** (accurate at the default camera orientation, approximate after user rotation).
-3. Draws a small colored dot using the color from `OverlayEngine.getColor()`.
+2. Converts that coordinate to globe-local 3D (`projectLngLatToCartesian`).
+3. Reads the active Globe Engine matrices from `globeViewStore` (world, camera view, projection) and projects the 3D point into screen coordinates.
+4. Performs a camera-facing test in globe-local space and skips points on the back side of the sphere.
+5. Draws a small colored dot using the color from `OverlayEngine.getColor()`.
 
-Countries on the back hemisphere (not facing the camera) are skipped automatically.
-
-> **Note:** A pixel-perfect per-country fill would require exposing the Globe Engine's camera and world transforms to the overlay layer — this is the natural next step for a future phase if desired.
+This keeps overlay dots synchronized with OrbitControls camera movement while preventing far-side dots from rendering.

@@ -1,9 +1,11 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component, type ErrorInfo, type ReactNode, useEffect } from 'react'
 import Topbar from './Topbar'
 import Footer from './Footer'
 import GlobeEngine from '../globe/GlobeEngine'
 import CountryPanel from '../panels/CountryPanel'
 import { OverlayCanvas, OverlayPanel, OverlayLegend } from '../overlay'
+import { DebugCanvas } from '../debug'
+import { useDebugStore } from '../../stores/debugStore'
 
 // ─── Error boundary — catches any render-time crash and shows a recoverable UI ─
 
@@ -60,6 +62,17 @@ interface ShellProps {
 }
 
 export default function Shell({ children }: ShellProps) {
+  const toggleDebug = useDebugStore((s) => s.toggle)
+
+  // Shift+D toggles the Sprite ↔ OverlayCanvas comparison overlay.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.shiftKey && e.key === 'D') toggleDebug()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [toggleDebug])
+
   return (
     <div className="flex flex-col h-full w-full overflow-hidden" style={{ background: 'var(--weos-bg)' }}>
       <Topbar />
@@ -71,6 +84,7 @@ export default function Shell({ children }: ShellProps) {
           <OverlayPanel />
           <OverlayLegend />
           <CountryPanel />
+          <DebugCanvas />
         </AppErrorBoundary>
       </main>
 

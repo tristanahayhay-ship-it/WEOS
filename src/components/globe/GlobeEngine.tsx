@@ -14,6 +14,7 @@ import {
   LineBasicMaterial,
   MathUtils,
   Material,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   MeshPhongMaterial,
@@ -28,11 +29,15 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { useUIStore } from '../../stores/uiStore'
 import { useElementSize } from '../../hooks/useElementSize'
+import { useGlobeViewStore } from '../../stores/globeViewStore'
+import { useDebugStore } from '../../stores/debugStore'
 import {
   COASTLINE_PATHS,
   COUNTRY_BOUNDARY_PATHS,
   EARTH_RADIUS,
+  projectLngLatToCartesian,
 } from '../../utils/globe'
+import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
 
 const VIEW_MODE_LABELS = {
   '2d': '2D MAP',
@@ -47,6 +52,33 @@ const DESKTOP_CAMERA_DISTANCE = 2.8
 
 function getCameraDistance(width: number) {
   return width < MOBILE_BREAKPOINT ? MOBILE_CAMERA_DISTANCE : DESKTOP_CAMERA_DISTANCE
+}
+
+// ── Pre-allocated scratch objects for per-frame sprite-point computation ──────
+const _sv          = new Vector3()
+const _svCamLocal  = new Vector3()
+const _svToCamera  = new Vector3()
+const _svWorldInv  = new Matrix4()
+
+/**
+ * Build a Group of 5 small Mesh markers, one per DEBUG_COUNTRY.
+ * Placed at EARTH_RADIUS * 1.025 to sit visibly above the surface.
+ * Start invisible; visibility is controlled by debug mode.
+ */
+function createDebugMarkers(): Group {
+  const group = new Group()
+  const geo   = new SphereGeometry(0.028, 8, 8)
+
+  for (const c of DEBUG_COUNTRIES) {
+    const [x, y, z] = projectLngLatToCartesian(c.lon, c.lat, EARTH_RADIUS * 1.025)
+    const mat  = new MeshBasicMaterial({ color: c.color })
+    const mesh = new Mesh(geo, mat)
+    mesh.position.set(x, y, z)
+    group.add(mesh)
+  }
+
+  group.visible = false
+  return group
 }
 
 function createLineGroup(
@@ -137,6 +169,7 @@ export default function GlobeEngine() {
   const controlsRef = useRef<OrbitControls | null>(null)
   const sceneRef = useRef<Scene | null>(null)
   const worldRef = useRef<Group | null>(null)
+  const debugMarkersRef = useRef<Group | null>(null)
   const focusTarget = useMemo(() => new Vector3(0, 0, 0), [])
 
   // Country interaction layer (hover + click + highlight)
@@ -185,6 +218,8 @@ export default function GlobeEngine() {
     const fillLight = new HemisphereLight('#b7ddff', '#02070d', 1.2)
 
     const world = createWorld()
+    const debugMarkers = createDebugMarkers()
+    world.add(debugMarkers)
 
     scene.add(fillLight, keyLight, world)
     camera.position.set(0, 0, DESKTOP_CAMERA_DISTANCE)
@@ -194,9 +229,44 @@ export default function GlobeEngine() {
     controlsRef.current = controls
     sceneRef.current = scene
     worldRef.current = world
+    debugMarkersRef.current = debugMarkers
 
     const renderFrame = () => {
       controls.update()
+      scene.updateMatrixWorld()
+      camera.updateMatrixWorld()
+
+      // ── Compute sprite screen positions via Three.js ground truth ───────────
+      // This is the reference: vector.project(camera) applied to each test point.
+      const vw = renderer.domElement.clientWidth
+      const vh = renderer.domElement.clientHeight
+      _svWorldInv.copy(world.matrixWorld).invert()
+
+      const spritePoints = DEBUG_COUNTRIES.map(({ lon, lat }) => {
+        const [x, y, z] = projectLngLatToCartesian(lon, lat, EARTH_RADIUS)
+        _sv.set(x, y, z)
+
+        // Same back-face culling used by OverlayCanvas.
+        _svCamLocal.set(camera.position.x, camera.position.y, camera.position.z)
+          .applyMatrix4(_svWorldInv)
+        if (_sv.dot(_svToCamera.copy(_svCamLocal).sub(_sv)) <= 0) return null
+
+        _sv.applyMatrix4(world.matrixWorld).project(camera)
+        if (_sv.z < -1 || _sv.z > 1) return null
+
+        return { x: ((_sv.x + 1) * vw) / 2, y: ((1 - _sv.y) * vh) / 2 }
+      })
+
+      useGlobeViewStore.getState().setFrame({
+        worldMatrix: [...world.matrixWorld.elements],
+        viewMatrix: [...camera.matrixWorldInverse.elements],
+        projectionMatrix: [...camera.projectionMatrix.elements],
+        cameraWorldPosition: [camera.position.x, camera.position.y, camera.position.z],
+        viewportWidth: vw,
+        viewportHeight: vh,
+        spritePoints,
+      })
+
       renderer.render(scene, camera)
     }
 
@@ -213,8 +283,18 @@ export default function GlobeEngine() {
       controlsRef.current = null
       sceneRef.current = null
       worldRef.current = null
+      debugMarkersRef.current = null
+      useGlobeViewStore.getState().clearFrame()
     }
   }, [containerRef, focusTarget])
+
+  // ── Keep debug markers visible only when debug mode is active ──────────────
+  useEffect(() => {
+    return useDebugStore.subscribe((state) => {
+      const m = debugMarkersRef.current
+      if (m) m.visible = state.enabled
+    })
+  }, [])
 
   useEffect(() => {
     const renderer = rendererRef.current
