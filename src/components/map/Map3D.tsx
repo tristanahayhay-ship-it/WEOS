@@ -28,19 +28,21 @@ const countryColor = (score: number): [number, number, number, number] => {
   return [255, 68, 68, 190]
 }
 
-/** Arc source colour based on flow direction */
+/** Arc source color based on flow direction */
 const arcSourceColor = (flow: CapitalFlow): [number, number, number, number] => {
   if (flow.direction === 'outbound') return [255, 100, 50, 210]
   if (flow.direction === 'inbound') return [0, 255, 136, 210]
   return [0, 180, 255, 200]
 }
 
-/** Arc target colour based on flow direction */
+/** Arc target color based on flow direction */
 const arcTargetColor = (flow: CapitalFlow): [number, number, number, number] => {
   if (flow.direction === 'outbound') return [255, 50, 50, 180]
   if (flow.direction === 'inbound') return [0, 212, 255, 200]
   return [0, 255, 200, 190]
 }
+
+const CITY_LABEL_FONT = '"SFMono-Regular","Cascadia Code","Fira Code",monospace'
 
 export function Map3D({ onError }: Map3DProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -129,7 +131,7 @@ export function Map3D({ onError }: Map3DProps) {
         getColor: [220, 240, 255, 230],
         getTextAnchor: 'middle',
         getAlignmentBaseline: 'bottom',
-        fontFamily: '"SFMono-Regular","Cascadia Code","Fira Code",monospace',
+        fontFamily: CITY_LABEL_FONT,
         fontWeight: 600,
         outlineWidth: 2,
         outlineColor: [0, 0, 0, 180],

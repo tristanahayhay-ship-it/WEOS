@@ -7,7 +7,7 @@ const FLOW_SPEED_FACTOR = 10
 const FLOW_MAX_ACCELERATION = 20
 const FLOW_PHASE_OFFSET = 0.07
 
-/** Neon colours by flow direction */
+/** Neon colors by flow direction */
 const FLOW_TRAIL_COLOR: Record<string, string> = {
   inbound: 'rgba(0, 255, 136, 0.42)',
   outbound: 'rgba(255, 80, 50, 0.38)',
