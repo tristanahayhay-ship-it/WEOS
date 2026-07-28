@@ -4,7 +4,6 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 
 import { capitalFlows, countries } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
-import { ZoomLevel } from '../../types'
 import { MAP_2D_BASE_ZOOM, MAP_2D_ZOOM_MULTIPLIER, mapZoomToWeosLevel, weosLevelToMapZoom } from './zoomConfig'
 
 interface Map2DProps {
