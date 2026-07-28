@@ -4,7 +4,14 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 
 import { capitalFlows, countries } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
-import { ZoomLevel } from '../../types'
+import {
+  MAP_2D_BASE_ZOOM,
+  MAP_2D_ZOOM_MULTIPLIER,
+  ZOOM_SYNC_THRESHOLD,
+  ZOOM_TRANSITION_DURATION_MS,
+  mapZoomToWeosLevel,
+  weosLevelToMapZoom,
+} from './zoomConfig'
 
 interface Map2DProps {
   onError?: () => void
@@ -17,8 +24,6 @@ const countryColor = (score: number) => {
   return '#ff4444'
 }
 
-const WEOS_BASE_MAPLIBRE_ZOOM = 1
-const WEOS_ZOOM_MULTIPLIER = 1.7
 const MIN_MAP_HOST_SIZE = 80
 const DEFAULT_MAP_CENTER: [number, number] = [8, 20]
 const DEFAULT_MAP_ZOOM = 1.2
@@ -48,7 +53,10 @@ export function Map2D({ onError }: Map2DProps) {
   const mapRef = useRef<maplibregl.Map | null>(null)
   const isCreatingMapRef = useRef(false)
   const hasReportedErrorRef = useRef(false)
+  const isSyncingZoomRef = useRef(false)
+  const moveEndHandlerRef = useRef<(() => void) | null>(null)
   const selectEntity = useStore((state) => state.selectEntity)
+  const zoomLevel = useStore((state) => state.zoomLevel)
   const setZoomLevel = useStore((state) => state.setZoomLevel)
 
   const countryGeoJson = useMemo(
@@ -223,16 +231,16 @@ export function Map2D({ onError }: Map2DProps) {
             console.warn('[WEOS Map2D] Tile or source error (map still functional):', e.error.message)
           }
         })
-        map.on('moveend', () => {
-          const normalizedLevel = Math.max(
-            0,
-            Math.min(
-              10,
-              Math.round((map.getZoom() - WEOS_BASE_MAPLIBRE_ZOOM) * WEOS_ZOOM_MULTIPLIER),
-            ),
-          )
-          setZoomLevel(normalizedLevel as ZoomLevel)
-        })
+        const handleMoveEnd = () => {
+          const normalizedLevel = mapZoomToWeosLevel(map.getZoom(), MAP_2D_BASE_ZOOM, MAP_2D_ZOOM_MULTIPLIER)
+          if (isSyncingZoomRef.current) {
+            isSyncingZoomRef.current = false
+            return
+          }
+          setZoomLevel(normalizedLevel)
+        }
+        moveEndHandlerRef.current = handleMoveEnd
+        map.on('moveend', handleMoveEnd)
         isCreatingMapRef.current = false
       } catch {
         isCreatingMapRef.current = false
@@ -261,10 +269,25 @@ export function Map2D({ onError }: Map2DProps) {
       window.clearTimeout(invalidSizeTimer)
       resizeObserver.disconnect()
       isCreatingMapRef.current = false
+      if (moveEndHandlerRef.current) {
+        mapRef.current?.off('moveend', moveEndHandlerRef.current)
+      }
       mapRef.current?.remove()
       mapRef.current = null
+      moveEndHandlerRef.current = null
     }
   }, [countryGeoJson, flowGeoJson, onError, selectEntity, setZoomLevel])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const targetZoom = weosLevelToMapZoom(zoomLevel, MAP_2D_BASE_ZOOM, MAP_2D_ZOOM_MULTIPLIER)
+    if (Math.abs(map.getZoom() - targetZoom) < ZOOM_SYNC_THRESHOLD) return
+
+    isSyncingZoomRef.current = true
+    map.easeTo({ zoom: targetZoom, duration: ZOOM_TRANSITION_DURATION_MS })
+  }, [zoomLevel])
 
   return <div ref={containerRef} className="maplibre-host" />
 }
