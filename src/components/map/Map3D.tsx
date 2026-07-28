@@ -6,6 +6,7 @@ import * as maplibregl from 'maplibre-gl'
 import { capitalFlows, countries, financialCenters } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
 import type { CapitalFlow, FinancialCenter, GeoEntity } from '../../types'
+import { MAP_3D_BASE_ZOOM, MAP_3D_ZOOM_MULTIPLIER, mapZoomToWeosLevel, weosLevelToMapZoom } from './zoomConfig'
 
 interface Map3DProps {
   onError?: () => void
@@ -49,7 +50,10 @@ export function Map3D({ onError }: Map3DProps) {
   const mapRef = useRef<maplibregl.Map | null>(null)
   const overlayRef = useRef<MapboxOverlay | null>(null)
   const isCreatingRef = useRef(false)
+  const isSyncingZoomRef = useRef(false)
   const selectEntity = useStore((state) => state.selectEntity)
+  const zoomLevel = useStore((state) => state.zoomLevel)
+  const setZoomLevel = useStore((state) => state.setZoomLevel)
 
   const layers = useMemo(
     () => [
@@ -200,6 +204,7 @@ export function Map3D({ onError }: Map3DProps) {
         styleLoaded = true
         // Switch to vertical-perspective (globe-like) projection once the style is ready
         map.setProjection({ type: 'vertical-perspective' })
+        map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
 
         // Mount deck.gl overlay so layers render on top of the MapLibre basemap
         const overlay = new MapboxOverlay({
@@ -222,6 +227,15 @@ export function Map3D({ onError }: Map3DProps) {
           console.warn('[WEOS Map3D] Tile/source error (globe still functional):', e.error.message)
         }
       })
+
+      map.on('moveend', () => {
+        const normalizedLevel = mapZoomToWeosLevel(map.getZoom(), MAP_3D_BASE_ZOOM, MAP_3D_ZOOM_MULTIPLIER)
+        if (isSyncingZoomRef.current) {
+          isSyncingZoomRef.current = false
+          return
+        }
+        setZoomLevel(normalizedLevel)
+      })
     } catch (err) {
       console.error('[WEOS Map3D] Failed to initialise globe map:', err)
       onError?.()
@@ -235,7 +249,18 @@ export function Map3D({ onError }: Map3DProps) {
       overlayRef.current = null
       isCreatingRef.current = false
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [layers, onError, setZoomLevel]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const targetZoom = weosLevelToMapZoom(zoomLevel, MAP_3D_BASE_ZOOM, MAP_3D_ZOOM_MULTIPLIER)
+    if (Math.abs(map.getZoom() - targetZoom) < 0.12) return
+
+    isSyncingZoomRef.current = true
+    map.easeTo({ zoom: targetZoom, duration: 700 })
+  }, [zoomLevel])
 
   return <div ref={containerRef} className="deck-host" />
 }

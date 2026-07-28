@@ -8,6 +8,7 @@ interface WEOSState {
   zoomLevel: ZoomLevel
   selectedEntity: GeoEntity | null
   mapMode: MapMode
+  flowSpeed: number
   flows: typeof capitalFlows
   alerts: AlertItem[]
   setZoomLevel: (level: ZoomLevel) => void
@@ -16,6 +17,7 @@ interface WEOSState {
   selectEntity: (entity: GeoEntity | null) => void
   toggleMapMode: () => void
   setMapMode: (mode: MapMode) => void
+  setFlowSpeed: (speed: number) => void
   acknowledgeAlert: (id: string) => void
   resetFocus: () => void
 }
@@ -24,6 +26,7 @@ export const useStore = create<WEOSState>((set) => ({
   zoomLevel: ZoomLevel.TongTheHeThong,
   selectedEntity: defaultEntity,
   mapMode: '2D',
+  flowSpeed: 1,
   flows: capitalFlows,
   alerts,
   setZoomLevel: (level) => set({ zoomLevel: level }),
@@ -38,6 +41,7 @@ export const useStore = create<WEOSState>((set) => ({
   selectEntity: (entity) => set({ selectedEntity: entity }),
   toggleMapMode: () => set((state) => ({ mapMode: state.mapMode === '2D' ? '3D' : '2D' })),
   setMapMode: (mode) => set({ mapMode: mode }),
+  setFlowSpeed: (speed) => set({ flowSpeed: Math.max(0.4, Math.min(2.5, Number(speed.toFixed(1)))) }),
   acknowledgeAlert: (id) =>
     set((state) => ({
       alerts: state.alerts.map((alert) => (alert.id === id ? { ...alert, acknowledged: true } : alert)),

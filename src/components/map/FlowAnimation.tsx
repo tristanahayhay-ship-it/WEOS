@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import { capitalFlows, countries } from '../../data/mockData'
+import { useStore } from '../../store/useStore'
 
 const FLOW_BASE_TRAVEL_FRAMES = 80
 const FLOW_SPEED_FACTOR = 10
@@ -26,6 +27,7 @@ const toCanvasPoint = (lat: number, lon: number, width: number, height: number) 
 
 export function FlowAnimation() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const flowSpeed = useStore((state) => state.flowSpeed)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -75,7 +77,8 @@ export function FlowAnimation() {
 
         // Draw animated dot
         const progress =
-          ((frame / (FLOW_BASE_TRAVEL_FRAMES - Math.min(flow.speed * FLOW_SPEED_FACTOR, FLOW_MAX_ACCELERATION))) +
+          ((frame * flowSpeed) /
+            (FLOW_BASE_TRAVEL_FRAMES - Math.min(flow.speed * FLOW_SPEED_FACTOR, FLOW_MAX_ACCELERATION)) +
             index * FLOW_PHASE_OFFSET) %
           1
         const q0x = (1 - progress) * (1 - progress) * start.x
@@ -108,7 +111,7 @@ export function FlowAnimation() {
       window.removeEventListener('resize', resize)
       window.cancelAnimationFrame(animation)
     }
-  }, [])
+  }, [flowSpeed])
 
   return <canvas ref={canvasRef} className="flow-layer" />
 }

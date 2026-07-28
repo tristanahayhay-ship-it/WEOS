@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import { zoomLevelLabels } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
 
 const navTabs = ['GLOBAL VIEW', 'ECONOMY', 'MARKETS', 'CAPITAL FLOW', 'INDUSTRY', 'AI ANALYTICS', 'NEWS', 'SETTINGS']
@@ -7,6 +8,8 @@ const navTabs = ['GLOBAL VIEW', 'ECONOMY', 'MARKETS', 'CAPITAL FLOW', 'INDUSTRY'
 export function Topbar() {
   const [utcClock, setUtcClock] = useState(() => new Date().toISOString().slice(11, 19))
   const mapMode = useStore((state) => state.mapMode)
+  const zoomLevel = useStore((state) => state.zoomLevel)
+  const selectedEntity = useStore((state) => state.selectedEntity)
   const toggleMapMode = useStore((state) => state.toggleMapMode)
 
   useEffect(() => {
@@ -22,7 +25,9 @@ export function Topbar() {
       <div className="branding">
         <div className="brand-copy">
           <h1>WEOS</h1>
-          <p>WORLD ECONOMIC OPERATING SYSTEM · Level 0 · Global View</p>
+          <p>
+            WORLD ECONOMIC OPERATING SYSTEM · {zoomLevelLabels[zoomLevel]} · {selectedEntity?.name ?? 'Global View'}
+          </p>
         </div>
       </div>
 

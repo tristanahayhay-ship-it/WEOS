@@ -5,6 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { capitalFlows, countries } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
 import { ZoomLevel } from '../../types'
+import { MAP_2D_BASE_ZOOM, MAP_2D_ZOOM_MULTIPLIER, mapZoomToWeosLevel, weosLevelToMapZoom } from './zoomConfig'
 
 interface Map2DProps {
   onError?: () => void
@@ -17,8 +18,6 @@ const countryColor = (score: number) => {
   return '#ff4444'
 }
 
-const WEOS_BASE_MAPLIBRE_ZOOM = 1
-const WEOS_ZOOM_MULTIPLIER = 1.7
 const MIN_MAP_HOST_SIZE = 80
 const DEFAULT_MAP_CENTER: [number, number] = [8, 20]
 const DEFAULT_MAP_ZOOM = 1.2
@@ -48,7 +47,9 @@ export function Map2D({ onError }: Map2DProps) {
   const mapRef = useRef<maplibregl.Map | null>(null)
   const isCreatingMapRef = useRef(false)
   const hasReportedErrorRef = useRef(false)
+  const isSyncingZoomRef = useRef(false)
   const selectEntity = useStore((state) => state.selectEntity)
+  const zoomLevel = useStore((state) => state.zoomLevel)
   const setZoomLevel = useStore((state) => state.setZoomLevel)
 
   const countryGeoJson = useMemo(
@@ -224,13 +225,11 @@ export function Map2D({ onError }: Map2DProps) {
           }
         })
         map.on('moveend', () => {
-          const normalizedLevel = Math.max(
-            0,
-            Math.min(
-              10,
-              Math.round((map.getZoom() - WEOS_BASE_MAPLIBRE_ZOOM) * WEOS_ZOOM_MULTIPLIER),
-            ),
-          )
+          const normalizedLevel = mapZoomToWeosLevel(map.getZoom(), MAP_2D_BASE_ZOOM, MAP_2D_ZOOM_MULTIPLIER)
+          if (isSyncingZoomRef.current) {
+            isSyncingZoomRef.current = false
+            return
+          }
           setZoomLevel(normalizedLevel as ZoomLevel)
         })
         isCreatingMapRef.current = false
@@ -265,6 +264,17 @@ export function Map2D({ onError }: Map2DProps) {
       mapRef.current = null
     }
   }, [countryGeoJson, flowGeoJson, onError, selectEntity, setZoomLevel])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const targetZoom = weosLevelToMapZoom(zoomLevel, MAP_2D_BASE_ZOOM, MAP_2D_ZOOM_MULTIPLIER)
+    if (Math.abs(map.getZoom() - targetZoom) < 0.12) return
+
+    isSyncingZoomRef.current = true
+    map.easeTo({ zoom: targetZoom, duration: 700 })
+  }, [zoomLevel])
 
   return <div ref={containerRef} className="maplibre-host" />
 }

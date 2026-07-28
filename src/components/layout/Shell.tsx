@@ -4,10 +4,15 @@ import { SidebarRight } from './SidebarRight'
 import { Topbar } from './Topbar'
 import { MapContainer } from '../map/MapContainer'
 import { FlowAnimation } from '../map/FlowAnimation'
+import { zoomLevelLabels } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
 
 export function Shell() {
   const mapMode = useStore((state) => state.mapMode)
+  const flowSpeed = useStore((state) => state.flowSpeed)
+  const setFlowSpeed = useStore((state) => state.setFlowSpeed)
+  const zoomLevel = useStore((state) => state.zoomLevel)
+  const selectedEntity = useStore((state) => state.selectedEntity)
 
   return (
     <div className="weos-shell">
@@ -18,6 +23,7 @@ export function Shell() {
           <div className="map-header">
             <p className="map-title">GLOBAL CAPITAL FLOW NETWORK</p>
             <span className="map-badge">LIVE</span>
+            <span className="map-badge">{zoomLevelLabels[zoomLevel]}</span>
           </div>
 
           <div className="map-legend">
@@ -33,8 +39,18 @@ export function Shell() {
           <div className="atmosphere-overlay" aria-hidden="true" />
           <div className="flow-control-bar">
             <span>REAL-TIME FLOW ANIMATION</span>
-            <input type="range" min={0} max={100} defaultValue={52} aria-label="Flow animation timeline" />
-            <span>FLOW SPEED 1.0x · {mapMode}</span>
+            <input
+              type="range"
+              min={4}
+              max={25}
+              step={1}
+              value={Math.round(flowSpeed * 10)}
+              aria-label="Flow animation speed"
+              onChange={(event) => setFlowSpeed(Number(event.target.value) / 10)}
+            />
+            <span>
+              FLOW SPEED {flowSpeed.toFixed(1)}x · {mapMode} · {selectedEntity?.code ?? 'GLOBAL'}
+            </span>
           </div>
         </section>
         <SidebarRight />
