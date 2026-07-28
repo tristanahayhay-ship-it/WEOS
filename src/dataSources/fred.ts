@@ -66,6 +66,9 @@ async function fetchLatestObservation(
     `&limit=1`
 
   const res = await fetch(url)
+  if (res.status === 429) {
+    throw new Error(`FRED: HTTP 429 rate limit for series "${seriesId}"`)
+  }
   if (!res.ok) return null
 
   const json = (await res.json()) as FredApiResponse

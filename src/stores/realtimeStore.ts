@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import {
   ECONOMIC_SOURCE_IDS,
+  ECONOMIC_SOURCE_NAMES,
   createEmptyEconomicSourceState,
   type EconomicDataPoint,
   type EconomicSourceId,
@@ -20,10 +21,10 @@ export interface RealtimeStoreState {
 }
 
 const createInitialSourceState = (): Record<EconomicSourceId, EconomicSourceState> => ({
-  worldBank: createEmptyEconomicSourceState(),
-  fred: createEmptyEconomicSourceState(),
-  imf: createEmptyEconomicSourceState(),
-  oecd: createEmptyEconomicSourceState(),
+  worldBank: createEmptyEconomicSourceState(ECONOMIC_SOURCE_NAMES.worldBank),
+  fred: createEmptyEconomicSourceState(ECONOMIC_SOURCE_NAMES.fred),
+  imf: createEmptyEconomicSourceState(ECONOMIC_SOURCE_NAMES.imf),
+  oecd: createEmptyEconomicSourceState(ECONOMIC_SOURCE_NAMES.oecd),
 })
 
 export const useRealtimeStore = create<RealtimeStoreState>((set, get) => ({
