@@ -40,6 +40,7 @@ const projectBox = (lat: number, lon: number, scale = 4.5) => {
 export function Map2D({ onError }: Map2DProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
+  const isCreatingMapRef = useRef(false)
   const hasReportedErrorRef = useRef(false)
   const selectEntity = useStore((state) => state.selectEntity)
   const setZoomLevel = useStore((state) => state.setZoomLevel)
@@ -108,12 +109,16 @@ export function Map2D({ onError }: Map2DProps) {
       if (mapRef.current) {
         return
       }
+      if (isCreatingMapRef.current) {
+        return
+      }
 
       if (host.clientWidth < MIN_MAP_HOST_SIZE || host.clientHeight < MIN_MAP_HOST_SIZE) {
         return
       }
 
       try {
+        isCreatingMapRef.current = true
         const map = new maplibregl.Map({
           container: host,
           style: {
@@ -200,7 +205,9 @@ export function Map2D({ onError }: Map2DProps) {
           )
           setZoomLevel(normalizedLevel as ZoomLevel)
         })
+        isCreatingMapRef.current = false
       } catch {
+        isCreatingMapRef.current = false
         reportMapError()
       }
     }
@@ -228,6 +235,7 @@ export function Map2D({ onError }: Map2DProps) {
         mapRef.current.off('error', reportMapError)
       }
       resizeObserver.disconnect()
+      isCreatingMapRef.current = false
       mapRef.current?.remove()
       mapRef.current = null
     }

@@ -12,7 +12,7 @@ interface Map3DProps {
 }
 
 const DEFAULT_3D_VIEW_STATE = {
-  longitude: 12,
+  longitude: 110,
   latitude: 20,
   zoom: 0.55,
 }
