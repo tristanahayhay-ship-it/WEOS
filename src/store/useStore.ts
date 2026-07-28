@@ -21,7 +21,7 @@ interface WEOSState {
 }
 
 export const useStore = create<WEOSState>((set) => ({
-  zoomLevel: ZoomLevel.QuocGia,
+  zoomLevel: ZoomLevel.TongTheHeThong,
   selectedEntity: defaultEntity,
   mapMode: '2D',
   flows: capitalFlows,

@@ -7,6 +7,10 @@ import { capitalFlows, countries, financialCenters } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
 import type { CapitalFlow, FinancialCenter, GeoEntity } from '../../types'
 
+interface Map3DProps {
+  onError?: () => void
+}
+
 const countryColor = (score: number): [number, number, number, number] => {
   if (score >= 82) return [0, 255, 136, 180]
   if (score >= 74) return [0, 212, 255, 170]
@@ -14,7 +18,7 @@ const countryColor = (score: number): [number, number, number, number] => {
   return [255, 68, 68, 170]
 }
 
-export function Map3D() {
+export function Map3D({ onError }: Map3DProps) {
   const selectEntity = useStore((state) => state.selectEntity)
 
   const layers = useMemo(
@@ -75,8 +79,9 @@ export function Map3D() {
       <DeckGL
         controller
         views={new GlobeView()}
-        initialViewState={{ longitude: 110, latitude: 18, zoom: 0.75 }}
+        initialViewState={{ longitude: 12, latitude: 20, zoom: 0.55 }}
         layers={layers}
+        onError={onError}
         style={{ background: 'radial-gradient(circle at 30% 20%, rgba(0,212,255,0.08), rgba(3,7,18,0.92))' }}
       />
     </div>
