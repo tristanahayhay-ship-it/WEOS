@@ -3,6 +3,7 @@ import Topbar from './Topbar'
 import Footer from './Footer'
 import GlobeEngine from '../globe/GlobeEngine'
 import CountryPanel from '../panels/CountryPanel'
+import { OverlayCanvas, OverlayPanel, OverlayLegend } from '../overlay'
 
 // ─── Error boundary — catches any render-time crash and shows a recoverable UI ─
 
@@ -66,6 +67,9 @@ export default function Shell({ children }: ShellProps) {
       <main className="relative flex-1 overflow-hidden">
         <AppErrorBoundary>
           {children ?? <GlobeEngine />}
+          <OverlayCanvas />
+          <OverlayPanel />
+          <OverlayLegend />
           <CountryPanel />
         </AppErrorBoundary>
       </main>
