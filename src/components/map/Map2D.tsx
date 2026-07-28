@@ -37,7 +37,7 @@ const projectBox = (lat: number, lon: number, scale = 4.5) => {
 export function Map2D({ onError }: Map2DProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
-  const didReportErrorRef = useRef(false)
+  const hasReportedErrorRef = useRef(false)
   const selectEntity = useStore((state) => state.selectEntity)
   const setZoomLevel = useStore((state) => state.setZoomLevel)
 
@@ -94,15 +94,19 @@ export function Map2D({ onError }: Map2DProps) {
 
     const host = containerRef.current
     const reportMapError = () => {
-      if (didReportErrorRef.current) {
+      if (hasReportedErrorRef.current) {
         return
       }
-      didReportErrorRef.current = true
+      hasReportedErrorRef.current = true
       onError?.()
     }
 
     const createMap = () => {
-      if (mapRef.current || host.clientWidth < MIN_MAP_HOST_SIZE || host.clientHeight < MIN_MAP_HOST_SIZE) {
+      if (mapRef.current) {
+        return
+      }
+
+      if (host.clientWidth < MIN_MAP_HOST_SIZE || host.clientHeight < MIN_MAP_HOST_SIZE) {
         return
       }
 

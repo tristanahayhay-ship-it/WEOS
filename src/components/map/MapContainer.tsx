@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo, useState } from 'react'
+import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from 'react'
 
 import { useStore } from '../../store/useStore'
 import { Map2D } from './Map2D'
@@ -57,7 +57,7 @@ export function MapContainer() {
     }
   }, [force2DMode, mapMode])
 
-  const activeMapMode = useMemo(() => (mapMode === '3D' && !force2DMode ? '3D' : '2D'), [force2DMode, mapMode])
+  const activeMapMode = mapMode === '3D' && !force2DMode ? '3D' : '2D'
 
   const handle3DMapError = () => {
     setForce2DMode(true)
