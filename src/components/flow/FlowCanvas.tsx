@@ -1,8 +1,73 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useFlowStore } from '../../stores/flowStore'
+import { useRealtimeStore } from '../../stores/realtimeStore'
 import { useGlobeViewStore } from '../../stores/globeViewStore'
 import { useElementSize } from '../../hooks/useElementSize'
 import { FlowRenderer } from '../../flows/FlowRenderer'
+import type { FlowModel, FlowType } from '../../flows/types'
+import type { EconomicDataPoint } from '../../types/economic'
+
+const FLOW_VALUE_SCALE: Record<FlowType, number> = {
+  trade: 50,
+  investment: 250,
+  debt: 1200,
+  aid: 5000,
+}
+
+const getTimestamp = (value: string): number => {
+  const parsed = Date.parse(value)
+  return Number.isNaN(parsed) ? -1 : parsed
+}
+
+function buildGdpByCountry(records: Record<string, EconomicDataPoint>): Map<string, number> {
+  const latestByCountry = new Map<string, { value: number; observedAt: number }>()
+
+  for (const record of Object.values(records)) {
+    if (record.indicator !== 'gdp' || record.value == null) continue
+
+    const observedAt = getTimestamp(record.observedAt)
+    const previous = latestByCountry.get(record.countryCode)
+    if (!previous || observedAt >= previous.observedAt) {
+      latestByCountry.set(record.countryCode, { value: record.value, observedAt })
+    }
+  }
+
+  return new Map(
+    Array.from(latestByCountry.entries()).map(([countryCode, latest]) => [countryCode, latest.value]),
+  )
+}
+
+function withRealtimeEconomicValues(
+  flows: FlowModel[],
+  records: Record<string, EconomicDataPoint>,
+): FlowModel[] {
+  const gdpByCountry = buildGdpByCountry(records)
+
+  return flows.map((flow) => {
+    const sourceGdp = gdpByCountry.get(flow.sourceCountry)
+    const targetGdp = gdpByCountry.get(flow.targetCountry)
+
+    if (sourceGdp == null && targetGdp == null) return flow
+
+    const singleCountryGdp = sourceGdp ?? targetGdp
+    if (singleCountryGdp == null) return flow
+
+    const baseValue = sourceGdp != null && targetGdp != null
+      ? (sourceGdp + targetGdp) / 2
+      : singleCountryGdp
+
+    const scaledValue = Math.max(
+      0.5,
+      Math.round((baseValue / FLOW_VALUE_SCALE[flow.flowType]) * 100) / 100,
+    )
+    if (scaledValue === flow.value) return flow
+
+    return {
+      ...flow,
+      value: scaledValue,
+    }
+  })
+}
 
 /**
  * FlowCanvas — a transparent WebGL canvas that overlays the globe and renders
@@ -27,6 +92,7 @@ export default function FlowCanvas() {
   const flows        = useFlowStore((s) => s.flows)
   const visibleTypes = useFlowStore((s) => s.visibleTypes)
   const getFiltered  = useFlowStore((s) => s.getFilteredFlows)
+  const realtimeRecords = useRealtimeStore((s) => s.records)
 
   // ── Renderer bootstrap ────────────────────────────────────────────────────
 
@@ -54,8 +120,8 @@ export default function FlowCanvas() {
 
   useEffect(() => {
     if (!rendererRef.current) return
-    rendererRef.current.updateFlows(getFiltered())
-  }, [flows, visibleTypes, getFiltered])
+    rendererRef.current.updateFlows(withRealtimeEconomicValues(getFiltered(), realtimeRecords))
+  }, [flows, visibleTypes, getFiltered, realtimeRecords])
 
   // ── Animation loop ────────────────────────────────────────────────────────
 
@@ -103,4 +169,3 @@ export default function FlowCanvas() {
     </div>
   )
 }
-
