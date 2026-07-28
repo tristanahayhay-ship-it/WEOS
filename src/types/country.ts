@@ -38,10 +38,24 @@ export interface Country {
  * Economic data attachment.
  * Designed to be fetched and attached at runtime in future phases
  * without requiring changes to the Country model itself.
+ *
+ * All numeric fields are in standard units:
+ *   gdpUsd          — current USD billions
+ *   gdpPerCapitaUsd — current USD
+ *   inflationPercent    — annual CPI inflation rate (%)
+ *   interestRatePercent — central-bank policy/benchmark rate (%)
  */
 export interface CountryEconomicData {
   isoCode: string
   population: number | null
   gdpUsd: number | null
   gdpPerCapitaUsd: number | null
+  inflationPercent: number | null
+  interestRatePercent: number | null
+  /** Primary currency name (e.g. "US Dollar") */
+  currency: string | null
+  /** ISO 4217 currency code (e.g. "USD") */
+  currencyCode: string | null
+  /** Representative IANA time-zone identifier(s) */
+  timeZones: string[]
 }
