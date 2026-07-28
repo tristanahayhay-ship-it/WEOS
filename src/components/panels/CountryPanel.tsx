@@ -1,13 +1,19 @@
 import { useCountryStore } from '../../stores/countryStore'
+import { useEconomicStore } from '../../stores/economicStore'
 import { isoToFlag, formatArea } from '../../data/countries'
 
 const PANEL_LABELS: Record<string, string> = {
-  isoCode:   'ISO CODE',
-  capital:   'CAPITAL',
-  continent: 'CONTINENT',
-  area:      'AREA',
-  population:'POPULATION',
-  gdp:       'GDP',
+  isoCode:      'ISO CODE',
+  capital:      'CAPITAL',
+  continent:    'CONTINENT',
+  area:         'AREA',
+  population:   'POPULATION',
+  gdp:          'GDP',
+  gdpPerCapita: 'GDP PER CAPITA',
+  inflation:    'INFLATION',
+  interestRate: 'INTEREST RATE',
+  currency:     'CURRENCY',
+  timeZone:     'TIME ZONE',
 }
 
 function DataRow({ label, value }: { label: string; value: string }) {
@@ -30,10 +36,28 @@ export default function CountryPanel() {
   const selectedCountry = useCountryStore((s) => s.selectedCountry)
   const isPanelOpen = useCountryStore((s) => s.isPanelOpen)
   const closePanel = useCountryStore((s) => s.closePanel)
+  const getEconomicData = useEconomicStore((s) => s.getEconomicData)
 
   if (!isPanelOpen || !selectedCountry) return null
 
   const flag = isoToFlag(selectedCountry.isoCode)
+  const econ = getEconomicData(selectedCountry.isoCode)
+
+  const fmt = (n: number | null, suffix = '') =>
+    n == null ? '—' : n.toLocaleString('en-US') + suffix
+
+  const BILLION = 1_000
+  const fmtGdp = (n: number | null) => {
+    if (n == null) return '—'
+    if (n >= BILLION) return `$${(n / BILLION).toFixed(2)}T`
+    return `$${n.toFixed(2)}B`
+  }
+
+  const fmtGdpPerCapita = (n: number | null) =>
+    n == null ? '—' : `$${n.toLocaleString('en-US')}`
+
+  const fmtRate = (n: number | null) =>
+    n == null ? '—' : `${n.toFixed(2)}%`
 
   return (
     <aside
@@ -87,23 +111,17 @@ export default function CountryPanel() {
 
       {/* Data rows */}
       <div className="flex-1 overflow-y-auto px-4 py-1">
-        <DataRow label={PANEL_LABELS.isoCode}    value={`${selectedCountry.isoCode} / ${selectedCountry.iso3Code}`} />
-        <DataRow label={PANEL_LABELS.capital}    value={selectedCountry.capital} />
-        <DataRow label={PANEL_LABELS.continent}  value={selectedCountry.continent} />
-        <DataRow label={PANEL_LABELS.area}       value={formatArea(selectedCountry.area)} />
-        <DataRow label={PANEL_LABELS.population} value="—" />
-        <DataRow label={PANEL_LABELS.gdp}        value="—" />
-      </div>
-
-      {/* Footer note */}
-      <div
-        className="px-4 py-2 text-[10px]"
-        style={{
-          color: 'rgba(121,196,255,0.35)',
-          borderTop: '1px solid rgba(121,196,255,0.1)',
-        }}
-      >
-      Population & GDP available in a future phase
+        <DataRow label={PANEL_LABELS.isoCode}      value={`${selectedCountry.isoCode} / ${selectedCountry.iso3Code}`} />
+        <DataRow label={PANEL_LABELS.capital}      value={selectedCountry.capital} />
+        <DataRow label={PANEL_LABELS.continent}    value={selectedCountry.continent} />
+        <DataRow label={PANEL_LABELS.area}         value={formatArea(selectedCountry.area)} />
+        <DataRow label={PANEL_LABELS.population}   value={econ ? fmt(econ.population) : '—'} />
+        <DataRow label={PANEL_LABELS.gdp}          value={econ ? fmtGdp(econ.gdpUsd) : '—'} />
+        <DataRow label={PANEL_LABELS.gdpPerCapita} value={econ ? fmtGdpPerCapita(econ.gdpPerCapitaUsd) : '—'} />
+        <DataRow label={PANEL_LABELS.inflation}    value={econ ? fmtRate(econ.inflationPercent) : '—'} />
+        <DataRow label={PANEL_LABELS.interestRate} value={econ ? fmtRate(econ.interestRatePercent) : '—'} />
+        <DataRow label={PANEL_LABELS.currency}     value={econ && econ.currency ? `${econ.currency}${econ.currencyCode ? ` (${econ.currencyCode})` : ''}` : '—'} />
+        <DataRow label={PANEL_LABELS.timeZone}     value={econ && econ.timeZones.length > 0 ? econ.timeZones[0] : '—'} />
       </div>
     </aside>
   )
