@@ -10,6 +10,7 @@ import type {
   EconomicDataPoint,
   EconomicSourceId,
 } from '../types/economic'
+import { ECONOMIC_SOURCE_NAMES } from '../types/economic'
 
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000
 
@@ -41,25 +42,28 @@ export class DataPipeline {
 
     store.setSourceState(source, {
       status: 'fetching',
+      loading: true,
       error: null,
       isCached: false,
+      sourceName: ECONOMIC_SOURCE_NAMES[source],
     })
 
     if (cachedEntry && cachedEntry.expiresAt > now) {
-      return this.applyRecords(source, cachedEntry.records, cachedEntry.fetchedAt, true)
+      return this.applyRecords(source, cachedEntry.records, cachedEntry.fetchedAt, true, cachedEntry.expiresAt)
     }
 
+    const expiresAt = now + this.cacheTtlMs
     const snapshot = await this.connectors[source].fetchLatest()
     const normalizedRecords = this.connectors[source].normalize(snapshot)
 
     this.cache.set(source, {
       source,
       fetchedAt: snapshot.fetchedAt,
-      expiresAt: now + this.cacheTtlMs,
+      expiresAt,
       records: normalizedRecords,
     })
 
-    return this.applyRecords(source, normalizedRecords, snapshot.fetchedAt, false)
+    return this.applyRecords(source, normalizedRecords, snapshot.fetchedAt, false, expiresAt)
   }
 
   async refreshAll(sources: EconomicSourceId[] = Object.keys(this.connectors) as EconomicSourceId[]): Promise<DataPipelineRunResult[]> {
@@ -72,8 +76,10 @@ export class DataPipeline {
         const message = error instanceof Error ? error.message : 'Unknown realtime data pipeline error'
         useRealtimeStore.getState().setSourceState(source, {
           status: 'error',
+          loading: false,
           error: message,
           isCached: false,
+          sourceName: ECONOMIC_SOURCE_NAMES[source],
         })
       }
     }
@@ -99,11 +105,25 @@ export class DataPipeline {
     return cachedEntry.records
   }
 
+  /**
+   * Returns the Unix epoch (ms) at which the cache entry for `source` expires,
+   * or `null` if there is no valid cache entry.
+   */
+  getCacheExpiry(source: EconomicSourceId): number | null {
+    const cachedEntry = this.cache.get(source)
+    if (!cachedEntry || cachedEntry.expiresAt <= Date.now()) {
+      return null
+    }
+
+    return cachedEntry.expiresAt
+  }
+
   private applyRecords(
     source: EconomicSourceId,
     records: EconomicDataPoint[],
     fetchedAt: string,
     fromCache: boolean,
+    expiresAt: number,
   ): DataPipelineRunResult {
     const store = useRealtimeStore.getState()
     const updatedAt = new Date().toISOString()
@@ -111,11 +131,14 @@ export class DataPipeline {
     store.replaceSourceRecords(source, records)
     store.setSourceState(source, {
       status: 'ready',
+      loading: false,
       lastFetchedAt: fetchedAt,
       lastUpdatedAt: updatedAt,
       isCached: fromCache,
       error: null,
       recordCount: records.length,
+      cacheExpires: new Date(expiresAt).toISOString(),
+      sourceName: ECONOMIC_SOURCE_NAMES[source],
     })
     store.setLastPipelineRunAt(updatedAt)
 
