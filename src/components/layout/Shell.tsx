@@ -5,7 +5,9 @@ import { Topbar } from './Topbar'
 import { MapContainer } from '../map/MapContainer'
 import { FlowAnimation } from '../map/FlowAnimation'
 import { zoomLevelLabels } from '../../data/mockData'
-import { FLOW_SPEED_MAX, FLOW_SPEED_MIN, useStore } from '../../store/useStore'
+import { FLOW_SPEED_MAX, FLOW_SPEED_MIN, FLOW_SPEED_STEP, useStore } from '../../store/useStore'
+
+const FLOW_SPEED_SLIDER_MULTIPLIER = 1 / FLOW_SPEED_STEP
 
 export function Shell() {
   const mapMode = useStore((state) => state.mapMode)
@@ -41,12 +43,12 @@ export function Shell() {
             <span>REAL-TIME FLOW ANIMATION</span>
             <input
               type="range"
-              min={FLOW_SPEED_MIN * 10}
-              max={FLOW_SPEED_MAX * 10}
+              min={FLOW_SPEED_MIN * FLOW_SPEED_SLIDER_MULTIPLIER}
+              max={FLOW_SPEED_MAX * FLOW_SPEED_SLIDER_MULTIPLIER}
               step={1}
-              value={Math.round(flowSpeed * 10)}
+              value={Math.round(flowSpeed * FLOW_SPEED_SLIDER_MULTIPLIER)}
               aria-label="Flow animation speed"
-              onChange={(event) => setFlowSpeed(Number(event.target.value) / 10)}
+              onChange={(event) => setFlowSpeed(Number(event.target.value) / FLOW_SPEED_SLIDER_MULTIPLIER)}
             />
             <span>
               FLOW SPEED {flowSpeed.toFixed(1)}x · {mapMode} · {selectedEntity?.code ?? 'GLOBAL'}

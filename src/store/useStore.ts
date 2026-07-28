@@ -8,6 +8,8 @@ export const FLOW_SPEED_MIN = 0.4
 export const FLOW_SPEED_MAX = 2.5
 export const FLOW_SPEED_STEP = 0.1
 
+const clampFlowSpeed = (speed: number) => Math.max(FLOW_SPEED_MIN, Math.min(FLOW_SPEED_MAX, Number(speed.toFixed(1))))
+
 interface WEOSState {
   zoomLevel: ZoomLevel
   selectedEntity: GeoEntity | null
@@ -47,7 +49,7 @@ export const useStore = create<WEOSState>((set) => ({
   setMapMode: (mode) => set({ mapMode: mode }),
   setFlowSpeed: (speed) =>
     set({
-      flowSpeed: Math.max(FLOW_SPEED_MIN, Math.min(FLOW_SPEED_MAX, Number(speed.toFixed(1)))),
+      flowSpeed: clampFlowSpeed(speed),
     }),
   acknowledgeAlert: (id) =>
     set((state) => ({

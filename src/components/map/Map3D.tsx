@@ -6,7 +6,14 @@ import * as maplibregl from 'maplibre-gl'
 import { capitalFlows, countries, financialCenters } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
 import type { CapitalFlow, FinancialCenter, GeoEntity } from '../../types'
-import { MAP_3D_BASE_ZOOM, MAP_3D_ZOOM_MULTIPLIER, mapZoomToWeosLevel, weosLevelToMapZoom } from './zoomConfig'
+import {
+  MAP_3D_BASE_ZOOM,
+  MAP_3D_ZOOM_MULTIPLIER,
+  ZOOM_SYNC_THRESHOLD,
+  ZOOM_TRANSITION_DURATION_MS,
+  mapZoomToWeosLevel,
+  weosLevelToMapZoom,
+} from './zoomConfig'
 
 interface Map3DProps {
   onError?: () => void
@@ -15,7 +22,7 @@ interface Map3DProps {
 const GLOBE_CENTER: [number, number] = [110, 20]
 const GLOBE_ZOOM = 1.2
 const MIN_MAP_HOST_SIZE = 80
-const CITY_LABEL_INTENSITY_DIVISOR = 20
+const CITY_LABEL_SIZE_SCALE_FACTOR = 20
 
 /** CARTO dark-matter tiles — no API key, dark theme matches WEOS neon palette */
 const BASEMAP_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -132,7 +139,7 @@ export function Map3D({ onError }: Map3DProps) {
         pickable: false,
         getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
         getText: (center) => center.name,
-        getSize: (center) => 10 + Math.round(center.intensity / CITY_LABEL_INTENSITY_DIVISOR),
+        getSize: (center) => 10 + Math.round(center.intensity / CITY_LABEL_SIZE_SCALE_FACTOR),
         getColor: [220, 240, 255, 230],
         getTextAnchor: 'middle',
         getAlignmentBaseline: 'bottom',
@@ -259,10 +266,10 @@ export function Map3D({ onError }: Map3DProps) {
     if (!map) return
 
     const targetZoom = weosLevelToMapZoom(zoomLevel, MAP_3D_BASE_ZOOM, MAP_3D_ZOOM_MULTIPLIER)
-    if (Math.abs(map.getZoom() - targetZoom) < 0.12) return
+    if (Math.abs(map.getZoom() - targetZoom) < ZOOM_SYNC_THRESHOLD) return
 
     isSyncingZoomRef.current = true
-    map.easeTo({ zoom: targetZoom, duration: 700 })
+    map.easeTo({ zoom: targetZoom, duration: ZOOM_TRANSITION_DURATION_MS })
   }, [zoomLevel])
 
   return <div ref={containerRef} className="deck-host" />

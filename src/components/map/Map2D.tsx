@@ -4,7 +4,14 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 
 import { capitalFlows, countries } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
-import { MAP_2D_BASE_ZOOM, MAP_2D_ZOOM_MULTIPLIER, mapZoomToWeosLevel, weosLevelToMapZoom } from './zoomConfig'
+import {
+  MAP_2D_BASE_ZOOM,
+  MAP_2D_ZOOM_MULTIPLIER,
+  ZOOM_SYNC_THRESHOLD,
+  ZOOM_TRANSITION_DURATION_MS,
+  mapZoomToWeosLevel,
+  weosLevelToMapZoom,
+} from './zoomConfig'
 
 interface Map2DProps {
   onError?: () => void
@@ -269,10 +276,10 @@ export function Map2D({ onError }: Map2DProps) {
     if (!map) return
 
     const targetZoom = weosLevelToMapZoom(zoomLevel, MAP_2D_BASE_ZOOM, MAP_2D_ZOOM_MULTIPLIER)
-    if (Math.abs(map.getZoom() - targetZoom) < 0.12) return
+    if (Math.abs(map.getZoom() - targetZoom) < ZOOM_SYNC_THRESHOLD) return
 
     isSyncingZoomRef.current = true
-    map.easeTo({ zoom: targetZoom, duration: 700 })
+    map.easeTo({ zoom: targetZoom, duration: ZOOM_TRANSITION_DURATION_MS })
   }, [zoomLevel])
 
   return <div ref={containerRef} className="maplibre-host" />

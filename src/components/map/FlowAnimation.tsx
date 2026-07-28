@@ -7,8 +7,8 @@ const FLOW_BASE_TRAVEL_FRAMES = 80
 const FLOW_SPEED_FACTOR = 10
 const FLOW_MAX_ACCELERATION = 20
 const FLOW_PHASE_OFFSET = 0.07
-const CURVE_BASE_OFFSET = 44
-const CURVE_INDEX_SPACING = 14
+const CURVE_VERTICAL_BASE_OFFSET = 44
+const CURVE_VERTICAL_INDEX_SPACING = 14
 const FLOW_LINE_WIDTH_DIVISOR = 180
 const FLOW_DOT_BASE_RADIUS = 2.6
 const FLOW_DOT_SIZE_DIVISOR = 140
@@ -64,15 +64,15 @@ export function FlowAnimation() {
         const end = toCanvasPoint(toCountry.coordinates.lat, toCountry.coordinates.lon, canvas.width, canvas.height)
         const control = {
           x: (start.x + end.x) / 2,
-          y: Math.min(start.y, end.y) - CURVE_BASE_OFFSET - (index % 5) * CURVE_INDEX_SPACING,
+          y: Math.min(start.y, end.y) - CURVE_VERTICAL_BASE_OFFSET - (index % 5) * CURVE_VERTICAL_INDEX_SPACING,
         }
 
         const trailColor = FLOW_TRAIL_COLOR[flow.direction] ?? FLOW_TRAIL_COLOR.bidirectional
         const dotColor = FLOW_DOT_COLOR[flow.direction] ?? FLOW_DOT_COLOR.bidirectional
-        const lineW = Math.max(0.8, flow.value / FLOW_LINE_WIDTH_DIVISOR)
+        const lineWidth = Math.max(0.8, flow.value / FLOW_LINE_WIDTH_DIVISOR)
 
         // Draw trail arc
-        context.lineWidth = lineW
+        context.lineWidth = lineWidth
         context.strokeStyle = trailColor
         context.shadowBlur = 0
         context.beginPath()
