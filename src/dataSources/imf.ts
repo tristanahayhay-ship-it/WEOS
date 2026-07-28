@@ -1,3 +1,17 @@
+/**
+ * IMF (International Monetary Fund) Connector – Phase 6.2 placeholder
+ *
+ * The IMF DataMapper REST API (https://www.imf.org/external/datamapper/api/v1/) does not
+ * provide a stable, publicly accessible CORS-enabled endpoint suitable for browser-based
+ * consumption. Activating this connector requires either a server-side proxy or an official
+ * IMF developer agreement.
+ *
+ * This connector continues to return mock data. It will be replaced with a live
+ * implementation in a future phase once a stable endpoint is available.
+ *
+ * Placeholder indicators: inflation, unemployment
+ */
+
 import type { EconomicDataConnector, EconomicDataPoint, EconomicRawSnapshot } from '../types/economic'
 
 interface ImfMockRecord {

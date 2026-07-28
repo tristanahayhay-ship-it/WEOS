@@ -1,3 +1,17 @@
+/**
+ * OECD Connector – Phase 6.2 placeholder
+ *
+ * The OECD.Stat API (https://stats.oecd.org/SDMX-JSON/) does not expose a stable
+ * CORS-enabled public REST endpoint suitable for direct browser consumption.
+ * Activating this connector requires either a server-side proxy or use of the
+ * OECD's official developer portal.
+ *
+ * This connector continues to return mock data. It will be replaced with a live
+ * implementation in a future phase once a stable browser-accessible endpoint is confirmed.
+ *
+ * Placeholder indicators: industrialProduction, unemployment
+ */
+
 import type { EconomicDataConnector, EconomicDataPoint, EconomicRawSnapshot } from '../types/economic'
 
 interface OecdMockRecord {
