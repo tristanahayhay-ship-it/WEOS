@@ -68,9 +68,13 @@ export const useEconomicStore = create<EconomicState>((set, get) => ({
   },
 }))
 
-// Auto-initialise in the background after the first render frame.
+// Auto-initialise providers in the background after the first render frame.
+// Guarded by `typeof window` so the side-effect is skipped in test / SSR
+// environments, where tests call `initializeFromProviders()` directly.
 // The placeholder data remains in place until providers respond, so the UI
 // is never blocked or broken by this background task.
-setTimeout(() => {
-  void useEconomicStore.getState().initializeFromProviders()
-}, 0)
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    void useEconomicStore.getState().initializeFromProviders()
+  }, 0)
+}

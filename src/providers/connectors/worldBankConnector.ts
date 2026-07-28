@@ -72,22 +72,27 @@ export class WorldBankConnector implements EconomicDataProvider {
     const allIsoCodes = new Set([...popMap.keys(), ...gdpMap.keys()])
 
     for (const isoCode of allIsoCodes) {
+      // Use `?? null` to normalise "key absent" and "key present with null value"
+      // to the same null, then only include non-null values in the partial so
+      // valid placeholder data is never overwritten with null.
       const population = popMap.get(isoCode) ?? null
-      // World Bank returns GDP in raw USD; our schema stores billions
       const gdpRawUsd = gdpMap.get(isoCode) ?? null
-      const gdpUsd = gdpRawUsd !== null ? gdpRawUsd / 1e9 : null
 
       const partial: PartialEconomicData = {}
 
-      if (population !== undefined) partial.population = population
-      if (gdpUsd !== undefined) partial.gdpUsd = gdpUsd
-
-      // Derive GDP per capita when both values are available
-      if (population != null && population > 0 && gdpRawUsd != null) {
-        partial.gdpPerCapitaUsd = Math.round(gdpRawUsd / population)
+      if (population !== null) partial.population = population
+      if (gdpRawUsd !== null) {
+        // World Bank returns GDP in raw USD; our schema stores billions
+        partial.gdpUsd = gdpRawUsd / 1e9
+        // Derive GDP per capita when population is also available
+        if (population !== null && population > 0) {
+          partial.gdpPerCapitaUsd = Math.round(gdpRawUsd / population)
+        }
       }
 
-      result.set(isoCode, partial)
+      if (Object.keys(partial).length > 0) {
+        result.set(isoCode, partial)
+      }
     }
 
     return result

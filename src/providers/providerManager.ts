@@ -73,24 +73,19 @@ async function withRetry<T>(
 }
 
 /**
- * Merge `source` into `target`, overwriting only the fields present in `source`.
- * The isoCode is preserved from the existing record.
+ * Merge `source` into `target`, overwriting only the fields explicitly set
+ * in `source` (i.e. not `undefined`).  The `isoCode` is always preserved
+ * from the target.  New fields added to `CountryEconomicData` are handled
+ * automatically without changing this function.
  */
 function mergeInto(
   target: CountryEconomicData,
   source: PartialEconomicData,
 ): CountryEconomicData {
-  return {
-    ...target,
-    ...(source.population !== undefined && { population: source.population }),
-    ...(source.gdpUsd !== undefined && { gdpUsd: source.gdpUsd }),
-    ...(source.gdpPerCapitaUsd !== undefined && { gdpPerCapitaUsd: source.gdpPerCapitaUsd }),
-    ...(source.inflationPercent !== undefined && { inflationPercent: source.inflationPercent }),
-    ...(source.interestRatePercent !== undefined && { interestRatePercent: source.interestRatePercent }),
-    ...(source.currency !== undefined && { currency: source.currency }),
-    ...(source.currencyCode !== undefined && { currencyCode: source.currencyCode }),
-    ...(source.timeZones !== undefined && { timeZones: source.timeZones }),
-  }
+  const definedFields = Object.fromEntries(
+    (Object.entries(source) as [string, unknown][]).filter(([, v]) => v !== undefined),
+  )
+  return { ...target, ...(definedFields as PartialEconomicData) }
 }
 
 export class ProviderManager {

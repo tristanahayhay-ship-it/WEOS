@@ -23,29 +23,18 @@
 
 import type { EconomicDataProvider, PartialEconomicData } from '../types'
 
-/** Read a FRED API key from the Vite environment. Returns empty string if absent. */
-function getFredApiKey(): string {
-  // Vite exposes VITE_* env variables on import.meta.env
-  return (import.meta.env as Record<string, string>)['VITE_FRED_API_KEY'] ?? ''
-}
-
 export class FredConnector implements EconomicDataProvider {
   readonly name = 'FRED'
   readonly requiresApiKey = true
-
-  /** Called by ProviderManager before `fetchAll()` to check for a key. */
-  get hasApiKey(): boolean {
-    return getFredApiKey().length > 0
-  }
 
   async fetchAll(): Promise<Map<string, PartialEconomicData>> {
     // ProviderManager skips connectors where requiresApiKey === true
     // and no key is configured, so this method is only called when a key exists.
     //
     // Stub: return empty map until a full implementation is added.
-    // Real implementation example:
+    // Real implementation example (set VITE_FRED_API_KEY in .env.local first):
     //
-    //   const key = getFredApiKey()
+    //   const key = (import.meta.env as Record<string, string>)['VITE_FRED_API_KEY'] ?? ''
     //   const url = `https://api.stlouisfed.org/fred/series/observations?series_id=GDP&api_key=${key}&file_type=json&sort_order=desc&limit=1`
     //   const res = await fetch(url)
     //   if (!res.ok) return new Map()
