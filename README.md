@@ -4,7 +4,7 @@ WEOS là ứng dụng Vite + React + TypeScript mô phỏng **Digital Twin of th
 
 ## Tính năng chính
 - Giao diện tiếng Việt, dark theme và glassmorphism.
-- Bản đồ 2D bằng MapLibre GL với đa giác quốc gia và hành lang dòng vốn.
+- Bản đồ 2D bằng MapLibre GL với lớp nền tương tác và hành lang dòng vốn.
 - Bản đồ 3D bằng deck.gl ở chế độ globe.
 - 11 cấp zoom từ L0 đến L10, chuyển từ toàn cảnh hệ thống sang mô phỏng tape giao dịch.
 - Sidebar trái/phải cho chỉ số thị trường, lịch kinh tế, nhận định AI, cảnh báo và news feed.
@@ -30,3 +30,9 @@ npm run build
 
 ## Deploy GitHub Pages
 Ứng dụng đã cấu hình `base: '/WEOS/'` trong `vite.config.ts` và workflow Pages tự động build/deploy khi push lên nhánh `main`.
+
+## Hạn chế hiện tại & bước nâng cấp tiếp theo
+- Dữ liệu hiện dùng mock; cần cắm API thật (Alpha Vantage, WorldBank, CoinGecko...).
+- Bundle JS hiện khá lớn (~2.9MB do map/chart libs); cần code-splitting để tải theo nhu cầu.
+- Bản đồ 2D chưa có polygon GeoJSON đầy đủ theo từng quốc gia; cần bổ sung tileset/vector source riêng.
+- Nếu mở rộng multi-user, cần bổ sung xác thực (authentication) và phân quyền theo vai trò (RBAC).
