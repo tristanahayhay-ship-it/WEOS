@@ -1,4 +1,5 @@
 import { useCountryStore } from '../../stores/countryStore'
+import { useEconomicStore } from '../../stores/economicStore'
 import { isoToFlag, formatArea } from '../../data/countries'
 
 const PANEL_LABELS: Record<string, string> = {
@@ -6,8 +7,13 @@ const PANEL_LABELS: Record<string, string> = {
   capital:   'CAPITAL',
   continent: 'CONTINENT',
   area:      'AREA',
-  population:'POPULATION',
   gdp:       'GDP',
+  population:'POPULATION',
+  gdpPerCapita: 'GDP PER CAPITA',
+  inflation: 'INFLATION',
+  interestRate: 'INTEREST RATE',
+  currency: 'CURRENCY',
+  timeZone: 'TIME ZONE',
 }
 
 function DataRow({ label, value }: { label: string; value: string }) {
@@ -30,10 +36,16 @@ export default function CountryPanel() {
   const selectedCountry = useCountryStore((s) => s.selectedCountry)
   const isPanelOpen = useCountryStore((s) => s.isPanelOpen)
   const closePanel = useCountryStore((s) => s.closePanel)
+  const economicData = useEconomicStore((s) =>
+    selectedCountry ? s.getByIsoCode(selectedCountry.isoCode) : null,
+  )
 
   if (!isPanelOpen || !selectedCountry) return null
 
   const flag = isoToFlag(selectedCountry.isoCode)
+  const formatNumber = (value: number | null) => (value === null ? '—' : value.toLocaleString('en-US'))
+  const formatUsd = (value: number | null) => (value === null ? '—' : `$${value.toLocaleString('en-US')}`)
+  const formatPercent = (value: number | null) => (value === null ? '—' : `${value.toFixed(1)}%`)
 
   return (
     <aside
@@ -91,19 +103,13 @@ export default function CountryPanel() {
         <DataRow label={PANEL_LABELS.capital}    value={selectedCountry.capital} />
         <DataRow label={PANEL_LABELS.continent}  value={selectedCountry.continent} />
         <DataRow label={PANEL_LABELS.area}       value={formatArea(selectedCountry.area)} />
-        <DataRow label={PANEL_LABELS.population} value="—" />
-        <DataRow label={PANEL_LABELS.gdp}        value="—" />
-      </div>
-
-      {/* Footer note */}
-      <div
-        className="px-4 py-2 text-[10px]"
-        style={{
-          color: 'rgba(121,196,255,0.35)',
-          borderTop: '1px solid rgba(121,196,255,0.1)',
-        }}
-      >
-      Population & GDP available in a future phase
+        <DataRow label={PANEL_LABELS.gdp}        value={formatUsd(economicData?.gdpUsd ?? null)} />
+        <DataRow label={PANEL_LABELS.population} value={formatNumber(economicData?.population ?? null)} />
+        <DataRow label={PANEL_LABELS.gdpPerCapita} value={formatUsd(economicData?.gdpPerCapitaUsd ?? null)} />
+        <DataRow label={PANEL_LABELS.inflation} value={formatPercent(economicData?.inflationPct ?? null)} />
+        <DataRow label={PANEL_LABELS.interestRate} value={formatPercent(economicData?.interestRatePct ?? null)} />
+        <DataRow label={PANEL_LABELS.currency} value={economicData?.currency ?? '—'} />
+        <DataRow label={PANEL_LABELS.timeZone} value={economicData?.timeZone ?? '—'} />
       </div>
     </aside>
   )

@@ -33,15 +33,3 @@ export interface Country {
   /** Area in km² */
   area: number
 }
-
-/**
- * Economic data attachment.
- * Designed to be fetched and attached at runtime in future phases
- * without requiring changes to the Country model itself.
- */
-export interface CountryEconomicData {
-  isoCode: string
-  population: number | null
-  gdpUsd: number | null
-  gdpPerCapitaUsd: number | null
-}
