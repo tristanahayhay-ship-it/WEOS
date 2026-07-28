@@ -15,26 +15,38 @@ import { Matrix4, Vector3 } from 'three'
  */
 const DOT_RADIUS = 3.5
 
-const worldMatrix = new Matrix4()
-const worldInverse = new Matrix4()
-const viewMatrix = new Matrix4()
-const viewProjectionMatrix = new Matrix4()
-const cameraWorldPos = new Vector3()
-const localPoint = new Vector3()
-const worldPoint = new Vector3()
-const cameraLocalPos = new Vector3()
-const toCamera = new Vector3()
+// Re-usable singletons — allocated once, mutated in-place each frame.
+const worldMatrix   = new Matrix4()
+const worldInverse  = new Matrix4()
+// View matrix (camera.matrixWorldInverse snapshot) and projection matrix stored
+// separately so that the projection step mirrors what Vector3.project(camera)
+// does internally: applyMatrix4(matrixWorldInverse) → applyMatrix4(projectionMatrix).
+const viewMatrix    = new Matrix4()
+const projMatrix    = new Matrix4()
+const cameraWorldPos  = new Vector3()
+const localPoint      = new Vector3()
+const worldPoint      = new Vector3()
+const cameraLocalPos  = new Vector3()
+const toCamera        = new Vector3()
 
 interface ProjectionContext {
-  worldMatrix: Matrix4
+  worldMatrix:  Matrix4
   worldInverse: Matrix4
-  viewProjectionMatrix: Matrix4
+  /** Camera view matrix (camera.matrixWorldInverse). */
+  viewMatrix:   Matrix4
+  /** Camera projection matrix. */
+  projMatrix:   Matrix4
   cameraWorldPos: Vector3
 }
 
 /**
  * Convert geographic coordinates to a screen point using the current
  * GlobeEngine world/camera matrices.
+ *
+ * The projection pipeline mirrors Vector3.project(camera) exactly:
+ *   local → world (worldMatrix)
+ *   world → view  (viewMatrix  = camera.matrixWorldInverse)
+ *   view  → NDC   (projMatrix  = camera.projectionMatrix, includes w-divide)
  */
 function project(
   lon: number,
@@ -46,15 +58,15 @@ function project(
   const [x, y, z] = projectLngLatToCartesian(lon, lat, EARTH_RADIUS)
   localPoint.set(x, y, z)
 
-  // Back side of the sphere from the active camera view — skip
+  // Back side of the sphere from the active camera view — skip.
   cameraLocalPos.copy(projection.cameraWorldPos).applyMatrix4(projection.worldInverse)
   toCamera.copy(cameraLocalPos).sub(localPoint)
   if (localPoint.dot(toCamera) <= 0) return null
 
-  worldPoint
-    .copy(localPoint)
-    .applyMatrix4(projection.worldMatrix)
-    .applyMatrix4(projection.viewProjectionMatrix)
+  // local → world → view (applyMatrix4 handles the homogeneous w-divide).
+  worldPoint.copy(localPoint).applyMatrix4(projection.worldMatrix)
+  worldPoint.applyMatrix4(projection.viewMatrix)
+  worldPoint.applyMatrix4(projection.projMatrix)
   if (worldPoint.z < -1 || worldPoint.z > 1) return null
 
   return { x: ((worldPoint.x + 1) * width) / 2, y: ((1 - worldPoint.y) * height) / 2 }
@@ -79,13 +91,15 @@ function drawDots(
 
   worldMatrix.fromArray(frame.worldMatrix)
   worldInverse.copy(worldMatrix).invert()
-  viewProjectionMatrix.fromArray(frame.projectionMatrix).multiply(viewMatrix.fromArray(frame.viewMatrix))
+  viewMatrix.fromArray(frame.viewMatrix)
+  projMatrix.fromArray(frame.projectionMatrix)
   cameraWorldPos.fromArray(frame.cameraWorldPosition)
 
   const projection: ProjectionContext = {
     worldMatrix,
     worldInverse,
-    viewProjectionMatrix,
+    viewMatrix,
+    projMatrix,
     cameraWorldPos,
   }
 
