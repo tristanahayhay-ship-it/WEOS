@@ -7,5 +7,23 @@ export default defineConfig({
   base: '/WEOS/',
   build: {
     outDir: 'dist',
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('three')) {
+            return 'three-vendor'
+          }
+
+          if (id.includes('world-atlas') || id.includes('topojson-client')) {
+            return 'globe-data'
+          }
+
+          if (id.includes('react')) {
+            return 'react-vendor'
+          }
+        },
+      },
+    },
   },
 })
