@@ -32,8 +32,8 @@ export function SidebarRight() {
     <aside className="sidebar sidebar-right sidebar-scroll">
       <section className="sidebar-panel">
         <div className="section-title-row">
-          <h3>Nhận định AI</h3>
-          <span className="small-tag">5 tín hiệu</span>
+          <h3>AI GLOBAL ANALYSIS</h3>
+          <span className="small-tag">LIVE</span>
         </div>
         <div className="list-stack">
           {aiInsights.map((insight) => (
@@ -51,12 +51,12 @@ export function SidebarRight() {
 
       <section className="sidebar-panel">
         <div className="section-title-row">
-          <h3>Xếp hạng dòng vốn</h3>
-          <span className="small-tag">Inflow / Outflow</span>
+          <h3>CAPITAL FLOW RANKING (24H)</h3>
+          <span className="small-tag">LIVE</span>
         </div>
         <div className="rank-grid">
           <div className="rank-card">
-            <h3>Hấp thụ vốn</h3>
+            <h3>TOP INFLOW</h3>
             <div className="list-stack">
               {rankings.inflow.map((row, index) => (
                 <div key={row.code} className="rank-row">
@@ -71,7 +71,7 @@ export function SidebarRight() {
             </div>
           </div>
           <div className="rank-card">
-            <h3>Xuất vốn</h3>
+            <h3>TOP OUTFLOW</h3>
             <div className="list-stack">
               {rankings.outflow.map((row, index) => (
                 <div key={row.code} className="rank-row">
@@ -90,7 +90,7 @@ export function SidebarRight() {
 
       <section className="sidebar-panel">
         <div className="section-title-row">
-          <h3>Cảnh báo thị trường</h3>
+          <h3>CRITICAL ALERTS</h3>
           <span className="small-tag">{alerts.filter((item) => !item.acknowledged).length} chưa xử lý</span>
         </div>
         <div className="alert-stack">
@@ -102,8 +102,8 @@ export function SidebarRight() {
 
       <section className="sidebar-panel">
         <div className="section-title-row">
-          <h3>Tin tức vĩ mô</h3>
-          <span className="small-tag">10 mục</span>
+          <h3>NEWS FEED</h3>
+          <span className="small-tag">LIVE</span>
         </div>
         <div className="news-stack">
           {newsFeed.map((news) => (

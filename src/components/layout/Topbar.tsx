@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { countries } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
+
+const navTabs = ['GLOBAL VIEW', 'ECONOMY', 'MARKETS', 'CAPITAL FLOW', 'INDUSTRY', 'AI ANALYTICS', 'NEWS', 'SETTINGS']
 
 export function Topbar() {
   const [utcClock, setUtcClock] = useState(() => new Date().toISOString().slice(11, 19))
   const mapMode = useStore((state) => state.mapMode)
   const toggleMapMode = useStore((state) => state.toggleMapMode)
-  const selectedEntity = useStore((state) => state.selectedEntity)
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -17,34 +17,31 @@ export function Topbar() {
     return () => window.clearInterval(timer)
   }, [])
 
-  const globalRisk = useMemo(() => {
-    const risk = countries.reduce((sum, country) => sum + country.coreMetrics.riskIndex, 0) / countries.length
-    return risk.toFixed(1)
-  }, [])
-
   return (
     <header className="topbar">
       <div className="branding">
-        <div className="brand-mark">WΞ</div>
         <div className="brand-copy">
           <h1>WEOS</h1>
-          <p>Hệ điều hành kinh tế thế giới · Bảng điều khiển song sinh số thời gian thực</p>
+          <p>WORLD ECONOMIC OPERATING SYSTEM · Level 0 · Global View</p>
         </div>
       </div>
 
-      <div className="topbar-center">
-        <div className="topbar-pill">UTC <strong>{utcClock}</strong></div>
+      <nav className="top-nav" aria-label="Main dashboard views">
+        {navTabs.map((tab, index) => (
+          <button key={tab} type="button" className={`top-nav-item ${index === 0 ? 'active' : ''}`}>
+            {tab}
+          </button>
+        ))}
+      </nav>
+
+      <div className="topbar-right">
+        <div className="topbar-pill clock-pill">{utcClock} UTC</div>
         <div className="topbar-pill live">
           <span className="live-dot" />
           LIVE
         </div>
-        <div className="topbar-pill">Rủi ro toàn cầu <strong>{globalRisk}</strong></div>
-      </div>
-
-      <div className="topbar-right">
-        <div className="topbar-pill">Tiêu điểm <strong>{selectedEntity?.name ?? 'Toàn cầu'}</strong></div>
         <button type="button" className={`mode-toggle ${mapMode === '3D' ? 'active' : ''}`} onClick={toggleMapMode}>
-          Bản đồ {mapMode === '2D' ? '2D → 3D' : '3D → 2D'}
+          {mapMode === '2D' ? '3D EARTH' : '2D MAP'}
         </button>
       </div>
     </header>

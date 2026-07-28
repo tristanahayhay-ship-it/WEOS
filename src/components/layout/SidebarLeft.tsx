@@ -49,8 +49,8 @@ export function SidebarLeft() {
     <aside className="sidebar sidebar-left sidebar-scroll">
       <section className="sidebar-panel">
         <div className="section-title-row">
-          <h3>Toàn cảnh thị trường</h3>
-          <span className="small-tag">6 chỉ số</span>
+          <h3>GLOBAL MARKET OVERVIEW</h3>
+          <span className="small-tag">LIVE</span>
         </div>
         <div className="list-stack">
           {marketIndices.map((index) => (
@@ -73,8 +73,8 @@ export function SidebarLeft() {
 
       <section className="sidebar-panel">
         <div className="section-title-row">
-          <h3>Tóm tắt dòng vốn 24h</h3>
-          <span className="small-tag">{capitalFlows.length} hành lang</span>
+          <h3>GLOBAL CAPITAL FLOW (24H)</h3>
+          <span className="small-tag">LIVE</span>
         </div>
         <div className="stat-pair">
           <div className="metric-card">
@@ -102,8 +102,8 @@ export function SidebarLeft() {
 
       <section className="sidebar-panel">
         <div className="section-title-row">
-          <h3>Lịch kinh tế</h3>
-          <span className="small-tag">Sắp tới</span>
+          <h3>ECONOMIC CALENDAR (UTC)</h3>
+          <span className="small-tag">IMPACT</span>
         </div>
         <div className="calendar-stack">
           {economicCalendar.map((event) => (
@@ -121,8 +121,8 @@ export function SidebarLeft() {
 
       <section className="sidebar-panel">
         <div className="section-title-row">
-          <h3>Gauge rủi ro toàn cầu</h3>
-          <span className="small-tag">AI tổng hợp</span>
+          <h3>GLOBAL RISK INDEX</h3>
+          <span className="small-tag">LIVE</span>
         </div>
         <div className="gauge-box">
           <ReactECharts option={gaugeOption} style={{ height: '100%', width: '100%' }} />

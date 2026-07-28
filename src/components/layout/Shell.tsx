@@ -4,12 +4,9 @@ import { SidebarRight } from './SidebarRight'
 import { Topbar } from './Topbar'
 import { MapContainer } from '../map/MapContainer'
 import { FlowAnimation } from '../map/FlowAnimation'
-import { ZoomEngine } from '../ui/ZoomEngine'
 import { useStore } from '../../store/useStore'
-import { zoomLevelLabels } from '../../data/mockData'
 
 export function Shell() {
-  const zoomLevel = useStore((state) => state.zoomLevel)
   const mapMode = useStore((state) => state.mapMode)
 
   return (
@@ -19,16 +16,23 @@ export function Shell() {
         <SidebarLeft />
         <section className="map-stage" aria-label="Bản đồ song sinh số kinh tế toàn cầu">
           <div className="map-header">
-            <div>
-              <p className="map-title">Digital Twin of the Global Economy</p>
-              <p className="muted">{zoomLevelLabels[zoomLevel]} · Chế độ {mapMode}</p>
-            </div>
-            <span className="map-badge">Dòng vốn trực tiếp</span>
+            <p className="map-title">GLOBAL CAPITAL FLOW NETWORK</p>
+            <span className="map-badge">LIVE</span>
           </div>
+
+          <div className="map-legend">
+            <p><span className="legend-dot inflow" /> INFLOW</p>
+            <p><span className="legend-dot outflow" /> OUTFLOW</p>
+            <p><span className="legend-dot neutral" /> NEUTRAL</p>
+          </div>
+
           <MapContainer />
           <FlowAnimation />
-          <div className="map-overlay overlay-top-left">
-            <ZoomEngine />
+
+          <div className="flow-control-bar">
+            <span>REAL-TIME FLOW ANIMATION</span>
+            <input type="range" min={0} max={100} defaultValue={52} aria-label="Flow animation timeline" />
+            <span>FLOW SPEED 1.0x · {mapMode}</span>
           </div>
         </section>
         <SidebarRight />

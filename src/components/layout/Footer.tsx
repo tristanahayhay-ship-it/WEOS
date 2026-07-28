@@ -1,38 +1,39 @@
-import { zoomLevelDescriptions, zoomLevelLabels } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
 import { ZoomLevel } from '../../types'
 
-const levels = Array.from({ length: 11 }, (_, index) => index as ZoomLevel)
+const modeLinks: Array<{ label: string; level: ZoomLevel; icon: string }> = [
+  { label: 'GLOBAL VIEW', level: ZoomLevel.TongTheHeThong, icon: '🌐' },
+  { label: 'REGION VIEW', level: ZoomLevel.VungDiaKinhTe, icon: '◉' },
+  { label: 'COUNTRY VIEW', level: ZoomLevel.QuocGia, icon: '◎' },
+  { label: 'CITY VIEW', level: ZoomLevel.DoThi, icon: '⌂' },
+  { label: 'ASSET VIEW', level: ZoomLevel.DinhChe, icon: '◌' },
+  { label: 'ECONOMIC MAP', level: ZoomLevel.DoanhNghiep, icon: '▦' },
+]
 
 export function Footer() {
   const zoomLevel = useStore((state) => state.zoomLevel)
   const setZoomLevel = useStore((state) => state.setZoomLevel)
-  const zoomIn = useStore((state) => state.zoomIn)
-  const zoomOut = useStore((state) => state.zoomOut)
 
   return (
     <footer className="footer-bar">
-      <div>
-        <p className="panel-title">Điều hướng độ sâu</p>
-        <p className="footer-meta">{zoomLevelDescriptions[zoomLevel]}</p>
-      </div>
-      <div className="zoom-controls">
-        <button type="button" className="zoom-button" onClick={zoomOut}>
-          -
-        </button>
-        {levels.map((level) => (
+      <div className="footer-modes">
+        {modeLinks.map((item, index) => (
           <button
-            key={level}
+            key={item.label}
             type="button"
-            className={`zoom-button ${zoomLevel === level ? 'active' : ''}`}
-            onClick={() => setZoomLevel(level)}
+            className={`footer-mode ${zoomLevel === item.level || (index === 0 && zoomLevel <= ZoomLevel.VungDiaKinhTe) ? 'active' : ''}`}
+            onClick={() => setZoomLevel(item.level)}
           >
-            {zoomLevelLabels[level]}
+            <span>{item.icon}</span>
+            {item.label}
           </button>
         ))}
-        <button type="button" className="zoom-button" onClick={zoomIn}>
-          +
-        </button>
+      </div>
+      <div className="footer-tools">
+        <span>◈</span>
+        <span>⌁</span>
+        <span>◍</span>
+        <span>⟲</span>
       </div>
     </footer>
   )
