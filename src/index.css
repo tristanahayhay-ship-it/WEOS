@@ -875,8 +875,15 @@ button {
 
 .footer-modes {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  min-width: 0;
+  scrollbar-width: none; /* Firefox */
+}
+
+.footer-modes::-webkit-scrollbar {
+  display: none; /* Chrome / Safari */
 }
 
 .footer-mode {
@@ -952,5 +959,129 @@ button {
   .flow-control-bar {
     width: calc(100% - 24px);
     grid-template-columns: 1fr;
+  }
+
+  /* Ensure map-stage has a visible height when page scrolls vertically */
+  .map-stage {
+    min-height: 480px;
+  }
+}
+
+/* ─── Phone (≤ 480 px) ─── */
+@media (max-width: 480px) {
+  /* Topbar: tighten spacing */
+  .topbar {
+    padding: 7px 10px;
+    gap: 5px;
+  }
+
+  .brand-copy h1 {
+    font-size: 1.25rem;
+  }
+
+  .brand-copy p {
+    font-size: 0.6rem;
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .top-nav-item {
+    font-size: 0.58rem;
+    padding: 5px 7px;
+  }
+
+  .topbar-pill,
+  .mode-toggle {
+    padding: 5px 8px;
+    font-size: 0.64rem;
+  }
+
+  /* App grid */
+  .app-grid {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  /* Map: minimum viable height on phones */
+  .map-stage {
+    min-height: 300px;
+  }
+
+  /* Map header: allow wrapping so title does not clip off-screen */
+  .map-header {
+    max-width: calc(100% - 28px);
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 6px 9px;
+  }
+
+  .map-title {
+    font-size: 0.68rem;
+    flex-basis: 100%;
+  }
+
+  .map-badge {
+    font-size: 0.55rem;
+    padding: 2px 6px;
+  }
+
+  /* Legend: move to bottom-left corner, above control bar */
+  .map-legend {
+    top: auto;
+    bottom: 56px;
+    left: 10px;
+    padding: 5px 8px;
+    min-width: 88px;
+    gap: 4px;
+  }
+
+  .map-legend p {
+    font-size: 0.62rem;
+    gap: 5px;
+  }
+
+  /* Flow control bar: slider only, hide text labels */
+  .flow-control-bar {
+    grid-template-columns: 1fr;
+    width: calc(100% - 16px);
+    bottom: 8px;
+    padding: 5px 10px;
+    gap: 4px;
+  }
+
+  .flow-control-bar > span {
+    display: none;
+  }
+
+  /* Footer */
+  .footer-bar {
+    margin: 0 8px 8px;
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .footer-mode {
+    font-size: 0.59rem;
+    padding: 5px 6px;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .footer-tools {
+    flex-shrink: 0;
+    gap: 8px;
+  }
+
+  /* Sidebar panels: tighter internal padding */
+  .sidebar-panel,
+  .rank-card,
+  .panel-card {
+    padding: 10px;
+  }
+
+  .kpi-value {
+    font-size: 1.2rem;
   }
 }

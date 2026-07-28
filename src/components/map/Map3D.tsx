@@ -24,7 +24,8 @@ const GLOBE_ZOOM = 1.2
 const MIN_MAP_HOST_SIZE = 80
 const CITY_LABEL_SIZE_SCALE_FACTOR = 20
 const CITY_LABEL_FONT = '"SFMono-Regular","Cascadia Code","Fira Code",monospace'
-// Mean Earth radius for stable globe-surface placement in deck.gl altitude units (meters).
+// Mean Earth radius — deck.gl uses meters for altitude, and its globe projection
+// internally assumes this same ~6 371 km radius, so matching it keeps arcs on-surface.
 const GLOBE_RADIUS_METERS = 6_371_000
 const ARC_SURFACE_EPSILON_METERS = 250
 const ARC_MAX_ALTITUDE_METERS = 10_000
@@ -76,7 +77,8 @@ const dotProduct = ([ax, ay, az]: CartesianVector3, [bx, by, bz]: CartesianVecto
 
 const normalize = (vector: CartesianVector3): CartesianVector3 => {
   const length = magnitude(vector)
-  // Use north-pole unit vector as safe fallback direction for zero-length input.
+  // Degenerate zero-length input: return a valid unit vector pointing along the Z-axis
+  // (which maps to longitude 90° in the X-Z plane — an arbitrary but safe non-NaN fallback).
   if (length === 0) return [0, 0, 1]
   return [vector[0] / length, vector[1] / length, vector[2] / length]
 }
@@ -109,6 +111,9 @@ const interpolateGreatCircle = (
   const end = normalize(to)
   const dot = clamp(dotProduct(start, end), -1, 1)
 
+  // Threshold ≈ cos(1.8°): vectors this close are treated as identical.
+  // Standard SLERP becomes numerically unstable for very small angles (sinOmega → 0),
+  // so we fall back to linear interpolation which is accurate enough at sub-2° separation.
   if (dot > 0.9995) {
     return normalize([
       start[0] + (end[0] - start[0]) * t,
@@ -117,8 +122,12 @@ const interpolateGreatCircle = (
     ])
   }
 
+  // Antipodal case (dot ≈ -1): SLERP degenerates because the great-circle path is
+  // not unique. We pick an orthogonal axis via component swizzling (Gram-Schmidt step),
+  // then rotate around that axis through angle π·t to traverse a well-defined great circle.
   if (dot < -0.9995) {
     const orthogonal = normalize(
+      // Choose the component with smaller magnitude to avoid near-zero cross product.
       Math.abs(start[0]) > Math.abs(start[2]) ? [-start[1], start[0], 0] : [0, -start[2], start[1]],
     )
     const theta = Math.PI * t
