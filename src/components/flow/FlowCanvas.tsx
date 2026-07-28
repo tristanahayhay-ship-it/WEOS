@@ -24,8 +24,9 @@ export default function FlowCanvas() {
 
   const isVisible    = useFlowStore((s) => s.isVisible)
   const tick         = useFlowStore((s) => s.tick)
+  const flows        = useFlowStore((s) => s.flows)
+  const visibleTypes = useFlowStore((s) => s.visibleTypes)
   const getFiltered  = useFlowStore((s) => s.getFilteredFlows)
-  const animTime     = useFlowStore((s) => s.animationTime)
 
   // ── Renderer bootstrap ────────────────────────────────────────────────────
 
@@ -49,11 +50,12 @@ export default function FlowCanvas() {
   }, [size])
 
   // ── Flow data → geometry sync ─────────────────────────────────────────────
+  // Re-run only when the flow list or visible-type filter changes.
 
   useEffect(() => {
     if (!rendererRef.current) return
     rendererRef.current.updateFlows(getFiltered())
-  })
+  }, [flows, visibleTypes, getFiltered])
 
   // ── Animation loop ────────────────────────────────────────────────────────
 
@@ -86,10 +88,6 @@ export default function FlowCanvas() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  // Keep animTime in scope to suppress the "unused" lint warning —
-  // the actual value is read inside animate() via the store.
-  void animTime
-
   return (
     <div
       ref={containerRef}
@@ -105,3 +103,4 @@ export default function FlowCanvas() {
     </div>
   )
 }
+
