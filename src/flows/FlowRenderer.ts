@@ -28,8 +28,12 @@ const MAX_LINE_OPACITY = 0.85
 /** Number of segments along each arc */
 const ARC_SEGMENTS = 60
 
-/** How far above EARTH_RADIUS the arc peaks (relative, proportional to chord) */
-const ARC_LIFT_FACTOR = 0.55
+/**
+ * Maximum arc height above EARTH_RADIUS as a fraction of EARTH_RADIUS.
+ * Actual lift = ARC_LIFT_FACTOR × sin(half-angle) so short arcs hug the
+ * surface and long arcs rise only modestly.
+ */
+const ARC_LIFT_FACTOR = 0.4
 
 /** Value range for opacity normalisation (USD billions) */
 const VALUE_MIN = 1
@@ -93,13 +97,40 @@ function buildArcGeometry(
   const start = new Vector3(ax, ay, az)
   const end   = new Vector3(bx, by, bz)
 
-  // Mid-point of great-circle arc, lifted by ARC_LIFT_FACTOR × chord length
-  const mid = start.clone().add(end).multiplyScalar(0.5)
-  const chordLen = start.distanceTo(end)
-  const lift = chordLen * ARC_LIFT_FACTOR
-  mid.normalize().multiplyScalar(EARTH_RADIUS + lift)
+  // Unit-sphere directions for the two endpoints.
+  const aHat = start.clone().normalize()
+  const bHat = end.clone().normalize()
 
-  const curve = new QuadraticBezierCurve3(start, mid, end)
+  // Great-circle midpoint direction: average of unit vectors then re-normalised.
+  // This equals slerp(a,b,0.5) for non-antipodal pairs and is well-defined for
+  // any angle < 180°.
+  const midDir = aHat.clone().add(bHat)
+
+  // Guard against near-antipodal pairs (start + end ≈ 0).
+  if (midDir.lengthSq() < 1e-6) {
+    midDir.crossVectors(aHat, new Vector3(0, 1, 0))
+    if (midDir.lengthSq() < 1e-6) {
+      midDir.crossVectors(aHat, new Vector3(1, 0, 0))
+    }
+  }
+  midDir.normalize()
+
+  // Lift scales with sin(half-angle): zero for collocated points, capped for
+  // near-antipodal ones.  sin(θ/2) = sqrt((1 − cosθ)/2).
+  const cosAngle = Math.max(-1, Math.min(1, aHat.dot(bHat)))
+  const halfSin  = Math.sqrt((1 - cosAngle) / 2)          // ∈ [0, 1]
+  const arcR     = r + EARTH_RADIUS * ARC_LIFT_FACTOR * halfSin
+
+  // Point on the sphere (at arcR) that the arc's visual midpoint passes through.
+  const midPoint = midDir.multiplyScalar(arcR)
+
+  // Derive the QuadraticBezier control point so that the curve midpoint equals
+  // midPoint exactly:
+  //   B(0.5) = 0.25·start + 0.5·ctrl + 0.25·end  ⟹  ctrl = 2·midPoint − 0.5·(start+end)
+  const ctrl = midPoint.clone().multiplyScalar(2)
+    .sub(start.clone().add(end).multiplyScalar(0.5))
+
+  const curve = new QuadraticBezierCurve3(start, ctrl, end)
   const points = curve.getPoints(ARC_SEGMENTS)
 
   const positions = new Float32Array(points.length * 3)
@@ -156,6 +187,9 @@ export class FlowRenderer {
   constructor(canvas: HTMLCanvasElement) {
     this.scene    = new Scene()
     this.camera   = new PerspectiveCamera(45, 1, 0.1, 100)
+    // Prevent Three.js from rebuilding matrixWorld from position/quaternion/scale
+    // during renderer.render(); we inject the matrices directly from GlobeEngine.
+    this.camera.matrixAutoUpdate = false
     this.flowGroup = new Group()
     this.flowGroup.matrixAutoUpdate = false
 
@@ -230,9 +264,18 @@ export class FlowRenderer {
     this.flowGroup.matrix.fromArray(frame.worldMatrix)
     this.flowGroup.matrixWorldNeedsUpdate = true
 
-    // Reconstruct camera from view matrix (matrixWorldInverse) and projection
+    // Inject the camera matrices from the GlobeEngine snapshot.
+    //
+    // Three.js Camera.updateMatrixWorld() recomputes matrixWorldInverse from
+    // matrixWorld, so we must keep camera.matrix (local matrix) in sync with
+    // the injected matrixWorld.  Combined with matrixAutoUpdate = false
+    // (set in the constructor), this ensures that even a forced
+    // updateMatrixWorld(true) call from the renderer leaves our matrices intact.
     this.camera.matrixWorldInverse.fromArray(frame.viewMatrix)
     this.camera.matrixWorld.copy(this.camera.matrixWorldInverse).invert()
+    // Keep local matrix consistent so a forced updateMatrixWorld() is a no-op.
+    this.camera.matrix.copy(this.camera.matrixWorld)
+    this.camera.matrixWorldNeedsUpdate = false
     this.camera.projectionMatrix.fromArray(frame.projectionMatrix)
     this.camera.projectionMatrixInverse.copy(this.camera.projectionMatrix).invert()
   }
@@ -249,11 +292,9 @@ export class FlowRenderer {
     this.renderer.render(this.scene, this.camera)
   }
 
-  /** Resize the renderer and update camera aspect ratio. */
+  /** Resize the renderer canvas. */
   resize(width: number, height: number): void {
     this.renderer.setSize(width, height, false)
-    this.camera.aspect = width / height
-    this.camera.updateProjectionMatrix()
   }
 
   /** Free all GPU resources. */
