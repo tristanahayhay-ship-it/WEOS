@@ -10,6 +10,7 @@ const CURRENCY_BY_CONTINENT = {
   Oceania: 'AUD',
   'South America': 'USD',
 } as const
+const LONGITUDE_GDP_MULTIPLIER = 180
 
 function estimateTimeZone(offsetHours: number): string {
   const rounded = Math.round(offsetHours)
@@ -20,7 +21,7 @@ function estimateTimeZone(offsetHours: number): string {
 
 function buildPlaceholderEconomicData(isoCode: string, longitude: number, area: number, continent: keyof typeof CURRENCY_BY_CONTINENT): CountryEconomicData {
   const estimatedPopulation = Math.max(50_000, Math.round(area * 120))
-  const gdpPerCapitaUsd = 12_000 + Math.round(Math.abs(longitude) * 180)
+  const gdpPerCapitaUsd = 12_000 + Math.round(Math.abs(longitude) * LONGITUDE_GDP_MULTIPLIER)
   const gdpUsd = estimatedPopulation * gdpPerCapitaUsd
 
   return {
