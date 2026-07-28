@@ -28,6 +28,11 @@ const GLOBE_RADIUS_FACTOR = 0.42
  * orthographic approximation, which is accurate for the default orientation
  * and degrades gracefully as the user rotates the globe.
  *
+ * The formula matches `projectLngLatToCartesian` in `utils/globe.ts`:
+ *   x = cos(lat)·cos(lon),  y = sin(lat),  z = −cos(lat)·sin(lon)
+ * where z > 0 is the front-facing (camera-side) hemisphere.
+ * The initial globe view centers on lon ≈ −90° (Americas/Atlantic).
+ *
  * Returns `null` for points on the hidden (back) hemisphere.
  */
 function project(
@@ -42,10 +47,11 @@ function project(
   const lonRad = (lon * Math.PI) / 180
   const latRad = (lat * Math.PI) / 180
 
-  // 3-D Cartesian on unit sphere (globe-local axes: x=right, y=up, z=toward camera)
-  const x0 = Math.cos(latRad) * Math.sin(lonRad)
+  // 3-D Cartesian on unit sphere — matches projectLngLatToCartesian in globe.ts
+  // x = cos(lat)·cos(lon), y = sin(lat), z = −cos(lat)·sin(lon)
+  const x0 = Math.cos(latRad) * Math.cos(lonRad)
   const y0 = Math.sin(latRad)
-  const z0 = Math.cos(latRad) * Math.cos(lonRad)
+  const z0 = -Math.cos(latRad) * Math.sin(lonRad)
 
   // Apply axial tilt (Z-rotation of 23.4°)
   const x1 = x0 * Math.cos(TILT) - y0 * Math.sin(TILT)
