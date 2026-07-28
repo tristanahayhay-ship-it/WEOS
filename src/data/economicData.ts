@@ -2,6 +2,7 @@ import { COUNTRIES } from './countries'
 import type { CountryEconomicData } from '../types/economic'
 
 const CURRENCY_BY_CONTINENT = {
+  // Phase 3B placeholder defaults only; Phase 4 realtime feed will replace these.
   Africa: 'XAF',
   Antarctica: 'USD',
   Asia: 'USD',
@@ -26,7 +27,13 @@ function estimateTimeZone(offsetHours: number): string {
   return `UTC${sign}${String(Math.abs(rounded)).padStart(2, '0')}:00`
 }
 
-function buildPlaceholderEconomicData(isoCode: string, longitude: number, area: number, continent: keyof typeof CURRENCY_BY_CONTINENT): CountryEconomicData {
+function buildPlaceholderEconomicData(params: {
+  isoCode: string
+  longitude: number
+  area: number
+  continent: keyof typeof CURRENCY_BY_CONTINENT
+}): CountryEconomicData {
+  const { isoCode, longitude, area, continent } = params
   const estimatedPopulation = Math.max(50_000, Math.round(area * POPULATION_DENSITY_MULTIPLIER))
   const gdpPerCapitaUsd = 12_000 + Math.round(Math.abs(longitude) * LONGITUDE_GDP_MULTIPLIER)
   const gdpUsd = estimatedPopulation * gdpPerCapitaUsd
@@ -56,11 +63,11 @@ function buildPlaceholderEconomicData(isoCode: string, longitude: number, area: 
 export const COUNTRY_ECONOMIC_DATA: ReadonlyMap<string, CountryEconomicData> = new Map(
   COUNTRIES.map((country) => [
     country.isoCode,
-    buildPlaceholderEconomicData(
-      country.isoCode,
-      country.center[0],
-      country.area,
-      country.continent,
-    ),
+    buildPlaceholderEconomicData({
+      isoCode: country.isoCode,
+      longitude: country.center[0],
+      area: country.area,
+      continent: country.continent,
+    }),
   ]),
 )

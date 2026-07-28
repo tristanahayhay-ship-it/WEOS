@@ -48,13 +48,12 @@ export default function CountryPanel() {
   const selectedCountry = useCountryStore((s) => s.selectedCountry)
   const isPanelOpen = useCountryStore((s) => s.isPanelOpen)
   const closePanel = useCountryStore((s) => s.closePanel)
-  const economicData = useEconomicStore((s) =>
-    selectedCountry ? s.getByIsoCode(selectedCountry.isoCode) : null,
-  )
+  const economicByIsoCode = useEconomicStore((s) => s.byIsoCode)
 
   if (!isPanelOpen || !selectedCountry) return null
 
   const flag = isoToFlag(selectedCountry.isoCode)
+  const economicData = economicByIsoCode.get(selectedCountry.isoCode) ?? null
 
   return (
     <aside
