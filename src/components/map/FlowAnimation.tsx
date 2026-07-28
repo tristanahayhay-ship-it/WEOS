@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 import { capitalFlows, countries } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
@@ -30,27 +30,30 @@ const toCanvasPoint = (lat: number, lon: number, width: number, height: number) 
   y: ((90 - lat) / 180) * height,
 })
 
-const animatedFlows = capitalFlows.slice(0, 20).flatMap((flow) => {
-  const fromCountry = countries.find((country) => country.id === flow.from)
-  const toCountry = countries.find((country) => country.id === flow.to)
-  if (!fromCountry || !toCountry) return []
-
-  return [
-    {
-      ...flow,
-      fromCoordinates: fromCountry.coordinates,
-      toCoordinates: toCountry.coordinates,
-      trailColor: FLOW_TRAIL_COLOR[flow.direction] ?? FLOW_TRAIL_COLOR.bidirectional,
-      dotColor: FLOW_DOT_COLOR[flow.direction] ?? FLOW_DOT_COLOR.bidirectional,
-      lineWidth: Math.max(0.8, flow.value / FLOW_LINE_WIDTH_DIVISOR),
-      dotRadius: FLOW_DOT_BASE_RADIUS + flow.value / FLOW_DOT_SIZE_DIVISOR,
-    },
-  ]
-})
-
 export function FlowAnimation() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const flowSpeed = useStore((state) => state.flowSpeed)
+  const animatedFlows = useMemo(
+    () =>
+      capitalFlows.slice(0, 20).flatMap((flow) => {
+        const fromCountry = countries.find((country) => country.id === flow.from)
+        const toCountry = countries.find((country) => country.id === flow.to)
+        if (!fromCountry || !toCountry) return []
+
+        return [
+          {
+            ...flow,
+            fromCoordinates: fromCountry.coordinates,
+            toCoordinates: toCountry.coordinates,
+            trailColor: FLOW_TRAIL_COLOR[flow.direction] ?? FLOW_TRAIL_COLOR.bidirectional,
+            dotColor: FLOW_DOT_COLOR[flow.direction] ?? FLOW_DOT_COLOR.bidirectional,
+            lineWidth: Math.max(0.8, flow.value / FLOW_LINE_WIDTH_DIVISOR),
+            dotRadius: FLOW_DOT_BASE_RADIUS + flow.value / FLOW_DOT_SIZE_DIVISOR,
+          },
+        ]
+      }),
+    [],
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -125,7 +128,7 @@ export function FlowAnimation() {
       window.removeEventListener('resize', resize)
       window.cancelAnimationFrame(animation)
     }
-  }, [flowSpeed])
+  }, [animatedFlows, flowSpeed])
 
   return <canvas ref={canvasRef} className="flow-layer" />
 }

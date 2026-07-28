@@ -74,6 +74,7 @@ export function Map3D({ onError }: Map3DProps) {
   const overlayRef = useRef<MapboxOverlay | null>(null)
   const isCreatingRef = useRef(false)
   const isSyncingZoomRef = useRef(false)
+  const moveEndHandlerRef = useRef<(() => void) | null>(null)
   const selectEntity = useStore((state) => state.selectEntity)
   const zoomLevel = useStore((state) => state.zoomLevel)
   const setZoomLevel = useStore((state) => state.setZoomLevel)
@@ -248,14 +249,16 @@ export function Map3D({ onError }: Map3DProps) {
         }
       })
 
-      map.on('moveend', () => {
+      const handleMoveEnd = () => {
         const normalizedLevel = mapZoomToWeosLevel(map.getZoom(), MAP_3D_BASE_ZOOM, MAP_3D_ZOOM_MULTIPLIER)
         if (isSyncingZoomRef.current) {
           isSyncingZoomRef.current = false
           return
         }
         setZoomLevel(normalizedLevel)
-      })
+      }
+      moveEndHandlerRef.current = handleMoveEnd
+      map.on('moveend', handleMoveEnd)
     } catch (err) {
       console.error('[WEOS Map3D] Failed to initialise globe map:', err)
       onError?.()
@@ -264,9 +267,13 @@ export function Map3D({ onError }: Map3DProps) {
     }
 
     return () => {
+      if (moveEndHandlerRef.current) {
+        mapRef.current?.off('moveend', moveEndHandlerRef.current)
+      }
       mapRef.current?.remove()
       mapRef.current = null
       overlayRef.current = null
+      moveEndHandlerRef.current = null
       isCreatingRef.current = false
     }
   }, [onError, setZoomLevel])

@@ -54,6 +54,7 @@ export function Map2D({ onError }: Map2DProps) {
   const isCreatingMapRef = useRef(false)
   const hasReportedErrorRef = useRef(false)
   const isSyncingZoomRef = useRef(false)
+  const moveEndHandlerRef = useRef<(() => void) | null>(null)
   const selectEntity = useStore((state) => state.selectEntity)
   const zoomLevel = useStore((state) => state.zoomLevel)
   const setZoomLevel = useStore((state) => state.setZoomLevel)
@@ -230,14 +231,16 @@ export function Map2D({ onError }: Map2DProps) {
             console.warn('[WEOS Map2D] Tile or source error (map still functional):', e.error.message)
           }
         })
-        map.on('moveend', () => {
+        const handleMoveEnd = () => {
           const normalizedLevel = mapZoomToWeosLevel(map.getZoom(), MAP_2D_BASE_ZOOM, MAP_2D_ZOOM_MULTIPLIER)
           if (isSyncingZoomRef.current) {
             isSyncingZoomRef.current = false
             return
           }
           setZoomLevel(normalizedLevel)
-        })
+        }
+        moveEndHandlerRef.current = handleMoveEnd
+        map.on('moveend', handleMoveEnd)
         isCreatingMapRef.current = false
       } catch {
         isCreatingMapRef.current = false
@@ -266,8 +269,12 @@ export function Map2D({ onError }: Map2DProps) {
       window.clearTimeout(invalidSizeTimer)
       resizeObserver.disconnect()
       isCreatingMapRef.current = false
+      if (moveEndHandlerRef.current) {
+        mapRef.current?.off('moveend', moveEndHandlerRef.current)
+      }
       mapRef.current?.remove()
       mapRef.current = null
+      moveEndHandlerRef.current = null
     }
   }, [countryGeoJson, flowGeoJson, onError, selectEntity, setZoomLevel])
 
