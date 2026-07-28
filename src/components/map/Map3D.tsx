@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { MapboxOverlay } from '@deck.gl/mapbox'
-import { ArcLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
+import { PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
 import * as maplibregl from 'maplibre-gl'
 
 import { capitalFlows, countries, financialCenters } from '../../data/mockData'
 import { useStore } from '../../store/useStore'
-import type { CapitalFlow, FinancialCenter, GeoEntity } from '../../types'
+import type { CapitalFlow, Coordinate, FinancialCenter, GeoEntity } from '../../types'
 import {
   MAP_3D_BASE_ZOOM,
   MAP_3D_ZOOM_MULTIPLIER,
@@ -24,6 +24,17 @@ const GLOBE_ZOOM = 1.2
 const MIN_MAP_HOST_SIZE = 80
 const CITY_LABEL_SIZE_SCALE_FACTOR = 20
 const CITY_LABEL_FONT = '"SFMono-Regular","Cascadia Code","Fira Code",monospace'
+// Mean Earth radius — deck.gl uses meters for altitude, and its globe projection
+// internally assumes this same ~6 371 km radius, so matching it keeps arcs on-surface.
+const GLOBE_RADIUS_METERS = 6_371_000
+const ARC_SURFACE_EPSILON_METERS = 250
+const ARC_MAX_ALTITUDE_METERS = 10_000
+const ARC_SEGMENTS = 64
+const ARC_GLOW_WIDTH_DIVISOR = 36
+const ARC_CORE_WIDTH_DIVISOR = 70
+const MIN_ARC_RADIUS_METERS = GLOBE_RADIUS_METERS + ARC_SURFACE_EPSILON_METERS
+const MAX_ARC_RADIUS_METERS =
+  GLOBE_RADIUS_METERS + ARC_SURFACE_EPSILON_METERS + ARC_MAX_ALTITUDE_METERS
 
 /** CARTO dark-matter tiles — no API key, dark theme matches WEOS neon palette */
 const BASEMAP_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -38,18 +49,156 @@ const countryColor = (score: number): [number, number, number, number] => {
   return [255, 68, 68, 190]
 }
 
-/** Arc source color based on flow direction */
-const arcSourceColor = (flow: CapitalFlow): [number, number, number, number] => {
-  if (flow.direction === 'outbound') return [255, 100, 50, 210]
-  if (flow.direction === 'inbound') return [0, 255, 136, 210]
-  return [0, 180, 255, 200]
+const arcPathColor = (flow: CapitalFlow): [number, number, number, number] => {
+  if (flow.direction === 'outbound') return [255, 98, 66, 210]
+  if (flow.direction === 'inbound') return [0, 248, 160, 210]
+  return [0, 208, 255, 210]
 }
 
-/** Arc target color based on flow direction */
-const arcTargetColor = (flow: CapitalFlow): [number, number, number, number] => {
-  if (flow.direction === 'outbound') return [255, 50, 50, 180]
-  if (flow.direction === 'inbound') return [0, 212, 255, 200]
-  return [0, 255, 200, 190]
+const arcPathGlowColor = (flow: CapitalFlow): [number, number, number, number] => {
+  if (flow.direction === 'outbound') return [255, 90, 60, 72]
+  if (flow.direction === 'inbound') return [0, 248, 140, 72]
+  return [0, 208, 255, 72]
+}
+
+type GlobePosition = [number, number, number]
+type CartesianVector3 = [number, number, number]
+type FlowPath = CapitalFlow & {
+  path: GlobePosition[]
+}
+
+const toRadians = (value: number): number => (value * Math.PI) / 180
+const toDegrees = (value: number): number => (value * 180) / Math.PI
+
+const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value))
+
+const magnitude = ([x, y, z]: CartesianVector3): number => Math.hypot(x, y, z)
+const dotProduct = ([ax, ay, az]: CartesianVector3, [bx, by, bz]: CartesianVector3): number => ax * bx + ay * by + az * bz
+
+const normalize = (vector: CartesianVector3): CartesianVector3 => {
+  const length = magnitude(vector)
+  // Degenerate zero-length input: return a valid unit vector pointing along the Z-axis
+  // (which maps to longitude 90° in the X-Z plane — an arbitrary but safe non-NaN fallback).
+  if (length === 0) return [0, 0, 1]
+  return [vector[0] / length, vector[1] / length, vector[2] / length]
+}
+
+const fromCoordinateToUnitVector = ({ lat, lon }: Coordinate): CartesianVector3 => {
+  const latitude = toRadians(lat)
+  const longitude = toRadians(lon)
+  const cosLatitude = Math.cos(latitude)
+
+  return normalize([
+    cosLatitude * Math.cos(longitude),
+    Math.sin(latitude),
+    cosLatitude * Math.sin(longitude),
+  ])
+}
+
+const fromUnitVectorToCoordinate = ([x, y, z]: CartesianVector3): Coordinate => {
+  const normalized = normalize([x, y, z])
+  const lon = toDegrees(Math.atan2(normalized[2], normalized[0]))
+  const lat = toDegrees(Math.asin(clamp(normalized[1], -1, 1)))
+  return { lon, lat }
+}
+
+const interpolateGreatCircle = (
+  from: CartesianVector3,
+  to: CartesianVector3,
+  t: number,
+): CartesianVector3 => {
+  const start = normalize(from)
+  const end = normalize(to)
+  const dot = clamp(dotProduct(start, end), -1, 1)
+
+  // Threshold ≈ cos(1.8°): vectors this close are treated as identical.
+  // Standard SLERP becomes numerically unstable for very small angles (sinOmega → 0),
+  // so we fall back to linear interpolation which is accurate enough at sub-2° separation.
+  if (dot > 0.9995) {
+    return normalize([
+      start[0] + (end[0] - start[0]) * t,
+      start[1] + (end[1] - start[1]) * t,
+      start[2] + (end[2] - start[2]) * t,
+    ])
+  }
+
+  // Antipodal case (dot ≈ -1): SLERP degenerates because the great-circle path is
+  // not unique. We pick an orthogonal axis via component swizzling (Gram-Schmidt step),
+  // then rotate around that axis through angle π·t to traverse a well-defined great circle.
+  if (dot < -0.9995) {
+    const orthogonal = normalize(
+      // Choose the component with smaller magnitude to avoid near-zero cross product.
+      Math.abs(start[0]) > Math.abs(start[2]) ? [-start[1], start[0], 0] : [0, -start[2], start[1]],
+    )
+    const theta = Math.PI * t
+    return normalize([
+      start[0] * Math.cos(theta) + orthogonal[0] * Math.sin(theta),
+      start[1] * Math.cos(theta) + orthogonal[1] * Math.sin(theta),
+      start[2] * Math.cos(theta) + orthogonal[2] * Math.sin(theta),
+    ])
+  }
+
+  const omega = Math.acos(dot)
+  const sinOmega = Math.sin(omega)
+  const sourceWeight = Math.sin((1 - t) * omega) / sinOmega
+  const targetWeight = Math.sin(t * omega) / sinOmega
+
+  return normalize([
+    start[0] * sourceWeight + end[0] * targetWeight,
+    start[1] * sourceWeight + end[1] * targetWeight,
+    start[2] * sourceWeight + end[2] * targetWeight,
+  ])
+}
+
+const toGlobePosition = (
+  coordinate: Coordinate,
+  altitudeMeters: number = ARC_SURFACE_EPSILON_METERS,
+): GlobePosition => [coordinate.lon, coordinate.lat, Math.max(0, altitudeMeters)]
+
+const getCountryCoordinate = (
+  countryId: string,
+  countryById: Map<string, GeoEntity>,
+  missingCountryIds: Set<string>,
+): Coordinate => {
+  const country = countryById.get(countryId)
+  if (country) return country.coordinates
+
+  if (!missingCountryIds.has(countryId)) {
+    missingCountryIds.add(countryId)
+    console.warn(`[WEOS Map3D] Missing country for flow endpoint: ${countryId}`)
+  }
+
+  return { lon: 0, lat: 0 }
+}
+
+const buildFlowPath = (
+  flow: CapitalFlow,
+  countryById: Map<string, GeoEntity>,
+  missingCountryIds: Set<string>,
+): GlobePosition[] => {
+  const sourceCoordinate = getCountryCoordinate(flow.from, countryById, missingCountryIds)
+  const targetCoordinate = getCountryCoordinate(flow.to, countryById, missingCountryIds)
+  const sourceVector = fromCoordinateToUnitVector(sourceCoordinate)
+  const targetVector = fromCoordinateToUnitVector(targetCoordinate)
+  const dot = clamp(dotProduct(sourceVector, targetVector), -1, 1)
+  const separationRadians = Math.acos(dot)
+  const distanceAltitudeMeters = (separationRadians / Math.PI) * ARC_MAX_ALTITUDE_METERS
+
+  const path: GlobePosition[] = []
+  for (let step = 0; step <= ARC_SEGMENTS; step += 1) {
+    const t = step / ARC_SEGMENTS
+    const curve = Math.sin(Math.PI * t)
+    const radius = clamp(
+      GLOBE_RADIUS_METERS + ARC_SURFACE_EPSILON_METERS + curve * distanceAltitudeMeters,
+      MIN_ARC_RADIUS_METERS,
+      MAX_ARC_RADIUS_METERS,
+    )
+    const pointOnArc = interpolateGreatCircle(sourceVector, targetVector, t)
+    const coordinateOnArc = fromUnitVectorToCoordinate(pointOnArc)
+    path.push(toGlobePosition(coordinateOnArc, radius - GLOBE_RADIUS_METERS))
+  }
+
+  return path
 }
 
 type FinancialCenterVisual = FinancialCenter & {
@@ -75,9 +224,19 @@ export function Map3D({ onError }: Map3DProps) {
   const isCreatingRef = useRef(false)
   const isSyncingZoomRef = useRef(false)
   const moveEndHandlerRef = useRef<(() => void) | null>(null)
+  const missingCountryIdsRef = useRef<Set<string>>(new Set())
   const selectEntity = useStore((state) => state.selectEntity)
   const zoomLevel = useStore((state) => state.zoomLevel)
   const setZoomLevel = useStore((state) => state.setZoomLevel)
+  const countryById = useMemo(() => new Map(countries.map((country) => [country.id, country])), [])
+  const flowPaths = useMemo(
+    () =>
+      capitalFlows.map((flow) => ({
+        ...flow,
+        path: buildFlowPath(flow, countryById, missingCountryIdsRef.current),
+      })),
+    [countryById],
+  )
 
   const layers = useMemo(
     () => [
@@ -91,7 +250,7 @@ export function Map3D({ onError }: Map3DProps) {
         radiusMinPixels: 6,
         radiusMaxPixels: 44,
         lineWidthMinPixels: 1.5,
-        getPosition: (country) => [country.coordinates.lon, country.coordinates.lat],
+        getPosition: (country) => toGlobePosition(country.coordinates),
         getRadius: (country) => 90000 + country.coreMetrics.gdp * 15,
         getFillColor: (country) => countryColor(country.economicHealth),
         getLineColor: [165, 243, 252, 210],
@@ -101,23 +260,27 @@ export function Map3D({ onError }: Map3DProps) {
           }
         },
       }),
-      new ArcLayer<CapitalFlow>({
-        id: 'flow-arc-layer',
-        data: capitalFlows,
+      new PathLayer<FlowPath>({
+        id: 'flow-arc-layer-glow',
+        data: flowPaths,
         pickable: false,
-        getSourcePosition: (flow) => {
-          const country = countries.find((item) => item.id === flow.from)
-          return [country?.coordinates.lon ?? 0, country?.coordinates.lat ?? 0]
-        },
-        getTargetPosition: (flow) => {
-          const country = countries.find((item) => item.id === flow.to)
-          return [country?.coordinates.lon ?? 0, country?.coordinates.lat ?? 0]
-        },
-        getSourceColor: arcSourceColor,
-        getTargetColor: arcTargetColor,
-        getWidth: (flow) => Math.max(1.2, flow.value / 70),
-        greatCircle: true,
-        numSegments: 64,
+        getPath: (flow) => flow.path,
+        getColor: arcPathGlowColor,
+        getWidth: (flow) => Math.max(2.8, flow.value / ARC_GLOW_WIDTH_DIVISOR),
+        widthUnits: 'pixels',
+        widthMinPixels: 2.8,
+        rounded: true,
+      }),
+      new PathLayer<FlowPath>({
+        id: 'flow-arc-layer',
+        data: flowPaths,
+        pickable: false,
+        getPath: (flow) => flow.path,
+        getColor: arcPathColor,
+        getWidth: (flow) => Math.max(1.2, flow.value / ARC_CORE_WIDTH_DIVISOR),
+        widthUnits: 'pixels',
+        widthMinPixels: 1.2,
+        rounded: true,
       }),
       // Outer halo for financial centers (city lights glow)
       new ScatterplotLayer<FinancialCenterVisual>({
@@ -126,7 +289,7 @@ export function Map3D({ onError }: Map3DProps) {
         pickable: false,
         radiusUnits: 'meters',
         opacity: 0.18,
-        getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
+        getPosition: (center) => toGlobePosition(center.coordinates),
         getRadius: (center) => center.intensity * 18000,
         getFillColor: [255, 180, 60, 255],
         stroked: false,
@@ -137,7 +300,7 @@ export function Map3D({ onError }: Map3DProps) {
         pickable: false,
         radiusUnits: 'meters',
         opacity: 0.88,
-        getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
+        getPosition: (center) => toGlobePosition(center.coordinates),
         getRadius: (center) => center.intensity * 5500,
         getFillColor: (center) => center.pointColor,
         getLineColor: [255, 220, 120, 200],
@@ -148,7 +311,7 @@ export function Map3D({ onError }: Map3DProps) {
         id: 'city-labels',
         data: financialCentersWithVisuals,
         pickable: false,
-        getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
+        getPosition: (center) => toGlobePosition(center.coordinates),
         getText: (center) => center.name,
         getSize: (center) => center.labelSize,
         getColor: [220, 240, 255, 230],
@@ -163,7 +326,7 @@ export function Map3D({ onError }: Map3DProps) {
         billboard: true,
       }),
     ],
-    [selectEntity],
+    [flowPaths, selectEntity],
   )
   const layersRef = useRef(layers)
   layersRef.current = layers
