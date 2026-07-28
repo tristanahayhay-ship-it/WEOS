@@ -6,10 +6,13 @@ import {
   Group,
   Line,
   Matrix4,
+  Mesh,
+  MeshBasicMaterial,
   PerspectiveCamera,
   QuadraticBezierCurve3,
   Scene,
   ShaderMaterial,
+  SphereGeometry,
   Vector3,
   WebGLRenderer,
 } from 'three'
@@ -202,6 +205,18 @@ export class FlowRenderer {
     this.renderer.setClearColor(0x000000, 0)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
+    // Depth-mask sphere: invisible, but writes to the depth buffer so that flow
+    // arcs behind the Earth are occluded correctly.  The FlowRenderer canvas is
+    // a separate WebGL context — it has no shared depth buffer with GlobeEngine —
+    // so we recreate the occluder here.  renderOrder = -1 ensures it is drawn
+    // before all flow lines.
+    const occluder = new Mesh(
+      new SphereGeometry(EARTH_RADIUS * 1.005, 64, 64),
+      new MeshBasicMaterial({ colorWrite: false }),
+    )
+    occluder.renderOrder = -1
+    this.flowGroup.add(occluder)
+
     this.scene.add(this.flowGroup)
   }
 
@@ -245,6 +260,7 @@ export class FlowRenderer {
           uAlpha: { value: alpha },
         },
         transparent:    true,
+        depthTest:      true,   // occluded by the depth-mask sphere (arcs behind Earth hidden)
         depthWrite:     false,
         blending:       AdditiveBlending,
       })
