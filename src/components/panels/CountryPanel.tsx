@@ -8,7 +8,7 @@ const PANEL_LABELS: Record<string, string> = {
   continent: 'CONTINENT',
   area:      'AREA',
   gdp:       'GDP',
-  population:'POPULATION',
+  population: 'POPULATION',
   gdpPerCapita: 'GDP PER CAPITA',
   inflation: 'INFLATION',
   interestRate: 'INTEREST RATE',
