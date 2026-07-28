@@ -205,13 +205,18 @@ export class FlowRenderer {
     this.renderer.setClearColor(0x000000, 0)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
-    // Depth-mask sphere: invisible, but writes to the depth buffer so that flow
-    // arcs behind the Earth are occluded correctly.  The FlowRenderer canvas is
-    // a separate WebGL context — it has no shared depth buffer with GlobeEngine —
-    // so we recreate the occluder here.  renderOrder = -1 ensures it is drawn
-    // before all flow lines.
+    /**
+     * Radius of the depth-mask occluder sphere.
+     *
+     * Sits between the Earth's surface (EARTH_RADIUS = 1.0) and the arc
+     * endpoint elevation (EARTH_RADIUS * 1.01).  Any arc vertex that is
+     * geometrically behind this sphere will fail the depth test and not be
+     * drawn.  The tiny gap above EARTH_RADIUS avoids z-fighting with the arc
+     * endpoints themselves.
+     */
+    const OCCLUDER_RADIUS = EARTH_RADIUS * 1.005
     const occluder = new Mesh(
-      new SphereGeometry(EARTH_RADIUS * 1.005, 64, 64),
+      new SphereGeometry(OCCLUDER_RADIUS, 64, 64),
       new MeshBasicMaterial({ colorWrite: false }),
     )
     occluder.renderOrder = -1
