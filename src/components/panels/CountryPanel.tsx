@@ -32,6 +32,18 @@ function DataRow({ label, value }: { label: string; value: string }) {
   )
 }
 
+function formatNumber(value: number | null): string {
+  return value === null ? '—' : value.toLocaleString('en-US')
+}
+
+function formatUsd(value: number | null): string {
+  return value === null ? '—' : `$${value.toLocaleString('en-US')}`
+}
+
+function formatPercent(value: number | null): string {
+  return value === null ? '—' : `${value.toFixed(1)}%`
+}
+
 export default function CountryPanel() {
   const selectedCountry = useCountryStore((s) => s.selectedCountry)
   const isPanelOpen = useCountryStore((s) => s.isPanelOpen)
@@ -43,9 +55,6 @@ export default function CountryPanel() {
   if (!isPanelOpen || !selectedCountry) return null
 
   const flag = isoToFlag(selectedCountry.isoCode)
-  const formatNumber = (value: number | null) => (value === null ? '—' : value.toLocaleString('en-US'))
-  const formatUsd = (value: number | null) => (value === null ? '—' : `$${value.toLocaleString('en-US')}`)
-  const formatPercent = (value: number | null) => (value === null ? '—' : `${value.toFixed(1)}%`)
 
   return (
     <aside
