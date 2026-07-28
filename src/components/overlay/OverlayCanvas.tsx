@@ -1,14 +1,16 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useOverlayStore }    from '../../stores/overlayStore'
-import { useEconomicStore }   from '../../stores/economicStore'
+import { useRealtimeStore } from '../../stores/realtimeStore'
 import { OVERLAYS }           from '../../overlays'
 import { overlayEngine }      from '../../overlays/overlayEngine'
 import { COUNTRIES }          from '../../data/countries'
+import { ECONOMIC_DATA_BY_ISO } from '../../data/economicData'
 import { EARTH_RADIUS, projectLngLatToCartesian } from '../../utils/globe'
 import { useGlobeViewStore } from '../../stores/globeViewStore'
 import type { OverlayMetric } from '../../overlays/types'
 import type { CountryEconomicData } from '../../types/country'
 import { Matrix4, Vector3 } from 'three'
+import { buildRealtimeEconomicMap } from '../../utils/realtimeEconomic'
 
 /**
  * Dot radius in canvas pixels for each country marker.
@@ -132,14 +134,23 @@ function drawDots(
  * OverlayCanvas — a transparent HTML5 canvas that sits on top of the Three.js
  * globe canvas and draws one colored dot per country at its geographic centre.
  *
- * The component reads from `overlayStore` and `economicStore` only — it never
+ * The component reads from `overlayStore` and `realtimeStore` only — it never
  * calls the Globe Engine or modifies any globe internals.
  */
 export default function OverlayCanvas() {
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const isVisible    = useOverlayStore((s) => s.isVisible)
   const activeMetric = useOverlayStore((s) => s.activeMetric)
-  const econData     = useEconomicStore((s) => s.data)
+  const records      = useRealtimeStore((s) => s.records)
+  const econData = useMemo(
+    () => buildRealtimeEconomicMap(records, ECONOMIC_DATA_BY_ISO),
+    [records],
+  )
+  const econDataRef = useRef<ReadonlyMap<string, CountryEconomicData>>(econData)
+
+  useEffect(() => {
+    econDataRef.current = econData
+  }, [econData])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -165,8 +176,7 @@ export default function OverlayCanvas() {
       if (!visible) {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
       } else {
-        const { data } = useEconomicStore.getState()
-        drawDots(ctx, metric, data)
+        drawDots(ctx, metric, econDataRef.current)
       }
 
       rafId = window.requestAnimationFrame(drawFrame)
