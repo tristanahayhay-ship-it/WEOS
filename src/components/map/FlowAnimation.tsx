@@ -33,6 +33,7 @@ const toCanvasPoint = (lat: number, lon: number, width: number, height: number) 
 export function FlowAnimation() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const flowSpeed = useStore((state) => state.flowSpeed)
+  const flowSpeedRef = useRef(flowSpeed)
   const animatedFlows = useMemo(
     () =>
       capitalFlows.slice(0, 20).flatMap((flow) => {
@@ -56,14 +57,19 @@ export function FlowAnimation() {
   )
 
   useEffect(() => {
+    flowSpeedRef.current = flowSpeed
+  }, [flowSpeed])
+
+  useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const context = canvas.getContext('2d')
     if (!context) return
 
-    let frame = 0
     let animation = 0
+    let animationTime = 0
+    let lastTimestamp = 0
 
     const resize = () => {
       const parent = canvas.parentElement
@@ -72,8 +78,14 @@ export function FlowAnimation() {
       canvas.height = parent.clientHeight
     }
 
-    const draw = () => {
-      frame += 1
+    const draw = (timestamp: number) => {
+      if (!lastTimestamp) {
+        lastTimestamp = timestamp
+      }
+
+      const deltaFrames = (timestamp - lastTimestamp) / 16.67
+      lastTimestamp = timestamp
+      animationTime += deltaFrames * flowSpeedRef.current
       context.clearRect(0, 0, canvas.width, canvas.height)
 
       animatedFlows.forEach((flow, index) => {
@@ -95,7 +107,7 @@ export function FlowAnimation() {
 
         // Draw animated dot
         const progress =
-          ((frame * flowSpeed) /
+          (animationTime /
             (FLOW_BASE_TRAVEL_FRAMES - Math.min(flow.speed * FLOW_SPEED_FACTOR, FLOW_MAX_ACCELERATION)) +
             index * FLOW_PHASE_OFFSET) %
           1
@@ -121,14 +133,14 @@ export function FlowAnimation() {
     }
 
     resize()
-    draw()
+    animation = window.requestAnimationFrame(draw)
     window.addEventListener('resize', resize)
 
     return () => {
       window.removeEventListener('resize', resize)
       window.cancelAnimationFrame(animation)
     }
-  }, [animatedFlows, flowSpeed])
+  }, [animatedFlows])
 
   return <canvas ref={canvasRef} className="flow-layer" />
 }

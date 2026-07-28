@@ -23,6 +23,7 @@ const GLOBE_CENTER: [number, number] = [110, 20]
 const GLOBE_ZOOM = 1.2
 const MIN_MAP_HOST_SIZE = 80
 const CITY_LABEL_SIZE_SCALE_FACTOR = 20
+const CITY_LABEL_FONT = '"SFMono-Regular","Cascadia Code","Fira Code",monospace'
 
 /** CARTO dark-matter tiles — no API key, dark theme matches WEOS neon palette */
 const BASEMAP_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -51,7 +52,6 @@ const arcTargetColor = (flow: CapitalFlow): [number, number, number, number] => 
   return [0, 255, 200, 190]
 }
 
-const CITY_LABEL_FONT = '"SFMono-Regular","Cascadia Code","Fira Code",monospace'
 type FinancialCenterVisual = FinancialCenter & {
   pointColor: [number, number, number, number]
   labelSize: number
@@ -225,6 +225,7 @@ export function Map3D({ onError }: Map3DProps) {
         styleLoaded = true
         // Switch to vertical-perspective (globe-like) projection once the style is ready
         map.setProjection({ type: 'vertical-perspective' })
+        // Provide built-in zoom/rotation controls for the 3D globe interaction pass
         map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right')
 
         // Mount deck.gl overlay so layers render on top of the MapLibre basemap

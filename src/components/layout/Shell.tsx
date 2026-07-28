@@ -8,6 +8,8 @@ import { zoomLevelLabels } from '../../data/mockData'
 import { FLOW_SPEED_MAX, FLOW_SPEED_MIN, FLOW_SPEED_STEP, useStore } from '../../store/useStore'
 
 const FLOW_SPEED_SLIDER_MULTIPLIER = 1 / FLOW_SPEED_STEP
+const FLOW_SPEED_SLIDER_MIN = FLOW_SPEED_MIN * FLOW_SPEED_SLIDER_MULTIPLIER
+const FLOW_SPEED_SLIDER_MAX = FLOW_SPEED_MAX * FLOW_SPEED_SLIDER_MULTIPLIER
 
 export function Shell() {
   const mapMode = useStore((state) => state.mapMode)
@@ -43,8 +45,8 @@ export function Shell() {
             <span>REAL-TIME FLOW ANIMATION</span>
             <input
               type="range"
-              min={FLOW_SPEED_MIN * FLOW_SPEED_SLIDER_MULTIPLIER}
-              max={FLOW_SPEED_MAX * FLOW_SPEED_SLIDER_MULTIPLIER}
+              min={FLOW_SPEED_SLIDER_MIN}
+              max={FLOW_SPEED_SLIDER_MAX}
               step={1}
               value={Math.round(flowSpeed * FLOW_SPEED_SLIDER_MULTIPLIER)}
               aria-label="Flow animation speed"
