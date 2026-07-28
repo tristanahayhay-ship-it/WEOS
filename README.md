@@ -10,7 +10,7 @@ A production-grade geospatial analytics platform for visualizing global economic
 | Build Tool | Vite 6 |
 | Styling | Tailwind CSS v4 |
 | 2D Maps | MapLibre GL |
-| 3D Visualization | deck.gl |
+| 3D Visualization | Three.js |
 | State Management | Zustand |
 | Charts | ECharts |
 | Linting | oxlint |
@@ -62,15 +62,21 @@ npm run lint
 ```
 src/
 ├── components/
+│   ├── globe/
+│   │   └── GlobeEngine.tsx # Interactive 3D globe engine
 │   └── layout/
 │       ├── Shell.tsx      # Root dashboard shell
 │       ├── Topbar.tsx     # Tabbed navigation (GLOBAL VIEW … SETTINGS)
 │       └── Footer.tsx     # Mode-navigation footer (2D / 3D / FLOW / CHART)
+├── hooks/
+│   └── useElementSize.ts  # Responsive measurement hook for canvas containers
 ├── stores/
 │   └── uiStore.ts         # Zustand UI state (active tab, view mode)
 ├── types/
 │   ├── ui.ts              # UI type definitions
 │   └── geo.ts             # Geographic type definitions
+├── utils/
+│   └── globe.ts           # Globe geometry and boundary conversion helpers
 ├── App.tsx
 ├── main.tsx
 └── index.css
@@ -82,10 +88,9 @@ Merging to `main` triggers the GitHub Actions workflow (`.github/workflows/deplo
 
 `https://tristanahayhay-ship-it.github.io/WEOS/`
 
-## Roadmap
+## Current Status
 
-- **Phase 1** ✅ Project Foundation — monorepo setup, layout shell, type system, CI/CD
-- **Phase 2** Map Integration — MapLibre GL base map with 2D/3D toggle
-- **Phase 3** Data Layer — economic datasets, trade flow APIs, GeoJSON processing
-- **Phase 4** Visualization — deck.gl overlays, flow arcs, ECharts panels
-- **Phase 5** Analytics — cross-sector indicators, time-series playback
+- **Phase 1** ✅ Project Foundation — layout shell, type system, CI/CD
+- **Phase 2** ✅ Globe Engine — responsive interactive 3D Earth with coastlines and country boundaries
+- **Phase 3** ⏭️ Data Layer — economic datasets, trade flow APIs, GeoJSON processing
+- **Phase 4** ⏭️ Visualization — overlays, flow arcs, charts, and analytics surfaces

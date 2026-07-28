@@ -10,7 +10,7 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   activeTab: 'global-view',
-  viewMode: '2d',
+  viewMode: '3d',
   setActiveTab: (tab) => set({ activeTab: tab }),
   setViewMode: (mode) => set({ viewMode: mode }),
 }))
