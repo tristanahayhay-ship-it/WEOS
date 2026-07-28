@@ -46,11 +46,15 @@ export default function CountryPanel() {
   const fmt = (n: number | null, suffix = '') =>
     n == null ? '—' : n.toLocaleString('en-US') + suffix
 
+  const BILLION = 1_000
   const fmtGdp = (n: number | null) => {
     if (n == null) return '—'
-    if (n >= 1000) return `$${(n / 1000).toFixed(2)}T`
+    if (n >= BILLION) return `$${(n / BILLION).toFixed(2)}T`
     return `$${n.toFixed(2)}B`
   }
+
+  const fmtGdpPerCapita = (n: number | null) =>
+    n == null ? '—' : `$${n.toLocaleString('en-US')}`
 
   const fmtRate = (n: number | null) =>
     n == null ? '—' : `${n.toFixed(2)}%`
@@ -113,7 +117,7 @@ export default function CountryPanel() {
         <DataRow label={PANEL_LABELS.area}         value={formatArea(selectedCountry.area)} />
         <DataRow label={PANEL_LABELS.population}   value={econ ? fmt(econ.population) : '—'} />
         <DataRow label={PANEL_LABELS.gdp}          value={econ ? fmtGdp(econ.gdpUsd) : '—'} />
-        <DataRow label={PANEL_LABELS.gdpPerCapita} value={econ && econ.gdpPerCapitaUsd != null ? `$${econ.gdpPerCapitaUsd.toLocaleString('en-US')}` : '—'} />
+        <DataRow label={PANEL_LABELS.gdpPerCapita} value={econ ? fmtGdpPerCapita(econ.gdpPerCapitaUsd) : '—'} />
         <DataRow label={PANEL_LABELS.inflation}    value={econ ? fmtRate(econ.inflationPercent) : '—'} />
         <DataRow label={PANEL_LABELS.interestRate} value={econ ? fmtRate(econ.interestRatePercent) : '—'} />
         <DataRow label={PANEL_LABELS.currency}     value={econ && econ.currency ? `${econ.currency}${econ.currencyCode ? ` (${econ.currencyCode})` : ''}` : '—'} />
