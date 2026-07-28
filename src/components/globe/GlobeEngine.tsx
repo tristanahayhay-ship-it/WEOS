@@ -57,6 +57,7 @@ function getCameraDistance(width: number) {
 // ── Pre-allocated scratch objects for per-frame sprite-point computation ──────
 const _sv          = new Vector3()
 const _svCamLocal  = new Vector3()
+const _svToCamera  = new Vector3()
 const _svWorldInv  = new Matrix4()
 
 /**
@@ -248,7 +249,7 @@ export default function GlobeEngine() {
         // Same back-face culling used by OverlayCanvas.
         _svCamLocal.set(camera.position.x, camera.position.y, camera.position.z)
           .applyMatrix4(_svWorldInv)
-        if (_sv.dot(_svCamLocal.clone().sub(_sv)) <= 0) return null
+        if (_sv.dot(_svToCamera.copy(_svCamLocal).sub(_sv)) <= 0) return null
 
         _sv.applyMatrix4(world.matrixWorld).project(camera)
         if (_sv.z < -1 || _sv.z > 1) return null
