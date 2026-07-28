@@ -52,6 +52,21 @@ const arcTargetColor = (flow: CapitalFlow): [number, number, number, number] => 
 }
 
 const CITY_LABEL_FONT = '"SFMono-Regular","Cascadia Code","Fira Code",monospace'
+type FinancialCenterVisual = FinancialCenter & {
+  pointColor: [number, number, number, number]
+  labelSize: number
+}
+
+const financialCentersWithVisuals: FinancialCenterVisual[] = financialCenters.map((center) => ({
+  ...center,
+  pointColor: [
+    255,
+    Math.round(120 + center.intensity * 0.8),
+    Math.round(center.intensity * 0.4),
+    230,
+  ] as [number, number, number, number],
+  labelSize: 10 + Math.round(center.intensity / CITY_LABEL_SIZE_SCALE_FACTOR),
+}))
 
 export function Map3D({ onError }: Map3DProps) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -104,9 +119,9 @@ export function Map3D({ onError }: Map3DProps) {
         numSegments: 64,
       }),
       // Outer halo for financial centers (city lights glow)
-      new ScatterplotLayer<FinancialCenter>({
+      new ScatterplotLayer<FinancialCenterVisual>({
         id: 'financial-centers-halo',
-        data: financialCenters,
+        data: financialCentersWithVisuals,
         pickable: false,
         radiusUnits: 'meters',
         opacity: 0.18,
@@ -115,31 +130,26 @@ export function Map3D({ onError }: Map3DProps) {
         getFillColor: [255, 180, 60, 255],
         stroked: false,
       }),
-      new ScatterplotLayer<FinancialCenter>({
+      new ScatterplotLayer<FinancialCenterVisual>({
         id: 'financial-centers',
-        data: financialCenters,
+        data: financialCentersWithVisuals,
         pickable: false,
         radiusUnits: 'meters',
         opacity: 0.88,
         getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
         getRadius: (center) => center.intensity * 5500,
-        getFillColor: (center) => [
-          255,
-          Math.round(120 + center.intensity * 0.8),
-          Math.round(center.intensity * 0.4),
-          230,
-        ],
+        getFillColor: (center) => center.pointColor,
         getLineColor: [255, 220, 120, 200],
         lineWidthMinPixels: 1,
         stroked: true,
       }),
-      new TextLayer<FinancialCenter>({
+      new TextLayer<FinancialCenterVisual>({
         id: 'city-labels',
-        data: financialCenters,
+        data: financialCentersWithVisuals,
         pickable: false,
         getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
         getText: (center) => center.name,
-        getSize: (center) => 10 + Math.round(center.intensity / CITY_LABEL_SIZE_SCALE_FACTOR),
+        getSize: (center) => center.labelSize,
         getColor: [220, 240, 255, 230],
         getTextAnchor: 'middle',
         getAlignmentBaseline: 'bottom',

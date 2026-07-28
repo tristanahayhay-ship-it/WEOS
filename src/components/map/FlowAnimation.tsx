@@ -30,6 +30,24 @@ const toCanvasPoint = (lat: number, lon: number, width: number, height: number) 
   y: ((90 - lat) / 180) * height,
 })
 
+const animatedFlows = capitalFlows.slice(0, 20).flatMap((flow) => {
+  const fromCountry = countries.find((country) => country.id === flow.from)
+  const toCountry = countries.find((country) => country.id === flow.to)
+  if (!fromCountry || !toCountry) return []
+
+  return [
+    {
+      ...flow,
+      fromCoordinates: fromCountry.coordinates,
+      toCoordinates: toCountry.coordinates,
+      trailColor: FLOW_TRAIL_COLOR[flow.direction] ?? FLOW_TRAIL_COLOR.bidirectional,
+      dotColor: FLOW_DOT_COLOR[flow.direction] ?? FLOW_DOT_COLOR.bidirectional,
+      lineWidth: Math.max(0.8, flow.value / FLOW_LINE_WIDTH_DIVISOR),
+      dotRadius: FLOW_DOT_BASE_RADIUS + flow.value / FLOW_DOT_SIZE_DIVISOR,
+    },
+  ]
+})
+
 export function FlowAnimation() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const flowSpeed = useStore((state) => state.flowSpeed)
@@ -55,25 +73,17 @@ export function FlowAnimation() {
       frame += 1
       context.clearRect(0, 0, canvas.width, canvas.height)
 
-      capitalFlows.slice(0, 20).forEach((flow, index) => {
-        const fromCountry = countries.find((country) => country.id === flow.from)
-        const toCountry = countries.find((country) => country.id === flow.to)
-        if (!fromCountry || !toCountry) return
-
-        const start = toCanvasPoint(fromCountry.coordinates.lat, fromCountry.coordinates.lon, canvas.width, canvas.height)
-        const end = toCanvasPoint(toCountry.coordinates.lat, toCountry.coordinates.lon, canvas.width, canvas.height)
+      animatedFlows.forEach((flow, index) => {
+        const start = toCanvasPoint(flow.fromCoordinates.lat, flow.fromCoordinates.lon, canvas.width, canvas.height)
+        const end = toCanvasPoint(flow.toCoordinates.lat, flow.toCoordinates.lon, canvas.width, canvas.height)
         const control = {
           x: (start.x + end.x) / 2,
           y: Math.min(start.y, end.y) - CURVE_VERTICAL_BASE_OFFSET - (index % 5) * CURVE_VERTICAL_INDEX_SPACING,
         }
 
-        const trailColor = FLOW_TRAIL_COLOR[flow.direction] ?? FLOW_TRAIL_COLOR.bidirectional
-        const dotColor = FLOW_DOT_COLOR[flow.direction] ?? FLOW_DOT_COLOR.bidirectional
-        const lineWidth = Math.max(0.8, flow.value / FLOW_LINE_WIDTH_DIVISOR)
-
         // Draw trail arc
-        context.lineWidth = lineWidth
-        context.strokeStyle = trailColor
+        context.lineWidth = flow.lineWidth
+        context.strokeStyle = flow.trailColor
         context.shadowBlur = 0
         context.beginPath()
         context.moveTo(start.x, start.y)
@@ -95,12 +105,11 @@ export function FlowAnimation() {
         const pointX = q0x + q1x + q2x
         const pointY = q0y + q1y + q2y
 
-        const dotRadius = FLOW_DOT_BASE_RADIUS + flow.value / FLOW_DOT_SIZE_DIVISOR
-        context.fillStyle = dotColor
+        context.fillStyle = flow.dotColor
         context.shadowBlur = 16
-        context.shadowColor = dotColor
+        context.shadowColor = flow.dotColor
         context.beginPath()
-        context.arc(pointX, pointY, dotRadius, 0, Math.PI * 2)
+        context.arc(pointX, pointY, flow.dotRadius, 0, Math.PI * 2)
         context.fill()
         context.shadowBlur = 0
       })
