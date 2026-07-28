@@ -143,7 +143,8 @@ function buildRingGeometry(ring: number[][], radius: number): BufferGeometry | n
   let triangles: number[][]
   try {
     triangles = ShapeUtils.triangulateShape(contour, [])
-  } catch {
+  } catch (err) {
+    console.warn('[countryGeometry] triangulateShape failed for ring of length', ring.length, err)
     return null
   }
 

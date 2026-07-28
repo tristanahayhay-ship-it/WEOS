@@ -103,7 +103,7 @@ export default function CountryPanel() {
           borderTop: '1px solid rgba(121,196,255,0.1)',
         }}
       >
-        Population &amp; GDP available in a future phase
+      Population & GDP available in a future phase
       </div>
     </aside>
   )

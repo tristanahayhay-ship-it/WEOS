@@ -60,6 +60,8 @@ export function useCountryInteraction(
   const selectedMeshRef = useRef<Mesh | null>(null)
   const raycaster = useRef(new Raycaster())
   const ndcMouse = useRef(new Vector2())
+  // Maps each hover Mesh to its country numeric code — avoids mutating Three.js objects
+  const hoverMeshCode = useRef(new WeakMap<Mesh, number>())
 
   // ── Sync selected-country mesh whenever the store value changes ────────────
   useEffect(() => {
@@ -133,7 +135,7 @@ export function useCountryInteraction(
 
       // Update hover mesh only when the country changes
       const currentHover = hoverMeshRef.current
-      const currentCode = (currentHover as (Mesh & { _countryCode?: number }) | null)?._countryCode
+      const currentCode = currentHover ? hoverMeshCode.current.get(currentHover) : undefined
 
       if (country?.numericCode !== currentCode) {
         if (currentHover && world) {
@@ -142,9 +144,9 @@ export function useCountryInteraction(
         }
 
         if (country && world) {
-          const mesh = createHoverMesh(country, hoverMaterial) as (Mesh & { _countryCode?: number }) | null
+          const mesh = createHoverMesh(country, hoverMaterial)
           if (mesh) {
-            mesh._countryCode = country.numericCode
+            hoverMeshCode.current.set(mesh, country.numericCode)
             world.add(mesh)
             hoverMeshRef.current = mesh
           }
