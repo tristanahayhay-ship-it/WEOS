@@ -1,6 +1,5 @@
 import { useOverlayStore } from '../../stores/overlayStore'
 import { OVERLAYS, OVERLAY_LIST } from '../../overlays'
-import type { OverlayMetric } from '../../overlays/types'
 
 /**
  * OverlayPanel — floating control panel that lets the user:
@@ -78,7 +77,7 @@ export default function OverlayPanel() {
               <button
                 key={ov.id}
                 type="button"
-                onClick={() => setMetric(ov.id as OverlayMetric)}
+                onClick={() => setMetric(ov.id)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded text-xs text-left transition-all"
                 style={{
                   background: isActive

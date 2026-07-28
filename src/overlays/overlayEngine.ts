@@ -78,7 +78,7 @@ export class OverlayEngine {
 
     const rawValue = overlay.getValue(data)
 
-    if (rawValue === null || rawValue === undefined) {
+    if (rawValue === null) {
       return {
         color: overlay.noDataColor,
         rawValue: null,

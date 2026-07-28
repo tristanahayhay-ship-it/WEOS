@@ -4,6 +4,8 @@ import { useEconomicStore }   from '../../stores/economicStore'
 import { OVERLAYS }           from '../../overlays'
 import { overlayEngine }      from '../../overlays/overlayEngine'
 import { COUNTRIES }          from '../../data/countries'
+import type { OverlayMetric } from '../../overlays/types'
+import type { CountryEconomicData } from '../../types/country'
 
 /**
  * Convert geographic coordinates to an approximate screen position.
@@ -48,6 +50,48 @@ function project(
 }
 
 /**
+ * Draw all country overlay dots onto `ctx` using the given metric and data.
+ * Extracted to avoid duplicating the drawing logic in two effect callbacks.
+ */
+function drawDots(
+  ctx: CanvasRenderingContext2D,
+  activeMetric: OverlayMetric,
+  econData: ReadonlyMap<string, CountryEconomicData>,
+): void {
+  const w = ctx.canvas.width
+  const h = ctx.canvas.height
+
+  ctx.clearRect(0, 0, w, h)
+
+  const overlay     = OVERLAYS[activeMetric]
+  const globeRadius = Math.min(w, h) * 0.42
+  const cx          = w / 2
+  const cy          = h / 2
+
+  for (const country of COUNTRIES) {
+    const [lon, lat] = country.center
+    const pos = project(lon, lat, cx, cy, globeRadius)
+    if (!pos) continue
+
+    const econ   = econData.get(country.isoCode) ?? null
+    const result = overlayEngine.getColor(overlay, econ)
+
+    ctx.beginPath()
+    ctx.arc(pos.x, pos.y, 3.5, 0, Math.PI * 2)
+    ctx.fillStyle   = result.color
+    ctx.globalAlpha = result.hasData ? 0.82 : 0.35
+    ctx.fill()
+
+    // Thin ring to distinguish overlapping dots
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)'
+    ctx.lineWidth   = 0.5
+    ctx.stroke()
+  }
+
+  ctx.globalAlpha = 1
+}
+
+/**
  * OverlayCanvas — a transparent HTML5 canvas that sits on top of the Three.js
  * globe canvas and draws one colored dot per country at its geographic centre.
  *
@@ -55,11 +99,12 @@ function project(
  * calls the Globe Engine or modifies any globe internals.
  */
 export default function OverlayCanvas() {
-  const canvasRef   = useRef<HTMLCanvasElement>(null)
-  const isVisible   = useOverlayStore((s) => s.isVisible)
+  const canvasRef    = useRef<HTMLCanvasElement>(null)
+  const isVisible    = useOverlayStore((s) => s.isVisible)
   const activeMetric = useOverlayStore((s) => s.activeMetric)
-  const econData    = useEconomicStore((s) => s.data)
+  const econData     = useEconomicStore((s) => s.data)
 
+  // Re-draw whenever overlay state or economic data changes
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -74,89 +119,34 @@ export default function OverlayCanvas() {
       canvas.height = h
     }
 
-    ctx.clearRect(0, 0, w, h)
-
-    if (!isVisible) return
-
-    const overlay = OVERLAYS[activeMetric]
-
-    // The globe sphere occupies the largest circle that fits in the canvas,
-    // scaled to match GlobeEngine's approximate rendering area.
-    const globeRadius = Math.min(w, h) * 0.42
-    const cx = w / 2
-    const cy = h / 2
-
-    for (const country of COUNTRIES) {
-      const [lon, lat] = country.center
-      const pos = project(lon, lat, cx, cy, globeRadius)
-      if (!pos) continue
-
-      const econ   = econData.get(country.isoCode) ?? null
-      const result = overlayEngine.getColor(overlay, econ)
-
-      const dotRadius = 3.5
-
-      ctx.beginPath()
-      ctx.arc(pos.x, pos.y, dotRadius, 0, Math.PI * 2)
-      ctx.fillStyle = result.color
-      ctx.globalAlpha = result.hasData ? 0.82 : 0.35
-      ctx.fill()
-
-      // Thin ring to distinguish overlapping dots
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)'
-      ctx.lineWidth   = 0.5
-      ctx.stroke()
+    if (!isVisible) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      return
     }
 
-    ctx.globalAlpha = 1
+    drawDots(ctx, activeMetric, econData)
   }, [isVisible, activeMetric, econData])
 
-  // Re-render on resize
+  // Re-draw on container resize
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const ro = new ResizeObserver(() => {
-      // Force a repaint by updating a dependency; simplest: trigger the draw
-      // effect by toggling a state change is not possible without state.
-      // Instead we clear and re-draw directly here.
       const ctx = canvas.getContext('2d')
       if (!ctx) return
+
       canvas.width  = canvas.offsetWidth
       canvas.height = canvas.offsetHeight
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      if (!useOverlayStore.getState().isVisible) return
-
-      const { activeMetric } = useOverlayStore.getState()
-      const overlay = OVERLAYS[activeMetric]
-      const { data: econData } = useEconomicStore.getState()
-
-      const w = canvas.width
-      const h = canvas.height
-      const globeRadius = Math.min(w, h) * 0.42
-      const cx = w / 2
-      const cy = h / 2
-
-      for (const country of COUNTRIES) {
-        const [lon, lat] = country.center
-        const pos = project(lon, lat, cx, cy, globeRadius)
-        if (!pos) continue
-
-        const econ   = econData.get(country.isoCode) ?? null
-        const result = overlayEngine.getColor(overlay, econ)
-
-        ctx.beginPath()
-        ctx.arc(pos.x, pos.y, 3.5, 0, Math.PI * 2)
-        ctx.fillStyle   = result.color
-        ctx.globalAlpha = result.hasData ? 0.82 : 0.35
-        ctx.fill()
-        ctx.strokeStyle = 'rgba(0,0,0,0.4)'
-        ctx.lineWidth   = 0.5
-        ctx.stroke()
+      const { isVisible: visible, activeMetric: metric } = useOverlayStore.getState()
+      if (!visible) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        return
       }
 
-      ctx.globalAlpha = 1
+      const { data } = useEconomicStore.getState()
+      drawDots(ctx, metric, data)
     })
 
     ro.observe(canvas)
@@ -172,3 +162,4 @@ export default function OverlayCanvas() {
     />
   )
 }
+
