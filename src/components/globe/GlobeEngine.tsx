@@ -28,6 +28,7 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { useUIStore } from '../../stores/uiStore'
 import { useElementSize } from '../../hooks/useElementSize'
+import { useGlobeViewStore } from '../../stores/globeViewStore'
 import {
   COASTLINE_PATHS,
   COUNTRY_BOUNDARY_PATHS,
@@ -197,6 +198,16 @@ export default function GlobeEngine() {
 
     const renderFrame = () => {
       controls.update()
+      scene.updateMatrixWorld()
+      camera.updateMatrixWorld()
+
+      useGlobeViewStore.getState().setFrame({
+        worldMatrix: [...world.matrixWorld.elements],
+        viewMatrix: [...camera.matrixWorldInverse.elements],
+        projectionMatrix: [...camera.projectionMatrix.elements],
+        cameraWorldPosition: [camera.position.x, camera.position.y, camera.position.z],
+      })
+
       renderer.render(scene, camera)
     }
 
@@ -213,6 +224,7 @@ export default function GlobeEngine() {
       controlsRef.current = null
       sceneRef.current = null
       worldRef.current = null
+      useGlobeViewStore.getState().clearFrame()
     }
   }, [containerRef, focusTarget])
 

@@ -4,67 +4,60 @@ import { useEconomicStore }   from '../../stores/economicStore'
 import { OVERLAYS }           from '../../overlays'
 import { overlayEngine }      from '../../overlays/overlayEngine'
 import { COUNTRIES }          from '../../data/countries'
+import { EARTH_RADIUS, projectLngLatToCartesian } from '../../utils/globe'
+import { useGlobeViewStore } from '../../stores/globeViewStore'
 import type { OverlayMetric } from '../../overlays/types'
 import type { CountryEconomicData } from '../../types/country'
+import { Matrix4, Vector3 } from 'three'
 
 /**
  * Dot radius in canvas pixels for each country marker.
  */
 const DOT_RADIUS = 3.5
 
-/**
- * Fraction of Math.min(width, height) used as the projected globe radius.
- * Must approximate GlobeEngine's sphere rendering area (the globe sphere fills
- * roughly 84 % of the shorter canvas dimension).
- */
-const GLOBE_RADIUS_FACTOR = 0.42
+const worldMatrix = new Matrix4()
+const worldInverse = new Matrix4()
+const viewMatrix = new Matrix4()
+const viewProjectionMatrix = new Matrix4()
+const cameraWorldPos = new Vector3()
+const localPoint = new Vector3()
+const worldPoint = new Vector3()
+const cameraLocalPos = new Vector3()
+const toCamera = new Vector3()
+
+interface ProjectionContext {
+  worldMatrix: Matrix4
+  worldInverse: Matrix4
+  viewProjectionMatrix: Matrix4
+  cameraWorldPos: Vector3
+}
 
 /**
- * Convert geographic coordinates to an approximate screen position.
- *
- * The globe is a unit sphere rendered with a Z-rotation of 23.4° (axial tilt)
- * and an OrbitControls camera initially positioned on the +Z axis.
- * This function projects lon/lat onto the visible hemisphere using an
- * orthographic approximation, which is accurate for the default orientation
- * and degrades gracefully as the user rotates the globe.
- *
- * The formula matches `projectLngLatToCartesian` in `utils/globe.ts`:
- *   x = cos(lat)·cos(lon),  y = sin(lat),  z = −cos(lat)·sin(lon)
- * where z > 0 is the front-facing (camera-side) hemisphere.
- * The initial globe view centers on lon ≈ −90° (Americas/Atlantic).
- *
- * Returns `null` for points on the hidden (back) hemisphere.
+ * Convert geographic coordinates to a screen point using the current
+ * GlobeEngine world/camera matrices.
  */
 function project(
   lon: number,
   lat: number,
-  cx: number,
-  cy: number,
-  radius: number,
+  width: number,
+  height: number,
+  projection: ProjectionContext,
 ): { x: number; y: number } | null {
-  const TILT = (23.4 * Math.PI) / 180
+  const [x, y, z] = projectLngLatToCartesian(lon, lat, EARTH_RADIUS)
+  localPoint.set(x, y, z)
 
-  const lonRad = (lon * Math.PI) / 180
-  const latRad = (lat * Math.PI) / 180
+  // Back side of the sphere from the active camera view — skip
+  cameraLocalPos.copy(projection.cameraWorldPos).applyMatrix4(projection.worldInverse)
+  toCamera.copy(cameraLocalPos).sub(localPoint)
+  if (localPoint.dot(toCamera) <= 0) return null
 
-  // 3-D Cartesian on unit sphere — matches projectLngLatToCartesian in globe.ts
-  // x = cos(lat)·cos(lon), y = sin(lat), z = −cos(lat)·sin(lon)
-  const x0 = Math.cos(latRad) * Math.cos(lonRad)
-  const y0 = Math.sin(latRad)
-  const z0 = -Math.cos(latRad) * Math.sin(lonRad)
+  worldPoint
+    .copy(localPoint)
+    .applyMatrix4(projection.worldMatrix)
+    .applyMatrix4(projection.viewProjectionMatrix)
+  if (worldPoint.z < -1 || worldPoint.z > 1) return null
 
-  // Apply axial tilt (Z-rotation of 23.4°)
-  const x1 = x0 * Math.cos(TILT) - y0 * Math.sin(TILT)
-  const y1 = x0 * Math.sin(TILT) + y0 * Math.cos(TILT)
-  const z1 = z0
-
-  // Back hemisphere — skip
-  if (z1 < 0) return null
-
-  return {
-    x: cx + x1 * radius,
-    y: cy - y1 * radius,
-  }
+  return { x: ((worldPoint.x + 1) * width) / 2, y: ((1 - worldPoint.y) * height) / 2 }
 }
 
 /**
@@ -81,14 +74,26 @@ function drawDots(
 
   ctx.clearRect(0, 0, w, h)
 
+  const frame = useGlobeViewStore.getState().frame
+  if (!frame) return
+
+  worldMatrix.fromArray(frame.worldMatrix)
+  worldInverse.copy(worldMatrix).invert()
+  viewProjectionMatrix.fromArray(frame.projectionMatrix).multiply(viewMatrix.fromArray(frame.viewMatrix))
+  cameraWorldPos.fromArray(frame.cameraWorldPosition)
+
+  const projection: ProjectionContext = {
+    worldMatrix,
+    worldInverse,
+    viewProjectionMatrix,
+    cameraWorldPos,
+  }
+
   const overlay     = OVERLAYS[activeMetric]
-  const globeRadius = Math.min(w, h) * GLOBE_RADIUS_FACTOR
-  const cx          = w / 2
-  const cy          = h / 2
 
   for (const country of COUNTRIES) {
     const [lon, lat] = country.center
-    const pos = project(lon, lat, cx, cy, globeRadius)
+    const pos = project(lon, lat, w, h, projection)
     if (!pos) continue
 
     const econ   = econData.get(country.isoCode) ?? null
@@ -122,7 +127,6 @@ export default function OverlayCanvas() {
   const activeMetric = useOverlayStore((s) => s.activeMetric)
   const econData     = useEconomicStore((s) => s.data)
 
-  // Re-draw whenever overlay state or economic data changes
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -130,12 +134,46 @@ export default function OverlayCanvas() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Sync canvas logical size with CSS size
-    const { offsetWidth: w, offsetHeight: h } = canvas
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width  = w
-      canvas.height = h
+    let rafId = 0
+
+    const syncSize = () => {
+      const { offsetWidth, offsetHeight } = canvas
+      if (canvas.width !== offsetWidth || canvas.height !== offsetHeight) {
+        canvas.width = offsetWidth
+        canvas.height = offsetHeight
+      }
     }
+
+    const drawFrame = () => {
+      syncSize()
+
+      const { isVisible: visible, activeMetric: metric } = useOverlayStore.getState()
+      if (!visible) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+      } else {
+        const { data } = useEconomicStore.getState()
+        drawDots(ctx, metric, data)
+      }
+
+      rafId = window.requestAnimationFrame(drawFrame)
+    }
+
+    drawFrame()
+
+    const ro = new ResizeObserver(syncSize)
+    ro.observe(canvas)
+
+    return () => {
+      window.cancelAnimationFrame(rafId)
+      ro.disconnect()
+    }
+  }, [])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas?.getContext('2d')
+    if (!ctx) return
 
     if (!isVisible) {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -144,32 +182,6 @@ export default function OverlayCanvas() {
 
     drawDots(ctx, activeMetric, econData)
   }, [isVisible, activeMetric, econData])
-
-  // Re-draw on container resize
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ro = new ResizeObserver(() => {
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-
-      canvas.width  = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
-
-      const { isVisible: visible, activeMetric: metric } = useOverlayStore.getState()
-      if (!visible) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        return
-      }
-
-      const { data } = useEconomicStore.getState()
-      drawDots(ctx, metric, data)
-    })
-
-    ro.observe(canvas)
-    return () => ro.disconnect()
-  }, [])
 
   return (
     <canvas
@@ -180,4 +192,3 @@ export default function OverlayCanvas() {
     />
   )
 }
-
