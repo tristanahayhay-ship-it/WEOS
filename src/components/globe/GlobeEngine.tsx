@@ -39,6 +39,14 @@ const VIEW_MODE_LABELS = {
   'chart': 'CHART',
 } as const
 
+const MOBILE_BREAKPOINT = 640
+const MOBILE_CAMERA_DISTANCE = 3.2
+const DESKTOP_CAMERA_DISTANCE = 2.8
+
+function getCameraDistance(width: number) {
+  return width < MOBILE_BREAKPOINT ? MOBILE_CAMERA_DISTANCE : DESKTOP_CAMERA_DISTANCE
+}
+
 function createLineGroup(
   paths: Float32Array[],
   color: string,
@@ -171,7 +179,7 @@ export default function GlobeEngine() {
     const world = createWorld()
 
     scene.add(fillLight, keyLight, world)
-    camera.position.set(0, 0, size.width > 0 && size.width < 640 ? 3.2 : 2.8)
+    camera.position.set(0, 0, getCameraDistance(size.width > 0 ? size.width : MOBILE_BREAKPOINT))
 
     rendererRef.current = renderer
     cameraRef.current = camera
@@ -210,7 +218,7 @@ export default function GlobeEngine() {
 
     renderer.setSize(size.width, size.height, false)
     camera.aspect = size.width / size.height
-    camera.position.set(0, 0, size.width < 640 ? 3.2 : 2.8)
+    camera.position.set(0, 0, getCameraDistance(size.width))
     camera.updateProjectionMatrix()
   }, [size.height, size.width])
 
