@@ -19,7 +19,7 @@ type MeshTopology = Parameters<typeof mesh>[0]
 type MeshObject = Exclude<Parameters<typeof mesh>[1], undefined>
 type MeshFilter = Exclude<Parameters<typeof mesh>[2], undefined>
 
-function projectLngLatToCartesian(
+export function projectLngLatToCartesian(
   longitude: number,
   latitude: number,
   radius: number,
@@ -32,6 +32,25 @@ function projectLngLatToCartesian(
     radius * Math.cos(phi),
     radius * Math.sin(phi) * Math.sin(theta),
   ]
+}
+
+/**
+ * Inverse of projectLngLatToCartesian.
+ * Returns [longitude, latitude] for a point on the unit sphere.
+ */
+export function cartesianToLngLat(
+  x: number,
+  y: number,
+  z: number,
+): [number, number] {
+  const r = Math.sqrt(x * x + y * y + z * z)
+  const phi = Math.acos(Math.max(-1, Math.min(1, y / r)))
+  const lat = 90 - (phi * 180) / Math.PI
+  const theta = Math.atan2(z, -x)
+  let lng = (theta * 180) / Math.PI - 180
+  if (lng < -180) lng += 360
+  if (lng > 180) lng -= 360
+  return [lng, lat]
 }
 
 function buildLinePositions(
