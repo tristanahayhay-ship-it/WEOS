@@ -12,7 +12,7 @@ function measureElement(element: HTMLElement): ElementSize {
 
 export function useElementSize<T extends HTMLElement>() {
   const ref = useRef<T | null>(null)
-  const [size, setSize] = useState<ElementSize>({ width: 0, height: 0 })
+  const [size, setSize] = useState<ElementSize | null>(null)
 
   useEffect(() => {
     const element = ref.current

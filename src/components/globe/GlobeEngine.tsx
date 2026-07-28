@@ -179,7 +179,7 @@ export default function GlobeEngine() {
     const world = createWorld()
 
     scene.add(fillLight, keyLight, world)
-    camera.position.set(0, 0, getCameraDistance(size.width > 0 ? size.width : MOBILE_BREAKPOINT))
+    camera.position.set(0, 0, DESKTOP_CAMERA_DISTANCE)
 
     rendererRef.current = renderer
     cameraRef.current = camera
@@ -206,13 +206,13 @@ export default function GlobeEngine() {
       sceneRef.current = null
       worldRef.current = null
     }
-  }, [containerRef, focusTarget, size.width])
+  }, [containerRef, focusTarget])
 
   useEffect(() => {
     const renderer = rendererRef.current
     const camera = cameraRef.current
 
-    if (!renderer || !camera || size.width === 0 || size.height === 0) {
+    if (!renderer || !camera || !size) {
       return
     }
 
@@ -220,7 +220,7 @@ export default function GlobeEngine() {
     camera.aspect = size.width / size.height
     camera.position.set(0, 0, getCameraDistance(size.width))
     camera.updateProjectionMatrix()
-  }, [size.height, size.width])
+  }, [size])
 
   return (
     <section
