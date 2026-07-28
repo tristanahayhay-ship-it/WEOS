@@ -7,6 +7,18 @@ const FLOW_SPEED_FACTOR = 10
 const FLOW_MAX_ACCELERATION = 20
 const FLOW_PHASE_OFFSET = 0.07
 
+/** Neon colours by flow direction */
+const FLOW_TRAIL_COLOR: Record<string, string> = {
+  inbound: 'rgba(0, 255, 136, 0.42)',
+  outbound: 'rgba(255, 80, 50, 0.38)',
+  bidirectional: 'rgba(0, 180, 255, 0.36)',
+}
+const FLOW_DOT_COLOR: Record<string, string> = {
+  inbound: '#00ff88',
+  outbound: '#ff5533',
+  bidirectional: '#00d4ff',
+}
+
 const toCanvasPoint = (lat: number, lon: number, width: number, height: number) => ({
   x: ((lon + 180) / 360) * width,
   y: ((90 - lat) / 180) * height,
@@ -35,7 +47,6 @@ export function FlowAnimation() {
     const draw = () => {
       frame += 1
       context.clearRect(0, 0, canvas.width, canvas.height)
-      context.lineWidth = 1
 
       capitalFlows.slice(0, 20).forEach((flow, index) => {
         const fromCountry = countries.find((country) => country.id === flow.from)
@@ -46,15 +57,23 @@ export function FlowAnimation() {
         const end = toCanvasPoint(toCountry.coordinates.lat, toCountry.coordinates.lon, canvas.width, canvas.height)
         const control = {
           x: (start.x + end.x) / 2,
-          y: Math.min(start.y, end.y) - 40 - (index % 5) * 12,
+          y: Math.min(start.y, end.y) - 44 - (index % 5) * 14,
         }
 
-        context.strokeStyle = index % 2 === 0 ? 'rgba(0, 212, 255, 0.22)' : 'rgba(0, 255, 136, 0.16)'
+        const trailColor = FLOW_TRAIL_COLOR[flow.direction] ?? FLOW_TRAIL_COLOR.bidirectional
+        const dotColor = FLOW_DOT_COLOR[flow.direction] ?? FLOW_DOT_COLOR.bidirectional
+        const lineW = Math.max(0.8, flow.value / 180)
+
+        // Draw trail arc
+        context.lineWidth = lineW
+        context.strokeStyle = trailColor
+        context.shadowBlur = 0
         context.beginPath()
         context.moveTo(start.x, start.y)
         context.quadraticCurveTo(control.x, control.y, end.x, end.y)
         context.stroke()
 
+        // Draw animated dot
         const progress =
           ((frame / (FLOW_BASE_TRAVEL_FRAMES - Math.min(flow.speed * FLOW_SPEED_FACTOR, FLOW_MAX_ACCELERATION))) +
             index * FLOW_PHASE_OFFSET) %
@@ -68,11 +87,12 @@ export function FlowAnimation() {
         const pointX = q0x + q1x + q2x
         const pointY = q0y + q1y + q2y
 
-        context.fillStyle = index % 2 === 0 ? '#00d4ff' : '#00ff88'
-        context.shadowBlur = 12
-        context.shadowColor = context.fillStyle
+        const dotRadius = 2.6 + flow.value / 140
+        context.fillStyle = dotColor
+        context.shadowBlur = 16
+        context.shadowColor = dotColor
         context.beginPath()
-        context.arc(pointX, pointY, 2.4 + (flow.value / 160), 0, Math.PI * 2)
+        context.arc(pointX, pointY, dotRadius, 0, Math.PI * 2)
         context.fill()
         context.shadowBlur = 0
       })

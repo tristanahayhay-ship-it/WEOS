@@ -29,6 +29,8 @@ export function Shell() {
           <MapContainer />
           <FlowAnimation />
 
+          {/* Atmosphere glow ring — purely decorative, sits above map but below controls */}
+          <div className="atmosphere-overlay" aria-hidden="true" />
           <div className="flow-control-bar">
             <span>REAL-TIME FLOW ANIMATION</span>
             <input type="range" min={0} max={100} defaultValue={52} aria-label="Flow animation timeline" />

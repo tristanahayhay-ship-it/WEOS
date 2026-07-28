@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { MapboxOverlay } from '@deck.gl/mapbox'
-import { ArcLayer, ScatterplotLayer } from '@deck.gl/layers'
+import { ArcLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
 import * as maplibregl from 'maplibre-gl'
 
 import { capitalFlows, countries, financialCenters } from '../../data/mockData'
@@ -22,10 +22,24 @@ const BASEMAP_ATTRIBUTION =
   '© <a href="https://carto.com/" target="_blank">CARTO</a>'
 
 const countryColor = (score: number): [number, number, number, number] => {
-  if (score >= 82) return [0, 255, 136, 180]
-  if (score >= 74) return [0, 212, 255, 170]
-  if (score >= 68) return [255, 136, 0, 160]
-  return [255, 68, 68, 170]
+  if (score >= 82) return [0, 255, 136, 200]
+  if (score >= 74) return [0, 212, 255, 190]
+  if (score >= 68) return [255, 136, 0, 180]
+  return [255, 68, 68, 190]
+}
+
+/** Arc source colour based on flow direction */
+const arcSourceColor = (flow: CapitalFlow): [number, number, number, number] => {
+  if (flow.direction === 'outbound') return [255, 100, 50, 210]
+  if (flow.direction === 'inbound') return [0, 255, 136, 210]
+  return [0, 180, 255, 200]
+}
+
+/** Arc target colour based on flow direction */
+const arcTargetColor = (flow: CapitalFlow): [number, number, number, number] => {
+  if (flow.direction === 'outbound') return [255, 50, 50, 180]
+  if (flow.direction === 'inbound') return [0, 212, 255, 200]
+  return [0, 255, 200, 190]
 }
 
 export function Map3D({ onError }: Map3DProps) {
@@ -41,16 +55,16 @@ export function Map3D({ onError }: Map3DProps) {
         id: 'country-layer',
         data: countries,
         pickable: true,
-        opacity: 0.9,
+        opacity: 0.92,
         stroked: true,
         filled: true,
-        radiusMinPixels: 5,
-        radiusMaxPixels: 40,
-        lineWidthMinPixels: 1,
+        radiusMinPixels: 6,
+        radiusMaxPixels: 44,
+        lineWidthMinPixels: 1.5,
         getPosition: (country) => [country.coordinates.lon, country.coordinates.lat],
-        getRadius: (country) => 80000 + country.coreMetrics.gdp * 15,
+        getRadius: (country) => 90000 + country.coreMetrics.gdp * 15,
         getFillColor: (country) => countryColor(country.economicHealth),
-        getLineColor: [165, 243, 252, 180],
+        getLineColor: [165, 243, 252, 210],
         onClick: (info) => {
           if (info.object) {
             selectEntity(info.object)
@@ -69,20 +83,59 @@ export function Map3D({ onError }: Map3DProps) {
           const country = countries.find((item) => item.id === flow.to)
           return [country?.coordinates.lon ?? 0, country?.coordinates.lat ?? 0]
         },
-        getSourceColor: [0, 212, 255, 180],
-        getTargetColor: [0, 255, 136, 190],
-        getWidth: (flow) => Math.max(1, flow.value / 85),
+        getSourceColor: arcSourceColor,
+        getTargetColor: arcTargetColor,
+        getWidth: (flow) => Math.max(1.2, flow.value / 70),
+        greatCircle: true,
+        numSegments: 64,
+      }),
+      // Outer halo for financial centers (city lights glow)
+      new ScatterplotLayer<FinancialCenter>({
+        id: 'financial-centers-halo',
+        data: financialCenters,
+        pickable: false,
+        radiusUnits: 'meters',
+        opacity: 0.18,
+        getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
+        getRadius: (center) => center.intensity * 18000,
+        getFillColor: [255, 180, 60, 255],
+        stroked: false,
       }),
       new ScatterplotLayer<FinancialCenter>({
         id: 'financial-centers',
         data: financialCenters,
         pickable: false,
         radiusUnits: 'meters',
+        opacity: 0.88,
         getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
-        getRadius: (center) => center.intensity * 4200,
-        getFillColor: [255, 136, 0, 160],
-        getLineColor: [255, 255, 255, 120],
+        getRadius: (center) => center.intensity * 5500,
+        getFillColor: (center) => [
+          255,
+          Math.round(120 + center.intensity * 0.8),
+          Math.round(center.intensity * 0.4),
+          230,
+        ],
+        getLineColor: [255, 220, 120, 200],
+        lineWidthMinPixels: 1,
         stroked: true,
+      }),
+      new TextLayer<FinancialCenter>({
+        id: 'city-labels',
+        data: financialCenters,
+        pickable: false,
+        getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
+        getText: (center) => center.name,
+        getSize: (center) => 10 + Math.round(center.intensity / 20),
+        getColor: [220, 240, 255, 230],
+        getTextAnchor: 'middle',
+        getAlignmentBaseline: 'bottom',
+        fontFamily: '"SFMono-Regular","Cascadia Code","Fira Code",monospace',
+        fontWeight: 600,
+        outlineWidth: 2,
+        outlineColor: [0, 0, 0, 180],
+        getPixelOffset: [0, -18],
+        sizeUnits: 'pixels',
+        billboard: true,
       }),
     ],
     [selectEntity],
@@ -119,8 +172,19 @@ export function Map3D({ onError }: Map3DProps) {
             },
           },
           layers: [
-            { id: 'weos-background', type: 'background', paint: { 'background-color': '#07111e' } },
-            { id: 'basemap-tiles', type: 'raster', source: 'carto-dark', paint: { 'raster-opacity': 0.72 } },
+            { id: 'weos-background', type: 'background', paint: { 'background-color': '#040810' } },
+            {
+              id: 'basemap-tiles',
+              type: 'raster',
+              source: 'carto-dark',
+              paint: {
+                'raster-opacity': 0.88,
+                'raster-brightness-min': 0.04,
+                'raster-brightness-max': 0.82,
+                'raster-contrast': 0.22,
+                'raster-saturation': 0.12,
+              },
+            },
           ],
         },
         center: GLOBE_CENTER,
