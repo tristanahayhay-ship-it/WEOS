@@ -9,6 +9,9 @@ const FLOW_MAX_ACCELERATION = 20
 const FLOW_PHASE_OFFSET = 0.07
 const CURVE_BASE_OFFSET = 44
 const CURVE_INDEX_SPACING = 14
+const FLOW_LINE_WIDTH_DIVISOR = 180
+const FLOW_DOT_BASE_RADIUS = 2.6
+const FLOW_DOT_SIZE_DIVISOR = 140
 
 /** Neon colors by flow direction */
 const FLOW_TRAIL_COLOR: Record<string, string> = {
@@ -66,7 +69,7 @@ export function FlowAnimation() {
 
         const trailColor = FLOW_TRAIL_COLOR[flow.direction] ?? FLOW_TRAIL_COLOR.bidirectional
         const dotColor = FLOW_DOT_COLOR[flow.direction] ?? FLOW_DOT_COLOR.bidirectional
-        const lineW = Math.max(0.8, flow.value / 180)
+        const lineW = Math.max(0.8, flow.value / FLOW_LINE_WIDTH_DIVISOR)
 
         // Draw trail arc
         context.lineWidth = lineW
@@ -92,7 +95,7 @@ export function FlowAnimation() {
         const pointX = q0x + q1x + q2x
         const pointY = q0y + q1y + q2y
 
-        const dotRadius = 2.6 + flow.value / 140
+        const dotRadius = FLOW_DOT_BASE_RADIUS + flow.value / FLOW_DOT_SIZE_DIVISOR
         context.fillStyle = dotColor
         context.shadowBlur = 16
         context.shadowColor = dotColor

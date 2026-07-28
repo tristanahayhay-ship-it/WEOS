@@ -15,6 +15,7 @@ interface Map3DProps {
 const GLOBE_CENTER: [number, number] = [110, 20]
 const GLOBE_ZOOM = 1.2
 const MIN_MAP_HOST_SIZE = 80
+const CITY_LABEL_INTENSITY_DIVISOR = 20
 
 /** CARTO dark-matter tiles — no API key, dark theme matches WEOS neon palette */
 const BASEMAP_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -131,7 +132,7 @@ export function Map3D({ onError }: Map3DProps) {
         pickable: false,
         getPosition: (center) => [center.coordinates.lon, center.coordinates.lat],
         getText: (center) => center.name,
-        getSize: (center) => 10 + Math.round(center.intensity / 20),
+        getSize: (center) => 10 + Math.round(center.intensity / CITY_LABEL_INTENSITY_DIVISOR),
         getColor: [220, 240, 255, 230],
         getTextAnchor: 'middle',
         getAlignmentBaseline: 'bottom',
@@ -146,6 +147,8 @@ export function Map3D({ onError }: Map3DProps) {
     ],
     [selectEntity],
   )
+  const layersRef = useRef(layers)
+  layersRef.current = layers
 
   // Keep the deck.gl overlay's layers in sync without recreating the map
   useEffect(() => {
@@ -208,7 +211,7 @@ export function Map3D({ onError }: Map3DProps) {
 
         // Mount deck.gl overlay so layers render on top of the MapLibre basemap
         const overlay = new MapboxOverlay({
-          layers,
+          layers: layersRef.current,
           onError: (err: unknown) => {
             console.error('[WEOS Map3D] deck.gl overlay error:', err)
             onError?.()
@@ -249,7 +252,7 @@ export function Map3D({ onError }: Map3DProps) {
       overlayRef.current = null
       isCreatingRef.current = false
     }
-  }, [layers, onError, setZoomLevel])
+  }, [onError, setZoomLevel])
 
   useEffect(() => {
     const map = mapRef.current
