@@ -9,6 +9,8 @@ interface MapRenderBoundaryProps {
   children: ReactNode
 }
 
+const MAP_3D_FALLBACK_MESSAGE = 'Không thể hiển thị 3D, đã chuyển sang bản đồ 2D.'
+
 interface MapRenderBoundaryState {
   hasError: boolean
 }
@@ -51,7 +53,7 @@ export function MapContainer() {
     }
 
     if (force2DMode) {
-      setMapErrorMessage('Không thể hiển thị 3D, đã chuyển sang bản đồ 2D.')
+      setMapErrorMessage(MAP_3D_FALLBACK_MESSAGE)
     }
   }, [force2DMode, mapMode])
 
@@ -59,7 +61,7 @@ export function MapContainer() {
 
   const handle3DMapError = () => {
     setForce2DMode(true)
-    setMapErrorMessage('Không thể hiển thị 3D, đã chuyển sang bản đồ 2D.')
+    setMapErrorMessage(MAP_3D_FALLBACK_MESSAGE)
     setMapMode('2D')
   }
 

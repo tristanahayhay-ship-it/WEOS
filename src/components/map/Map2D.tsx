@@ -19,6 +19,7 @@ const countryColor = (score: number) => {
 
 const WEOS_BASE_MAPLIBRE_ZOOM = 1
 const WEOS_ZOOM_MULTIPLIER = 1.7
+const MIN_MAP_HOST_SIZE = 80
 
 const projectBox = (lat: number, lon: number, scale = 4.5) => {
   const lngDelta = Math.max(3, scale * Math.cos((lat * Math.PI) / 180))
@@ -101,7 +102,7 @@ export function Map2D({ onError }: Map2DProps) {
     }
 
     const createMap = () => {
-      if (mapRef.current || host.clientWidth < 80 || host.clientHeight < 80) {
+      if (mapRef.current || host.clientWidth < MIN_MAP_HOST_SIZE || host.clientHeight < MIN_MAP_HOST_SIZE) {
         return
       }
 
