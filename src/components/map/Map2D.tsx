@@ -210,10 +210,20 @@ export function Map2D({ onError }: Map2DProps) {
       createMap()
     })
 
+    const invalidSizeTimer = window.setTimeout(() => {
+      if (!mapRef.current && (host.clientWidth < MIN_MAP_HOST_SIZE || host.clientHeight < MIN_MAP_HOST_SIZE)) {
+        reportMapError()
+      }
+    }, 1500)
+
     resizeObserver.observe(host)
     createMap()
 
     return () => {
+      window.clearTimeout(invalidSizeTimer)
+      if (mapRef.current) {
+        mapRef.current.off('error', reportMapError)
+      }
       resizeObserver.disconnect()
       mapRef.current?.remove()
       mapRef.current = null

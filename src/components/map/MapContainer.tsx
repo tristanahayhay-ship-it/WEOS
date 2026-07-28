@@ -43,24 +43,16 @@ export function MapContainer() {
   const mapMode = useStore((state) => state.mapMode)
   const setMapMode = useStore((state) => state.setMapMode)
   const [mapErrorMessage, setMapErrorMessage] = useState<string | null>(null)
-  const [force2DMode, setForce2DMode] = useState(false)
 
   useEffect(() => {
     if (mapMode === '3D') {
-      setForce2DMode(false)
       setMapErrorMessage(null)
-      return
     }
+  }, [mapMode])
 
-    if (force2DMode) {
-      setMapErrorMessage(MAP_3D_FALLBACK_MESSAGE)
-    }
-  }, [force2DMode, mapMode])
-
-  const activeMapMode = mapMode === '3D' && !force2DMode ? '3D' : '2D'
+  const activeMapMode = mapMode
 
   const handle3DMapError = () => {
-    setForce2DMode(true)
     setMapErrorMessage(MAP_3D_FALLBACK_MESSAGE)
     setMapMode('2D')
   }
