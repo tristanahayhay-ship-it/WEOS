@@ -20,6 +20,9 @@ const countryColor = (score: number) => {
 const WEOS_BASE_MAPLIBRE_ZOOM = 1
 const WEOS_ZOOM_MULTIPLIER = 1.7
 const MIN_MAP_HOST_SIZE = 80
+const DEFAULT_MAP_CENTER: [number, number] = [8, 20]
+const DEFAULT_MAP_ZOOM = 1.2
+const MAP_INIT_TIMEOUT_MS = 1500
 
 const projectBox = (lat: number, lon: number, scale = 4.5) => {
   const lngDelta = Math.max(3, scale * Math.cos((lat * Math.PI) / 180))
@@ -118,8 +121,8 @@ export function Map2D({ onError }: Map2DProps) {
             sources: {},
             layers: [{ id: 'weos-background', type: 'background', paint: { 'background-color': '#07111e' } }],
           },
-          center: [8, 20],
-          zoom: 1.2,
+          center: DEFAULT_MAP_CENTER,
+          zoom: DEFAULT_MAP_ZOOM,
           attributionControl: false,
         })
 
@@ -214,7 +217,7 @@ export function Map2D({ onError }: Map2DProps) {
       if (!mapRef.current && (host.clientWidth < MIN_MAP_HOST_SIZE || host.clientHeight < MIN_MAP_HOST_SIZE)) {
         reportMapError()
       }
-    }, 1500)
+    }, MAP_INIT_TIMEOUT_MS)
 
     resizeObserver.observe(host)
     createMap()

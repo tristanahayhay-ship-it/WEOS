@@ -50,8 +50,6 @@ export function MapContainer() {
     }
   }, [mapMode])
 
-  const activeMapMode = mapMode
-
   const handle3DMapError = () => {
     setMapErrorMessage(MAP_3D_FALLBACK_MESSAGE)
     setMapMode('2D')
@@ -63,8 +61,8 @@ export function MapContainer() {
 
   return (
     <div className="map-frame">
-      <MapRenderBoundary key={activeMapMode} onError={activeMapMode === '3D' ? handle3DMapError : handle2DMapError}>
-        {activeMapMode === '2D' ? <Map2D onError={handle2DMapError} /> : <Map3D onError={handle3DMapError} />}
+      <MapRenderBoundary key={mapMode} onError={mapMode === '3D' ? handle3DMapError : handle2DMapError}>
+        {mapMode === '2D' ? <Map2D onError={handle2DMapError} /> : <Map3D onError={handle3DMapError} />}
       </MapRenderBoundary>
       {mapErrorMessage ? <p className="map-error-banner">{mapErrorMessage}</p> : null}
     </div>

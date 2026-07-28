@@ -11,6 +11,12 @@ interface Map3DProps {
   onError?: () => void
 }
 
+const DEFAULT_3D_VIEW_STATE = {
+  longitude: 12,
+  latitude: 20,
+  zoom: 0.55,
+}
+
 const countryColor = (score: number): [number, number, number, number] => {
   if (score >= 82) return [0, 255, 136, 180]
   if (score >= 74) return [0, 212, 255, 170]
@@ -79,7 +85,7 @@ export function Map3D({ onError }: Map3DProps) {
       <DeckGL
         controller
         views={new GlobeView()}
-        initialViewState={{ longitude: 12, latitude: 20, zoom: 0.55 }}
+        initialViewState={DEFAULT_3D_VIEW_STATE}
         layers={layers}
         onError={onError}
         style={{ background: 'radial-gradient(circle at 30% 20%, rgba(0,212,255,0.08), rgba(3,7,18,0.92))' }}
