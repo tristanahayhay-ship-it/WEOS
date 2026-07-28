@@ -25,6 +25,7 @@
     "zustand": "^5.0.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "@tailwindcss/vite": "^4.1.11",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
@@ -32,6 +33,7 @@
     "@types/topojson-client": "^3.1.5",
     "@vitejs/plugin-react": "^4.5.2",
     "oxlint": "^1.6.0",
+    "playwright": "^1.62.0",
     "tailwindcss": "^4.1.11",
     "typescript": "~5.8.3",
     "vite": "^6.3.5"
