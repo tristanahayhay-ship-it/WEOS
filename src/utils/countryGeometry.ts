@@ -1,5 +1,4 @@
-import { BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, DoubleSide } from 'three'
-import { ShapeUtils } from 'three'
+import { BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, DoubleSide, Vector2, ShapeUtils } from 'three'
 import { feature } from 'topojson-client'
 import countriesTopology from 'world-atlas/countries-110m.json'
 import { projectLngLatToCartesian, EARTH_RADIUS } from './globe'
@@ -79,18 +78,25 @@ function buildPolygonIndex(): PolygonEntry[] {
     countriesTopology.objects.countries as TopoObject,
   ) as unknown as GeoFeatureCollection
 
-  return col.features.map((f) => {
-    const numericCode = typeof f.id === 'string' ? parseInt(f.id, 10) : f.id
-    const rings = extractRings(f.geometry)
-    return {
-      numericCode,
-      rings,
-      bbox: computeBbox(rings),
-    }
-  })
+  return col.features
+    .filter((f) => f.geometry != null)
+    .map((f) => {
+      const numericCode = typeof f.id === 'string' ? parseInt(f.id, 10) : f.id
+      const rings = extractRings(f.geometry)
+      return {
+        numericCode,
+        rings,
+        bbox: computeBbox(rings),
+      }
+    })
 }
 
-const POLYGON_INDEX: PolygonEntry[] = buildPolygonIndex()
+let POLYGON_INDEX: PolygonEntry[] = []
+try {
+  POLYGON_INDEX = buildPolygonIndex()
+} catch (err) {
+  console.error('[countryGeometry] Failed to build polygon index — country hit-testing and highlighting will be unavailable:', err)
+}
 
 // ─── Point-in-polygon ────────────────────────────────────────────────────────
 
@@ -138,7 +144,7 @@ export function findCountryAtPoint(lng: number, lat: number): Country | null {
 function buildRingGeometry(ring: number[][], radius: number): BufferGeometry | null {
   if (ring.length < 3) return null
 
-  const contour = ring.map(([lng, lat]) => ({ x: lng, y: lat }))
+  const contour = ring.map(([lng, lat]) => new Vector2(lng, lat))
 
   let triangles: number[][]
   try {
