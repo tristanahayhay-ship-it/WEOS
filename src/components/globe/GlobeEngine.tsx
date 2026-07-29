@@ -254,17 +254,15 @@ export default function GlobeEngine() {
         if (Math.abs(diff) < CAMERA_ARRIVE_TOLERANCE) {
           // Snap to exact target and clear pending
           camera.position.normalize().multiplyScalar(pendingDist)
-          controls.update()
           zoomState.clearPendingCamera()
         } else {
           // Lerp toward target distance, preserving direction
           const step = Math.sign(diff) * Math.min(Math.abs(diff), CAMERA_LERP_SPEED * deltaSeconds)
           camera.position.normalize().multiplyScalar(currentDist + step)
-          // Prevent OrbitControls from fighting us: update its spherical state
-          controls.update()
         }
       }
 
+      // Single controls update per frame covers both animation and user input
       controls.update()
       scene.updateMatrixWorld()
       camera.updateMatrixWorld()

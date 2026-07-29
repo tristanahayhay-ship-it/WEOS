@@ -29,7 +29,7 @@ export default function ZoomLevelHUD() {
       }}
       aria-label="Zoom level navigator"
     >
-      {/* Zoom-in button */}
+      {/* Zoom-out button — moves toward Global (level 0) */}
       <button
         type="button"
         onClick={zoomOut}
@@ -100,7 +100,7 @@ export default function ZoomLevelHUD() {
         })}
       </div>
 
-      {/* Zoom-out button */}
+      {/* Zoom-in button — moves toward Corporation (level 6) */}
       <button
         type="button"
         onClick={zoomIn}
