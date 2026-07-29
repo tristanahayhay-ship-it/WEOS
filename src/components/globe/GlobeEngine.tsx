@@ -140,6 +140,13 @@ function disposeWorld(object: Group | Scene) {
 const DEFAULT_COUNTRY_CENTER: [number, number] = [10, 48]
 const LAYER_FADE_SPEED = 4.5
 const WORLD_DETAIL_SURFACE = EARTH_RADIUS * 1.03
+const DEPTH_WRITE_ALPHA_THRESHOLD = 0.35
+const ALPHA_UPDATE_THRESHOLD = 0.002
+const DISTRICT_SEED_OFFSET = 29
+const INSTITUTION_SEED_OFFSET = 73
+const CORPORATION_SEED_OFFSET = 199
+const COUNTRY_SEED_OFFSET = 11
+const BASE_OPACITY_BY_MATERIAL = new WeakMap<Material, number>()
 
 interface WorldLayerState {
   group: Group
@@ -154,6 +161,8 @@ interface WorldBundle {
   countryBoundaries: Group
   detailAnchor: Group
   layers: Record<ZoomLevelId, WorldLayerState>
+  coastlineAlpha: number
+  boundaryAlpha: number
 }
 
 function createSeededRandom(seed: number) {
@@ -169,15 +178,28 @@ function setGroupOpacity(group: Object3D, alpha: number) {
     if (!(child instanceof Mesh || child instanceof Line)) return
     const materials = Array.isArray(child.material) ? child.material : [child.material]
     for (const material of materials) {
-      const userData = material.userData as { baseOpacity?: number }
-      const baseOpacity = userData.baseOpacity ?? material.opacity
-      if (userData.baseOpacity == null) userData.baseOpacity = baseOpacity
+      if (!BASE_OPACITY_BY_MATERIAL.has(material)) {
+        BASE_OPACITY_BY_MATERIAL.set(material, material.opacity)
+      }
+      const baseOpacity = BASE_OPACITY_BY_MATERIAL.get(material) ?? material.opacity
       material.transparent = true
       material.opacity = baseOpacity * alpha
-      material.depthWrite = alpha > 0.35
+      material.depthWrite = alpha > DEPTH_WRITE_ALPHA_THRESHOLD
     }
   })
   group.visible = alpha > 0.01
+}
+
+function updateGroupAlpha(
+  group: Group,
+  currentAlpha: number,
+  targetAlpha: number,
+  fadeLerp: number,
+) {
+  const nextAlpha = MathUtils.lerp(currentAlpha, targetAlpha, fadeLerp)
+  const changed = Math.abs(nextAlpha - currentAlpha) > ALPHA_UPDATE_THRESHOLD
+  if (changed) setGroupOpacity(group, nextAlpha)
+  return nextAlpha
 }
 
 function addRoadMesh(group: Group, x: number, y: number, length: number, width: number, angle: number, color: string) {
@@ -285,7 +307,7 @@ function createCityLayer(seed: number): Group {
 }
 
 function createDistrictLayer(seed: number): Group {
-  const rand = createSeededRandom(seed + 29)
+  const rand = createSeededRandom(seed + DISTRICT_SEED_OFFSET)
   const layer = new Group()
 
   for (let i = 0; i < 60; i += 1) {
@@ -322,9 +344,8 @@ function createDistrictLayer(seed: number): Group {
 }
 
 function createInstitutionLayer(seed: number): Group {
-  const rand = createSeededRandom(seed + 73)
+  const rand = createSeededRandom(seed + INSTITUTION_SEED_OFFSET)
   const layer = new Group()
-  const labels = ['bank', 'exchange', 'port', 'airport', 'factory', 'warehouse']
 
   for (let i = 0; i < 24; i += 1) {
     const radius = 0.03 + rand() * 0.16
@@ -337,7 +358,6 @@ function createInstitutionLayer(seed: number): Group {
       new MeshPhongMaterial({ color: '#fbbf24', emissive: '#92400e', emissiveIntensity: 0.25, transparent: true, opacity: 0.95 }),
     )
     node.position.set(x, y, h * 0.5 + 0.0018)
-    node.userData['kind'] = labels[i % labels.length]
     layer.add(node)
   }
 
@@ -345,7 +365,7 @@ function createInstitutionLayer(seed: number): Group {
 }
 
 function createCorporationLayer(seed: number): Group {
-  const rand = createSeededRandom(seed + 199)
+  const rand = createSeededRandom(seed + CORPORATION_SEED_OFFSET)
   const layer = new Group()
   const nodePositions: Vector3[] = []
 
@@ -364,7 +384,10 @@ function createCorporationLayer(seed: number): Group {
     nodePositions.push(new Vector3(x, y, 0.002))
   }
 
-  for (let i = 0; i < 100; i += 1) {
+  let linksCreated = 0
+  let attempts = 0
+  while (linksCreated < 100 && attempts < 400) {
+    attempts += 1
     const a = nodePositions[Math.floor(rand() * nodePositions.length)]
     const b = nodePositions[Math.floor(rand() * nodePositions.length)]
     if (!a || !b || a.equals(b)) continue
@@ -375,13 +398,14 @@ function createCorporationLayer(seed: number): Group {
       0.75,
     )
     layer.add(route)
+    linksCreated += 1
   }
 
   return layer
 }
 
 function createCountryLayer(seed: number): Group {
-  const rand = createSeededRandom(seed + 11)
+  const rand = createSeededRandom(seed + COUNTRY_SEED_OFFSET)
   const layer = new Group()
   const colors = ['#f97316', '#0ea5e9', '#34d399', '#f43f5e']
 
@@ -506,12 +530,21 @@ function createWorld(): WorldBundle {
     6: { group: layer6, alpha: 0 },
   }
 
-  for (const key of Object.keys(layers)) {
-    const level = Number(key) as ZoomLevelId
+  for (const level of [0, 1, 2, 3, 4, 5, 6] as const) {
     setGroupOpacity(layers[level].group, layers[level].alpha)
   }
 
-  return { world, earth, atmosphere, coastlines, countryBoundaries, detailAnchor, layers }
+  return {
+    world,
+    earth,
+    atmosphere,
+    coastlines,
+    countryBoundaries,
+    detailAnchor,
+    layers,
+    coastlineAlpha: 1,
+    boundaryAlpha: 1,
+  }
 }
 
 export default function GlobeEngine() {
@@ -631,24 +664,34 @@ export default function GlobeEngine() {
         detailAnchorKeyRef.current = focusKey
       }
 
-      for (const key of Object.keys(worldBundle.layers)) {
-        const level = Number(key) as ZoomLevelId
+      // Clamp to 1 to keep interpolation stable on dropped/long frames.
+      const fadeLerp = Math.min(1, LAYER_FADE_SPEED * deltaSeconds)
+      for (const level of [0, 1, 2, 3, 4, 5, 6] as const) {
         const state = worldBundle.layers[level]
         const targetAlpha = level === activeLevel ? 1 : 0
-        state.alpha = MathUtils.lerp(state.alpha, targetAlpha, Math.min(1, LAYER_FADE_SPEED * deltaSeconds))
-        setGroupOpacity(state.group, state.alpha)
+        state.alpha = updateGroupAlpha(state.group, state.alpha, targetAlpha, fadeLerp)
       }
 
       const globeAlphaTarget = activeLevel <= 2 ? 1 : 0.22
       const earthMaterial = worldBundle.earth.material as MeshPhongMaterial
-      earthMaterial.opacity = MathUtils.lerp(earthMaterial.opacity, globeAlphaTarget, Math.min(1, LAYER_FADE_SPEED * deltaSeconds))
+      earthMaterial.opacity = MathUtils.lerp(earthMaterial.opacity, globeAlphaTarget, fadeLerp)
       const atmosphereMaterial = worldBundle.atmosphere.material as MeshBasicMaterial
       const atmosphereTarget = activeLevel <= 2 ? 0.12 : 0.02
-      atmosphereMaterial.opacity = MathUtils.lerp(atmosphereMaterial.opacity, atmosphereTarget, Math.min(1, LAYER_FADE_SPEED * deltaSeconds))
+      atmosphereMaterial.opacity = MathUtils.lerp(atmosphereMaterial.opacity, atmosphereTarget, fadeLerp)
       const boundaryAlphaTarget = activeLevel <= 2 ? 1 : 0.15
       const coastAlphaTarget = activeLevel <= 2 ? 1 : 0.2
-      setGroupOpacity(worldBundle.countryBoundaries, boundaryAlphaTarget)
-      setGroupOpacity(worldBundle.coastlines, coastAlphaTarget)
+      worldBundle.boundaryAlpha = updateGroupAlpha(
+        worldBundle.countryBoundaries,
+        worldBundle.boundaryAlpha,
+        boundaryAlphaTarget,
+        fadeLerp,
+      )
+      worldBundle.coastlineAlpha = updateGroupAlpha(
+        worldBundle.coastlines,
+        worldBundle.coastlineAlpha,
+        coastAlphaTarget,
+        fadeLerp,
+      )
 
       // ── Compute sprite screen positions via Three.js ground truth ───────────
       // This is the reference: vector.project(camera) applied to each test point.
