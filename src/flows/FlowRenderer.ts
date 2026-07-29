@@ -17,7 +17,7 @@ import {
   WebGLRenderer,
 } from 'three'
 import type { GlobeFrameSnapshot } from '../stores/globeViewStore'
-import type { FlowModel } from './types'
+import type { FlowModel, FlowObject } from './types'
 import { FLOW_TYPE_CONFIG } from '../stores/flowStore'
 import { COUNTRIES } from '../data/countries'
 import { projectLngLatToCartesian, EARTH_RADIUS } from '../utils/globe'
@@ -56,16 +56,19 @@ const FLOW_FRAG = /* glsl */ `
   uniform float uTime;
   uniform vec3  uColor;
   uniform float uAlpha;
+  uniform float uFadeAlpha;
+  uniform float uSpeed;
 
   varying float vProgress;
 
   void main() {
     // Moving pulse: one bright head (~15 % of arc length) that repeats
-    float t    = fract(vProgress - uTime * 0.28);
+    float t    = fract(vProgress - uTime * 0.28 * uSpeed);
     float head = smoothstep(0.0, 0.12, t) * (1.0 - smoothstep(0.6, 1.0, t));
     float base = 0.18;                 // dim "trail" always present
     float brightness = base + (1.0 - base) * head;
-    gl_FragColor = vec4(uColor, uAlpha * brightness);
+    float finalAlpha = uAlpha * uFadeAlpha * brightness;
+    gl_FragColor = vec4(uColor, finalAlpha);
     if (gl_FragColor.a < 0.01) discard;
   }
 `
@@ -177,6 +180,11 @@ interface FlowEntry {
  *  4. Call `setTime(t)` each animation frame with the monotonic clock.
  *  5. Call `render()` to draw the frame.
  *  6. Call `dispose()` on cleanup.
+ *
+ * LOD extension:
+ *  - `upsertFlowObject(flow)` / `removeFlowObject(id)` manage individual FlowObjects.
+ *  - `setFlowFadeAlpha(id, alpha)` updates the per-flow `uFadeAlpha` uniform each frame
+ *    so fade-in / fade-out transitions are fully smooth without geometry rebuilds.
  */
 export class FlowRenderer {
   private readonly scene: Scene
@@ -225,7 +233,7 @@ export class FlowRenderer {
     this.scene.add(this.flowGroup)
   }
 
-  // ── Public API ──────────────────────────────────────────────────────────────
+  // ── Public API — legacy (FlowModel) ────────────────────────────────────────
 
   /**
    * Rebuild arc geometry for all visible flows.
@@ -260,12 +268,14 @@ export class FlowRenderer {
         vertexShader:   FLOW_VERT,
         fragmentShader: FLOW_FRAG,
         uniforms: {
-          uTime:  { value: 0 },
-          uColor: { value: col },
-          uAlpha: { value: alpha },
+          uTime:      { value: 0 },
+          uColor:     { value: col },
+          uAlpha:     { value: alpha },
+          uFadeAlpha: { value: 1 },
+          uSpeed:     { value: 1 },
         },
         transparent:    true,
-        depthTest:      true,   // occluded by the depth-mask sphere (arcs behind Earth hidden)
+        depthTest:      true,
         depthWrite:     false,
         blending:       AdditiveBlending,
       })
@@ -275,6 +285,70 @@ export class FlowRenderer {
       this.entries.set(flow.id, { line, material: mat })
     }
   }
+
+  // ── Public API — LOD (FlowObject) ──────────────────────────────────────────
+
+  /**
+   * Add or replace a FlowObject arc.
+   * If the id already exists, the existing geometry is reused (no rebuild).
+   */
+  upsertFlowObject(flow: FlowObject): void {
+    if (this.entries.has(flow.id)) return  // geometry already built
+
+    const geo   = buildArcGeometry(
+      flow.startPoint[0], flow.startPoint[1],
+      flow.endPoint[0],   flow.endPoint[1],
+    )
+    const col   = new Color(flow.colorHex)
+    // thickness [0,1] maps to base alpha; thicker flows have higher peak opacity
+    const alpha = MIN_LINE_OPACITY + flow.thickness * (MAX_LINE_OPACITY - MIN_LINE_OPACITY)
+
+    const mat = new ShaderMaterial({
+      vertexShader:   FLOW_VERT,
+      fragmentShader: FLOW_FRAG,
+      uniforms: {
+        uTime:      { value: 0 },
+        uColor:     { value: col },
+        uAlpha:     { value: alpha },
+        uFadeAlpha: { value: 0 },            // starts invisible; caller drives fade-in
+        uSpeed:     { value: flow.animationSpeed },
+      },
+      transparent:    true,
+      depthTest:      true,
+      depthWrite:     false,
+      blending:       AdditiveBlending,
+    })
+
+    const line = new Line(geo, mat)
+    this.flowGroup.add(line)
+    this.entries.set(flow.id, { line, material: mat })
+  }
+
+  /**
+   * Remove and dispose a FlowObject arc by id.
+   * Should be called after the flow's fade-out animation has completed.
+   */
+  removeFlowObject(id: string): void {
+    const entry = this.entries.get(id)
+    if (!entry) return
+    this.flowGroup.remove(entry.line)
+    entry.line.geometry.dispose()
+    entry.material.dispose()
+    this.entries.delete(id)
+  }
+
+  /**
+   * Update the `uFadeAlpha` uniform for a single flow.
+   * Call every animation frame during transitions; no geometry is rebuilt.
+   */
+  setFlowFadeAlpha(id: string, alpha: number): void {
+    const entry = this.entries.get(id)
+    if (entry) {
+      entry.material.uniforms.uFadeAlpha.value = alpha
+    }
+  }
+
+  // ── Shared frame API ───────────────────────────────────────────────────────
 
   /**
    * Synchronise the camera and world matrices with the latest GlobeEngine frame.

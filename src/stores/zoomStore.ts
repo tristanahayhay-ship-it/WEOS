@@ -62,9 +62,12 @@ function applyLevelSideEffects(id: ZoomLevelId) {
     overlayStore.setActiveMetric(level.overlay.metric)
   }
 
-  // Flow
+  // Flow — master visibility + LOD level
   const flowStore = useFlowStore.getState()
   flowStore.setVisible(level.flow.visible)
+  // Notify the LOD engine regardless of master visibility so fade transitions
+  // begin immediately; the canvas CSS opacity gate handles the full hide.
+  flowStore.setLodLevel(id)
 }
 
 export const useZoomStore = create<ZoomState>()((set, get) => ({

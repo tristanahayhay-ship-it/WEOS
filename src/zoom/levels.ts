@@ -10,6 +10,11 @@ import type { ZoomLevelId, ZoomLevelMetadata } from './types'
  *
  * Each level owns a contiguous [min, max] range of camera distances.
  * The ranges are non-overlapping and together cover the full orbit band.
+ *
+ * Flow LOD notes:
+ *  - Flow is visible at every level; the FlowEngine manages which FlowObjects
+ *    are active per level and animates fade-in / fade-out transitions.
+ *  - `visibleTypes` in the flow context is retained for the legacy FlowPanel UI.
  */
 export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
   // ── Level 0: Global ───────────────────────────────────────────────────────
@@ -71,7 +76,8 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
       metric: 'gdp',
     },
     flow: {
-      visible: false,
+      visible: true,
+      visibleTypes: ['trade', 'investment'],
     },
     panel: {
       showCountryPanel: true,
@@ -93,7 +99,7 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
       metric: 'population',
     },
     flow: {
-      visible: false,
+      visible: true,
     },
     panel: {
       showCountryPanel: true,
@@ -114,7 +120,7 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
       visible: false,
     },
     flow: {
-      visible: false,
+      visible: true,
     },
     panel: {
       showCountryPanel: false,
@@ -135,7 +141,7 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
       visible: false,
     },
     flow: {
-      visible: false,
+      visible: true,
     },
     panel: {
       showCountryPanel: false,
@@ -156,7 +162,7 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
       visible: false,
     },
     flow: {
-      visible: false,
+      visible: true,
     },
     panel: {
       showCountryPanel: false,
