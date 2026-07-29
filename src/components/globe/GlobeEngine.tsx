@@ -31,6 +31,7 @@ import { useUIStore } from '../../stores/uiStore'
 import { useElementSize } from '../../hooks/useElementSize'
 import { useGlobeViewStore } from '../../stores/globeViewStore'
 import { useDebugStore } from '../../stores/debugStore'
+import { useZoomStore } from '../../stores/zoomStore'
 import {
   COASTLINE_PATHS,
   COUNTRY_BOUNDARY_PATHS,
@@ -38,6 +39,11 @@ import {
   projectLngLatToCartesian,
 } from '../../utils/globe'
 import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
+
+/** Lerp speed for programmatic camera-distance animation (units/second). */
+const CAMERA_LERP_SPEED = 3.5
+/** Distance tolerance to consider camera "arrived" at a pending target. */
+const CAMERA_ARRIVE_TOLERANCE = 0.005
 
 const VIEW_MODE_LABELS = {
   '2d': '2D MAP',
@@ -171,6 +177,8 @@ export default function GlobeEngine() {
   const worldRef = useRef<Group | null>(null)
   const debugMarkersRef = useRef<Group | null>(null)
   const focusTarget = useMemo(() => new Vector3(0, 0, 0), [])
+  /** Monotonic clock used for camera-distance lerp delta-time calculation. */
+  const lastFrameTimeRef = useRef<number>(performance.now())
 
   // Country interaction layer (hover + click + highlight)
   useCountryInteraction(containerRef, cameraRef, worldRef)
@@ -232,9 +240,35 @@ export default function GlobeEngine() {
     debugMarkersRef.current = debugMarkers
 
     const renderFrame = () => {
+      // ── Delta time for camera animation ─────────────────────────────────────
+      const now = performance.now()
+      const deltaSeconds = Math.min((now - lastFrameTimeRef.current) / 1000, 0.1)
+      lastFrameTimeRef.current = now
+
+      // ── Zoom orchestration: animate camera toward pending target distance ───
+      const zoomState = useZoomStore.getState()
+      const pendingDist = zoomState.pendingCameraDistance
+      if (pendingDist !== null) {
+        const currentDist = camera.position.length()
+        const diff = pendingDist - currentDist
+        if (Math.abs(diff) < CAMERA_ARRIVE_TOLERANCE) {
+          // Snap to exact target and clear pending
+          camera.position.normalize().multiplyScalar(pendingDist)
+          zoomState.clearPendingCamera()
+        } else {
+          // Lerp toward target distance, preserving direction
+          const step = Math.sign(diff) * Math.min(Math.abs(diff), CAMERA_LERP_SPEED * deltaSeconds)
+          camera.position.normalize().multiplyScalar(currentDist + step)
+        }
+      }
+
+      // Single controls update per frame covers both animation and user input
       controls.update()
       scene.updateMatrixWorld()
       camera.updateMatrixWorld()
+
+      // ── Report camera distance to zoom store for level detection ─────────
+      zoomState.syncFromCameraDistance(camera.position.length())
 
       // ── Compute sprite screen positions via Three.js ground truth ───────────
       // This is the reference: vector.project(camera) applied to each test point.
