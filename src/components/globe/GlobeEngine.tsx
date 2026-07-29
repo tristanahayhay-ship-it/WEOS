@@ -4,7 +4,9 @@ import { useCountryInteraction } from '../../hooks/useCountryInteraction'
 import {
   AdditiveBlending,
   BackSide,
+  BoxGeometry,
   BufferGeometry,
+  CylinderGeometry,
   Color,
   DirectionalLight,
   Float32BufferAttribute,
@@ -19,6 +21,7 @@ import {
   MeshBasicMaterial,
   MeshPhongMaterial,
   Object3D,
+  PlaneGeometry,
   PerspectiveCamera,
   Scene,
   SRGBColorSpace,
@@ -32,6 +35,7 @@ import { useElementSize } from '../../hooks/useElementSize'
 import { useGlobeViewStore } from '../../stores/globeViewStore'
 import { useDebugStore } from '../../stores/debugStore'
 import { useZoomStore } from '../../stores/zoomStore'
+import type { ZoomLevelId } from '../../zoom/types'
 import {
   COASTLINE_PATHS,
   COUNTRY_BOUNDARY_PATHS,
@@ -133,7 +137,345 @@ function disposeWorld(object: Group | Scene) {
   })
 }
 
-function createWorld() {
+const DEFAULT_COUNTRY_CENTER: [number, number] = [10, 48]
+const LAYER_FADE_SPEED = 4.5
+const WORLD_DETAIL_SURFACE = EARTH_RADIUS * 1.03
+const DEPTH_WRITE_ALPHA_THRESHOLD = 0.35
+const ALPHA_UPDATE_THRESHOLD = 0.002
+const DISTRICT_SEED_OFFSET = 29
+const INSTITUTION_SEED_OFFSET = 73
+const CORPORATION_SEED_OFFSET = 199
+const COUNTRY_SEED_OFFSET = 11
+const BASE_OPACITY_BY_MATERIAL = new WeakMap<Material, number>()
+
+interface WorldLayerState {
+  group: Group
+  alpha: number
+}
+
+interface WorldBundle {
+  world: Group
+  earth: Mesh
+  atmosphere: Mesh
+  coastlines: Group
+  countryBoundaries: Group
+  detailAnchor: Group
+  layers: Record<ZoomLevelId, WorldLayerState>
+  coastlineAlpha: number
+  boundaryAlpha: number
+}
+
+function createSeededRandom(seed: number) {
+  let state = (seed >>> 0) || 1
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0
+    return state / 0xffffffff
+  }
+}
+
+function setGroupOpacity(group: Object3D, alpha: number) {
+  group.traverse((child) => {
+    if (!(child instanceof Mesh || child instanceof Line)) return
+    const materials = Array.isArray(child.material) ? child.material : [child.material]
+    for (const material of materials) {
+      if (!BASE_OPACITY_BY_MATERIAL.has(material)) {
+        BASE_OPACITY_BY_MATERIAL.set(material, material.opacity)
+      }
+      const baseOpacity = BASE_OPACITY_BY_MATERIAL.get(material) ?? material.opacity
+      material.transparent = true
+      material.opacity = baseOpacity * alpha
+      material.depthWrite = alpha > DEPTH_WRITE_ALPHA_THRESHOLD
+    }
+  })
+  group.visible = alpha > 0.01
+}
+
+function updateGroupAlpha(
+  group: Group,
+  currentAlpha: number,
+  targetAlpha: number,
+  fadeLerp: number,
+) {
+  const nextAlpha = MathUtils.lerp(currentAlpha, targetAlpha, fadeLerp)
+  const changed = Math.abs(nextAlpha - currentAlpha) > ALPHA_UPDATE_THRESHOLD
+  if (changed) setGroupOpacity(group, nextAlpha)
+  return nextAlpha
+}
+
+function addRoadMesh(group: Group, x: number, y: number, length: number, width: number, angle: number, color: string) {
+  const road = new Mesh(
+    new BoxGeometry(length, width, 0.0018),
+    new MeshPhongMaterial({ color, transparent: true, opacity: 0.95 }),
+  )
+  road.position.set(x, y, 0.0012)
+  road.rotation.z = angle
+  group.add(road)
+}
+
+function createCityLayer(seed: number): Group {
+  const rand = createSeededRandom(seed)
+  const layer = new Group()
+
+  const ground = new Mesh(
+    new PlaneGeometry(0.52, 0.52),
+    new MeshPhongMaterial({ color: '#111827', transparent: true, opacity: 0.86 }),
+  )
+  ground.position.set(0, 0, -0.001)
+  layer.add(ground)
+
+  for (let i = 0; i < 20; i += 1) {
+    const length = 0.34 + rand() * 0.24
+    const x = (rand() - 0.5) * 0.34
+    const y = (rand() - 0.5) * 0.34
+    const angle = rand() * Math.PI
+    addRoadMesh(layer, x, y, length, 0.010, angle, '#4b5563')
+  }
+
+  for (let i = 0; i < 50; i += 1) {
+    const length = 0.18 + rand() * 0.16
+    const x = (rand() - 0.5) * 0.4
+    const y = (rand() - 0.5) * 0.4
+    const angle = rand() * Math.PI
+    addRoadMesh(layer, x, y, length, 0.0048, angle, '#6b7280')
+  }
+
+  for (let i = 0; i < 5; i += 1) {
+    const park = new Mesh(
+      new PlaneGeometry(0.06 + rand() * 0.04, 0.045 + rand() * 0.035),
+      new MeshPhongMaterial({ color: '#1f8a4c', transparent: true, opacity: 0.9 }),
+    )
+    park.position.set((rand() - 0.5) * 0.38, (rand() - 0.5) * 0.38, 0.001)
+    layer.add(park)
+  }
+
+  for (let i = 0; i < 5; i += 1) {
+    const river = new Mesh(
+      new BoxGeometry(0.13, 0.022, 0.0016),
+      new MeshPhongMaterial({ color: '#2780e3', transparent: true, opacity: 0.86 }),
+    )
+    river.position.set(-0.21 + i * 0.1, 0.08 * Math.sin(i * 0.8) - 0.04, 0.0013)
+    river.rotation.z = -0.2 + i * 0.08
+    layer.add(river)
+  }
+
+  const cbdCenter = new Vector3(0.02, 0.01, 0.0015)
+  for (let i = 0; i < 3; i += 1) {
+    const tower = new Mesh(
+      new CylinderGeometry(0.014, 0.016, 0.15 + rand() * 0.1, 10),
+      new MeshPhongMaterial({ color: '#74a8ff', emissive: '#1d4ed8', emissiveIntensity: 0.2, transparent: true, opacity: 0.95 }),
+    )
+    tower.position.set(cbdCenter.x + (i - 1) * 0.028, cbdCenter.y + (i % 2) * 0.016, 0.07)
+    layer.add(tower)
+  }
+
+  const industrialPad = new Mesh(
+    new PlaneGeometry(0.16, 0.11),
+    new MeshPhongMaterial({ color: '#3f3f46', transparent: true, opacity: 0.8 }),
+  )
+  industrialPad.position.set(0.15, -0.16, 0.0009)
+  layer.add(industrialPad)
+
+  for (let i = 0; i < 12; i += 1) {
+    const bW = 0.014 + rand() * 0.018
+    const bD = 0.014 + rand() * 0.018
+    const bH = 0.016 + rand() * 0.03
+    const block = new Mesh(
+      new BoxGeometry(bW, bD, bH),
+      new MeshPhongMaterial({ color: '#9ca3af', transparent: true, opacity: 0.95 }),
+    )
+    block.position.set(0.09 + rand() * 0.12, -0.2 + rand() * 0.08, bH * 0.5 + 0.0012)
+    layer.add(block)
+  }
+
+  for (let i = 0; i < 100; i += 1) {
+    const bW = 0.008 + rand() * 0.018
+    const bD = 0.008 + rand() * 0.018
+    const bH = 0.01 + rand() * 0.07
+    const block = new Mesh(
+      new BoxGeometry(bW, bD, bH),
+      new MeshPhongMaterial({
+        color: i % 9 === 0 ? '#cbd5e1' : '#94a3b8',
+        transparent: true,
+        opacity: 0.96,
+      }),
+    )
+    block.position.set((rand() - 0.5) * 0.42, (rand() - 0.5) * 0.42, bH * 0.5 + 0.0012)
+    layer.add(block)
+  }
+
+  return layer
+}
+
+function createDistrictLayer(seed: number): Group {
+  const rand = createSeededRandom(seed + DISTRICT_SEED_OFFSET)
+  const layer = new Group()
+
+  for (let i = 0; i < 60; i += 1) {
+    const length = 0.08 + rand() * 0.1
+    const angle = rand() * Math.PI
+    addRoadMesh(layer, (rand() - 0.5) * 0.3, (rand() - 0.5) * 0.3, length, 0.003, angle, '#9ca3af')
+  }
+
+  for (let i = 0; i < 4; i += 1) {
+    const boundary = createLineGroup(
+      [new Float32Array([
+        -0.2 + i * 0.1, -0.2, 0.002,
+        -0.2 + i * 0.1, 0.2, 0.002,
+      ])],
+      '#f59e0b',
+      0.7,
+    )
+    layer.add(boundary)
+  }
+
+  for (let i = 0; i < 200; i += 1) {
+    const bW = 0.006 + rand() * 0.012
+    const bD = 0.006 + rand() * 0.012
+    const bH = 0.012 + rand() * 0.08
+    const block = new Mesh(
+      new BoxGeometry(bW, bD, bH),
+      new MeshPhongMaterial({ color: '#bfc9d9', transparent: true, opacity: 0.96 }),
+    )
+    block.position.set((rand() - 0.5) * 0.32, (rand() - 0.5) * 0.32, bH * 0.5 + 0.0013)
+    layer.add(block)
+  }
+
+  return layer
+}
+
+function createInstitutionLayer(seed: number): Group {
+  const rand = createSeededRandom(seed + INSTITUTION_SEED_OFFSET)
+  const layer = new Group()
+
+  for (let i = 0; i < 24; i += 1) {
+    const radius = 0.03 + rand() * 0.16
+    const angle = rand() * Math.PI * 2
+    const x = Math.cos(angle) * radius
+    const y = Math.sin(angle) * radius
+    const h = 0.018 + rand() * 0.03
+    const node = new Mesh(
+      new CylinderGeometry(0.008, 0.01, h, 8),
+      new MeshPhongMaterial({ color: '#fbbf24', emissive: '#92400e', emissiveIntensity: 0.25, transparent: true, opacity: 0.95 }),
+    )
+    node.position.set(x, y, h * 0.5 + 0.0018)
+    layer.add(node)
+  }
+
+  return layer
+}
+
+function createCorporationLayer(seed: number): Group {
+  const rand = createSeededRandom(seed + CORPORATION_SEED_OFFSET)
+  const layer = new Group()
+  const nodePositions: Vector3[] = []
+
+  for (let i = 0; i < 30; i += 1) {
+    const radius = 0.03 + rand() * 0.2
+    const angle = rand() * Math.PI * 2
+    const x = Math.cos(angle) * radius
+    const y = Math.sin(angle) * radius
+    const h = 0.012 + rand() * 0.02
+    const node = new Mesh(
+      new BoxGeometry(0.01, 0.01, h),
+      new MeshPhongMaterial({ color: '#38bdf8', emissive: '#1d4ed8', emissiveIntensity: 0.22, transparent: true, opacity: 0.95 }),
+    )
+    node.position.set(x, y, h * 0.5 + 0.0018)
+    layer.add(node)
+    nodePositions.push(new Vector3(x, y, 0.002))
+  }
+
+  let linksCreated = 0
+  let attempts = 0
+  while (linksCreated < 100 && attempts < 400) {
+    attempts += 1
+    const a = nodePositions[Math.floor(rand() * nodePositions.length)]
+    const b = nodePositions[Math.floor(rand() * nodePositions.length)]
+    if (!a || !b || a.equals(b)) continue
+
+    const route = createLineGroup(
+      [new Float32Array([a.x, a.y, a.z + 0.0008, b.x, b.y, b.z + 0.0008])],
+      '#7dd3fc',
+      0.75,
+    )
+    layer.add(route)
+    linksCreated += 1
+  }
+
+  return layer
+}
+
+function createCountryLayer(seed: number): Group {
+  const rand = createSeededRandom(seed + COUNTRY_SEED_OFFSET)
+  const layer = new Group()
+  const colors = ['#f97316', '#0ea5e9', '#34d399', '#f43f5e']
+
+  for (let i = 0; i < 16; i += 1) {
+    const radius = 0.03 + rand() * 0.18
+    const angle = rand() * Math.PI * 2
+    const x = Math.cos(angle) * radius
+    const y = Math.sin(angle) * radius
+    const h = 0.01 + rand() * 0.02
+    const marker = new Mesh(
+      new CylinderGeometry(0.007, 0.01, h, 10),
+      new MeshPhongMaterial({ color: colors[i % colors.length], transparent: true, opacity: 0.9 }),
+    )
+    marker.position.set(x, y, h * 0.5 + 0.0015)
+    layer.add(marker)
+  }
+
+  return layer
+}
+
+function createContinentLayer(): Group {
+  const layer = new Group()
+  const centers: Array<[number, number]> = [
+    [-100, 45],
+    [-60, -15],
+    [20, 50],
+    [20, 8],
+    [95, 35],
+    [135, -24],
+  ]
+  for (const [lon, lat] of centers) {
+    const [x, y, z] = projectLngLatToCartesian(lon, lat, EARTH_RADIUS * 1.01)
+    const region = new Mesh(
+      new SphereGeometry(0.06, 10, 10),
+      new MeshPhongMaterial({ color: '#2563eb', emissive: '#1d4ed8', emissiveIntensity: 0.2, transparent: true, opacity: 0.35 }),
+    )
+    region.position.set(x, y, z)
+    layer.add(region)
+  }
+
+  const routes: Array<[[number, number], [number, number], string]> = [
+    [[-74, 40], [2, 49], '#60a5fa'],
+    [[2, 49], [103, 1], '#60a5fa'],
+    [[139, 35], [-118, 34], '#93c5fd'],
+    [[32, 30], [55, 25], '#93c5fd'],
+  ]
+
+  for (const [from, to, color] of routes) {
+    const [sx, sy, sz] = projectLngLatToCartesian(from[0], from[1], EARTH_RADIUS * 1.016)
+    const [ex, ey, ez] = projectLngLatToCartesian(to[0], to[1], EARTH_RADIUS * 1.016)
+    const path = createLineGroup([new Float32Array([sx, sy, sz, ex, ey, ez])], color, 0.6)
+    layer.add(path)
+  }
+
+  return layer
+}
+
+function updateAnchorTransform(anchor: Group, lon: number, lat: number) {
+  const lonRad = MathUtils.degToRad(lon)
+  const [x, y, z] = projectLngLatToCartesian(lon, lat, WORLD_DETAIL_SURFACE)
+  const up = new Vector3(x, y, z).normalize()
+  const east = new Vector3(-Math.sin(lonRad), 0, -Math.cos(lonRad)).normalize()
+  const north = new Vector3().crossVectors(up, east).normalize()
+
+  anchor.position.set(x, y, z)
+  const basis = new Matrix4().makeBasis(east, north, up)
+  anchor.setRotationFromMatrix(basis)
+}
+
+function createWorld(): WorldBundle {
   const world = new Group()
 
   const earth = new Mesh(
@@ -143,6 +485,8 @@ function createWorld() {
       emissive: '#07131f',
       shininess: 20,
       specular: new Color('#1f4d70'),
+      transparent: true,
+      opacity: 1,
     }),
   )
 
@@ -160,11 +504,47 @@ function createWorld() {
 
   const coastlines = createLineGroup(COASTLINE_PATHS, '#79c4ff', 0.9)
   const countryBoundaries = createLineGroup(COUNTRY_BOUNDARY_PATHS, '#d9efff', 0.45)
+  const detailAnchor = new Group()
+
+  const layer0 = new Group()
+  const layer1 = createContinentLayer()
+  const layer2 = createCountryLayer(7)
+  const layer3 = createCityLayer(11)
+  const layer4 = createDistrictLayer(17)
+  const layer5 = createInstitutionLayer(23)
+  const layer6 = createCorporationLayer(31)
+  detailAnchor.add(layer2, layer3, layer4, layer5, layer6)
+
+  updateAnchorTransform(detailAnchor, DEFAULT_COUNTRY_CENTER[0], DEFAULT_COUNTRY_CENTER[1])
 
   world.rotation.z = MathUtils.degToRad(23.4)
-  world.add(earth, atmosphere, coastlines, countryBoundaries)
+  world.add(earth, atmosphere, coastlines, countryBoundaries, layer0, layer1, detailAnchor)
 
-  return world
+  const layers: Record<ZoomLevelId, WorldLayerState> = {
+    0: { group: layer0, alpha: 1 },
+    1: { group: layer1, alpha: 0 },
+    2: { group: layer2, alpha: 0 },
+    3: { group: layer3, alpha: 0 },
+    4: { group: layer4, alpha: 0 },
+    5: { group: layer5, alpha: 0 },
+    6: { group: layer6, alpha: 0 },
+  }
+
+  for (const level of [0, 1, 2, 3, 4, 5, 6] as const) {
+    setGroupOpacity(layers[level].group, layers[level].alpha)
+  }
+
+  return {
+    world,
+    earth,
+    atmosphere,
+    coastlines,
+    countryBoundaries,
+    detailAnchor,
+    layers,
+    coastlineAlpha: 1,
+    boundaryAlpha: 1,
+  }
 }
 
 export default function GlobeEngine() {
@@ -175,7 +555,9 @@ export default function GlobeEngine() {
   const controlsRef = useRef<OrbitControls | null>(null)
   const sceneRef = useRef<Scene | null>(null)
   const worldRef = useRef<Group | null>(null)
+  const worldBundleRef = useRef<WorldBundle | null>(null)
   const debugMarkersRef = useRef<Group | null>(null)
+  const detailAnchorKeyRef = useRef<string>('')
   const focusTarget = useMemo(() => new Vector3(0, 0, 0), [])
   /** Monotonic clock used for camera-distance lerp delta-time calculation. */
   const lastFrameTimeRef = useRef<number>(performance.now())
@@ -225,7 +607,8 @@ export default function GlobeEngine() {
 
     const fillLight = new HemisphereLight('#b7ddff', '#02070d', 1.2)
 
-    const world = createWorld()
+    const worldBundle = createWorld()
+    const world = worldBundle.world
     const debugMarkers = createDebugMarkers()
     world.add(debugMarkers)
 
@@ -237,6 +620,7 @@ export default function GlobeEngine() {
     controlsRef.current = controls
     sceneRef.current = scene
     worldRef.current = world
+    worldBundleRef.current = worldBundle
     debugMarkersRef.current = debugMarkers
 
     const renderFrame = () => {
@@ -269,6 +653,45 @@ export default function GlobeEngine() {
 
       // ── Report camera distance to zoom store for level detection ─────────
       zoomState.syncFromCameraDistance(camera.position.length())
+
+      const activeLevel = zoomState.activeLevel
+      const countryState = useCountryStore.getState()
+      const focusedCountry = countryState.selectedCountry ?? countryState.hoveredCountry
+      const [focusLon, focusLat] = focusedCountry?.center ?? DEFAULT_COUNTRY_CENTER
+      const focusKey = focusedCountry?.isoCode ?? 'default'
+      if (focusKey !== detailAnchorKeyRef.current) {
+        updateAnchorTransform(worldBundle.detailAnchor, focusLon, focusLat)
+        detailAnchorKeyRef.current = focusKey
+      }
+
+      // Clamp to 1 to keep interpolation stable on dropped/long frames.
+      const fadeLerp = Math.min(1, LAYER_FADE_SPEED * deltaSeconds)
+      for (const level of [0, 1, 2, 3, 4, 5, 6] as const) {
+        const state = worldBundle.layers[level]
+        const targetAlpha = level === activeLevel ? 1 : 0
+        state.alpha = updateGroupAlpha(state.group, state.alpha, targetAlpha, fadeLerp)
+      }
+
+      const globeAlphaTarget = activeLevel <= 2 ? 1 : 0.22
+      const earthMaterial = worldBundle.earth.material as MeshPhongMaterial
+      earthMaterial.opacity = MathUtils.lerp(earthMaterial.opacity, globeAlphaTarget, fadeLerp)
+      const atmosphereMaterial = worldBundle.atmosphere.material as MeshBasicMaterial
+      const atmosphereTarget = activeLevel <= 2 ? 0.12 : 0.02
+      atmosphereMaterial.opacity = MathUtils.lerp(atmosphereMaterial.opacity, atmosphereTarget, fadeLerp)
+      const boundaryAlphaTarget = activeLevel <= 2 ? 1 : 0.15
+      const coastAlphaTarget = activeLevel <= 2 ? 1 : 0.2
+      worldBundle.boundaryAlpha = updateGroupAlpha(
+        worldBundle.countryBoundaries,
+        worldBundle.boundaryAlpha,
+        boundaryAlphaTarget,
+        fadeLerp,
+      )
+      worldBundle.coastlineAlpha = updateGroupAlpha(
+        worldBundle.coastlines,
+        worldBundle.coastlineAlpha,
+        coastAlphaTarget,
+        fadeLerp,
+      )
 
       // ── Compute sprite screen positions via Three.js ground truth ───────────
       // This is the reference: vector.project(camera) applied to each test point.
@@ -317,7 +740,9 @@ export default function GlobeEngine() {
       controlsRef.current = null
       sceneRef.current = null
       worldRef.current = null
+      worldBundleRef.current = null
       debugMarkersRef.current = null
+      detailAnchorKeyRef.current = ''
       useGlobeViewStore.getState().clearFrame()
     }
   }, [containerRef, focusTarget])
