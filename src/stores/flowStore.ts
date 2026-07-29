@@ -1,11 +1,24 @@
 import { create } from 'zustand'
 import type { FlowModel, FlowType } from '../flows/types'
+import type { FlowSnapshot } from '../flows/FlowEngine'
 import { MOCK_FLOWS } from '../flows/mockFlows'
+import { FlowEngine } from '../flows/FlowEngine'
+import type { ZoomLevelId } from '../zoom/types'
 
 const ALL_FLOW_TYPES: FlowType[] = ['trade', 'investment', 'debt', 'aid']
 
+/** Lazily-created singleton FlowEngine, shared with FlowCanvas */
+let engineSingleton: FlowEngine | null = null
+
+function getEngine(): FlowEngine {
+  if (!engineSingleton) {
+    engineSingleton = new FlowEngine(0)
+  }
+  return engineSingleton
+}
+
 interface FlowState {
-  /** All available flows (mock data) */
+  /** All available flows (legacy mock data, kept for FlowPanel compatibility) */
   flows: FlowModel[]
   /** Types currently shown; a type not in this array is hidden */
   visibleTypes: FlowType[]
@@ -22,8 +35,25 @@ interface FlowState {
   toggleFlowType: (type: FlowType) => void
   /** Advance the animation clock */
   tick: (delta: number) => void
-  /** Return only the flows that are currently visible */
+  /** Return only the flows that are currently visible (legacy path) */
   getFilteredFlows: () => FlowModel[]
+
+  /**
+   * Notify the LOD engine that the zoom level has changed.
+   * Called by zoomStore.applyLevelSideEffects after updating overlay/visibility.
+   */
+  setLodLevel: (id: ZoomLevelId) => void
+
+  /**
+   * Retrieve the LOD engine's snapshot for the current animation frame.
+   * Advances the engine's internal fade timers by `delta` seconds.
+   */
+  tickLodEngine: (delta: number) => FlowSnapshot[]
+
+  /**
+   * Returns the LOD engine instance so FlowCanvas can query `hasChanged()`.
+   */
+  getLodEngine: () => FlowEngine
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
@@ -51,6 +81,18 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     const { flows, visibleTypes } = get()
     return flows.filter((f) => visibleTypes.includes(f.flowType))
   },
+
+  setLodLevel: (id) => {
+    getEngine().setLevel(id)
+  },
+
+  tickLodEngine: (delta) => {
+    const engine = getEngine()
+    engine.tick(delta)
+    return engine.getSnapshot()
+  },
+
+  getLodEngine: () => getEngine(),
 }))
 
 /** Display configuration for each flow type */
