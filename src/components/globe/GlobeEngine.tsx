@@ -4,7 +4,6 @@ import { useCountryInteraction } from '../../hooks/useCountryInteraction'
 import {
   AdditiveBlending,
   BackSide,
-  BoxGeometry,
   BufferGeometry,
   CylinderGeometry,
   Color,
@@ -21,7 +20,6 @@ import {
   MeshBasicMaterial,
   MeshPhongMaterial,
   Object3D,
-  PlaneGeometry,
   PerspectiveCamera,
   Scene,
   SRGBColorSpace,
@@ -43,6 +41,8 @@ import {
   projectLngLatToCartesian,
 } from '../../utils/globe'
 import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
+import { createProceduralLayers } from '../../world/procedural'
+import { createSeededRandom } from '../../world/procedural/random'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
 const CAMERA_LERP_SPEED = 3.5
@@ -142,9 +142,6 @@ const LAYER_FADE_SPEED = 4.5
 const WORLD_DETAIL_SURFACE = EARTH_RADIUS * 1.03
 const DEPTH_WRITE_ALPHA_THRESHOLD = 0.35
 const ALPHA_UPDATE_THRESHOLD = 0.002
-const DISTRICT_SEED_OFFSET = 29
-const INSTITUTION_SEED_OFFSET = 73
-const CORPORATION_SEED_OFFSET = 199
 const COUNTRY_SEED_OFFSET = 11
 const BASE_OPACITY_BY_MATERIAL = new WeakMap<Material, number>()
 
@@ -163,14 +160,6 @@ interface WorldBundle {
   layers: Record<ZoomLevelId, WorldLayerState>
   coastlineAlpha: number
   boundaryAlpha: number
-}
-
-function createSeededRandom(seed: number) {
-  let state = (seed >>> 0) || 1
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0
-    return state / 0xffffffff
-  }
 }
 
 function setGroupOpacity(group: Object3D, alpha: number) {
@@ -200,208 +189,6 @@ function updateGroupAlpha(
   const changed = Math.abs(nextAlpha - currentAlpha) > ALPHA_UPDATE_THRESHOLD
   if (changed) setGroupOpacity(group, nextAlpha)
   return nextAlpha
-}
-
-function addRoadMesh(group: Group, x: number, y: number, length: number, width: number, angle: number, color: string) {
-  const road = new Mesh(
-    new BoxGeometry(length, width, 0.0018),
-    new MeshPhongMaterial({ color, transparent: true, opacity: 0.95 }),
-  )
-  road.position.set(x, y, 0.0012)
-  road.rotation.z = angle
-  group.add(road)
-}
-
-function createCityLayer(seed: number): Group {
-  const rand = createSeededRandom(seed)
-  const layer = new Group()
-
-  const ground = new Mesh(
-    new PlaneGeometry(0.52, 0.52),
-    new MeshPhongMaterial({ color: '#111827', transparent: true, opacity: 0.86 }),
-  )
-  ground.position.set(0, 0, -0.001)
-  layer.add(ground)
-
-  for (let i = 0; i < 20; i += 1) {
-    const length = 0.34 + rand() * 0.24
-    const x = (rand() - 0.5) * 0.34
-    const y = (rand() - 0.5) * 0.34
-    const angle = rand() * Math.PI
-    addRoadMesh(layer, x, y, length, 0.010, angle, '#4b5563')
-  }
-
-  for (let i = 0; i < 50; i += 1) {
-    const length = 0.18 + rand() * 0.16
-    const x = (rand() - 0.5) * 0.4
-    const y = (rand() - 0.5) * 0.4
-    const angle = rand() * Math.PI
-    addRoadMesh(layer, x, y, length, 0.0048, angle, '#6b7280')
-  }
-
-  for (let i = 0; i < 5; i += 1) {
-    const park = new Mesh(
-      new PlaneGeometry(0.06 + rand() * 0.04, 0.045 + rand() * 0.035),
-      new MeshPhongMaterial({ color: '#1f8a4c', transparent: true, opacity: 0.9 }),
-    )
-    park.position.set((rand() - 0.5) * 0.38, (rand() - 0.5) * 0.38, 0.001)
-    layer.add(park)
-  }
-
-  for (let i = 0; i < 5; i += 1) {
-    const river = new Mesh(
-      new BoxGeometry(0.13, 0.022, 0.0016),
-      new MeshPhongMaterial({ color: '#2780e3', transparent: true, opacity: 0.86 }),
-    )
-    river.position.set(-0.21 + i * 0.1, 0.08 * Math.sin(i * 0.8) - 0.04, 0.0013)
-    river.rotation.z = -0.2 + i * 0.08
-    layer.add(river)
-  }
-
-  const cbdCenter = new Vector3(0.02, 0.01, 0.0015)
-  for (let i = 0; i < 3; i += 1) {
-    const tower = new Mesh(
-      new CylinderGeometry(0.014, 0.016, 0.15 + rand() * 0.1, 10),
-      new MeshPhongMaterial({ color: '#74a8ff', emissive: '#1d4ed8', emissiveIntensity: 0.2, transparent: true, opacity: 0.95 }),
-    )
-    tower.position.set(cbdCenter.x + (i - 1) * 0.028, cbdCenter.y + (i % 2) * 0.016, 0.07)
-    layer.add(tower)
-  }
-
-  const industrialPad = new Mesh(
-    new PlaneGeometry(0.16, 0.11),
-    new MeshPhongMaterial({ color: '#3f3f46', transparent: true, opacity: 0.8 }),
-  )
-  industrialPad.position.set(0.15, -0.16, 0.0009)
-  layer.add(industrialPad)
-
-  for (let i = 0; i < 12; i += 1) {
-    const bW = 0.014 + rand() * 0.018
-    const bD = 0.014 + rand() * 0.018
-    const bH = 0.016 + rand() * 0.03
-    const block = new Mesh(
-      new BoxGeometry(bW, bD, bH),
-      new MeshPhongMaterial({ color: '#9ca3af', transparent: true, opacity: 0.95 }),
-    )
-    block.position.set(0.09 + rand() * 0.12, -0.2 + rand() * 0.08, bH * 0.5 + 0.0012)
-    layer.add(block)
-  }
-
-  for (let i = 0; i < 100; i += 1) {
-    const bW = 0.008 + rand() * 0.018
-    const bD = 0.008 + rand() * 0.018
-    const bH = 0.01 + rand() * 0.07
-    const block = new Mesh(
-      new BoxGeometry(bW, bD, bH),
-      new MeshPhongMaterial({
-        color: i % 9 === 0 ? '#cbd5e1' : '#94a3b8',
-        transparent: true,
-        opacity: 0.96,
-      }),
-    )
-    block.position.set((rand() - 0.5) * 0.42, (rand() - 0.5) * 0.42, bH * 0.5 + 0.0012)
-    layer.add(block)
-  }
-
-  return layer
-}
-
-function createDistrictLayer(seed: number): Group {
-  const rand = createSeededRandom(seed + DISTRICT_SEED_OFFSET)
-  const layer = new Group()
-
-  for (let i = 0; i < 60; i += 1) {
-    const length = 0.08 + rand() * 0.1
-    const angle = rand() * Math.PI
-    addRoadMesh(layer, (rand() - 0.5) * 0.3, (rand() - 0.5) * 0.3, length, 0.003, angle, '#9ca3af')
-  }
-
-  for (let i = 0; i < 4; i += 1) {
-    const boundary = createLineGroup(
-      [new Float32Array([
-        -0.2 + i * 0.1, -0.2, 0.002,
-        -0.2 + i * 0.1, 0.2, 0.002,
-      ])],
-      '#f59e0b',
-      0.7,
-    )
-    layer.add(boundary)
-  }
-
-  for (let i = 0; i < 200; i += 1) {
-    const bW = 0.006 + rand() * 0.012
-    const bD = 0.006 + rand() * 0.012
-    const bH = 0.012 + rand() * 0.08
-    const block = new Mesh(
-      new BoxGeometry(bW, bD, bH),
-      new MeshPhongMaterial({ color: '#bfc9d9', transparent: true, opacity: 0.96 }),
-    )
-    block.position.set((rand() - 0.5) * 0.32, (rand() - 0.5) * 0.32, bH * 0.5 + 0.0013)
-    layer.add(block)
-  }
-
-  return layer
-}
-
-function createInstitutionLayer(seed: number): Group {
-  const rand = createSeededRandom(seed + INSTITUTION_SEED_OFFSET)
-  const layer = new Group()
-
-  for (let i = 0; i < 24; i += 1) {
-    const radius = 0.03 + rand() * 0.16
-    const angle = rand() * Math.PI * 2
-    const x = Math.cos(angle) * radius
-    const y = Math.sin(angle) * radius
-    const h = 0.018 + rand() * 0.03
-    const node = new Mesh(
-      new CylinderGeometry(0.008, 0.01, h, 8),
-      new MeshPhongMaterial({ color: '#fbbf24', emissive: '#92400e', emissiveIntensity: 0.25, transparent: true, opacity: 0.95 }),
-    )
-    node.position.set(x, y, h * 0.5 + 0.0018)
-    layer.add(node)
-  }
-
-  return layer
-}
-
-function createCorporationLayer(seed: number): Group {
-  const rand = createSeededRandom(seed + CORPORATION_SEED_OFFSET)
-  const layer = new Group()
-  const nodePositions: Vector3[] = []
-
-  for (let i = 0; i < 30; i += 1) {
-    const radius = 0.03 + rand() * 0.2
-    const angle = rand() * Math.PI * 2
-    const x = Math.cos(angle) * radius
-    const y = Math.sin(angle) * radius
-    const h = 0.012 + rand() * 0.02
-    const node = new Mesh(
-      new BoxGeometry(0.01, 0.01, h),
-      new MeshPhongMaterial({ color: '#38bdf8', emissive: '#1d4ed8', emissiveIntensity: 0.22, transparent: true, opacity: 0.95 }),
-    )
-    node.position.set(x, y, h * 0.5 + 0.0018)
-    layer.add(node)
-    nodePositions.push(new Vector3(x, y, 0.002))
-  }
-
-  let linksCreated = 0
-  let attempts = 0
-  while (linksCreated < 100 && attempts < 400) {
-    attempts += 1
-    const a = nodePositions[Math.floor(rand() * nodePositions.length)]
-    const b = nodePositions[Math.floor(rand() * nodePositions.length)]
-    if (!a || !b || a.equals(b)) continue
-
-    const route = createLineGroup(
-      [new Float32Array([a.x, a.y, a.z + 0.0008, b.x, b.y, b.z + 0.0008])],
-      '#7dd3fc',
-      0.75,
-    )
-    layer.add(route)
-    linksCreated += 1
-  }
-
-  return layer
 }
 
 function createCountryLayer(seed: number): Group {
@@ -509,10 +296,11 @@ function createWorld(): WorldBundle {
   const layer0 = new Group()
   const layer1 = createContinentLayer()
   const layer2 = createCountryLayer(7)
-  const layer3 = createCityLayer(11)
-  const layer4 = createDistrictLayer(17)
-  const layer5 = createInstitutionLayer(23)
-  const layer6 = createCorporationLayer(31)
+  const proceduralLayers = createProceduralLayers(11)
+  const layer3 = proceduralLayers.city
+  const layer4 = proceduralLayers.district
+  const layer5 = proceduralLayers.institution
+  const layer6 = proceduralLayers.corporation
   detailAnchor.add(layer2, layer3, layer4, layer5, layer6)
 
   updateAnchorTransform(detailAnchor, DEFAULT_COUNTRY_CENTER[0], DEFAULT_COUNTRY_CENTER[1])
