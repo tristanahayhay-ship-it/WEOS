@@ -50,10 +50,13 @@ export class FlowEngine {
 
   constructor(initialLevel: ZoomLevelId = 0) {
     this.currentLevel = initialLevel
-    // Bootstrap: immediately show level-0 flows at full opacity
+    // Bootstrap: immediately show initial-level flows at full opacity.
+    // visibilityState is kept at its definition-time value (0); the live fade
+    // alpha is tracked separately in FlowState.fadeAlpha to avoid mutating
+    // the immutable FlowObject definition.
     for (const flow of LOD_FLOWS[initialLevel]) {
       this.states.set(flow.id, {
-        flow: { ...flow, visibilityState: 1 },
+        flow,
         fadeAlpha: 1,
         fadeDir: 0,
       })
@@ -87,7 +90,7 @@ export class FlowEngine {
     for (const flow of incoming) {
       if (!this.states.has(flow.id)) {
         this.states.set(flow.id, {
-          flow: { ...flow, visibilityState: 0 },
+          flow,
           fadeAlpha: 0,
           fadeDir: 1,
         })
@@ -106,6 +109,7 @@ export class FlowEngine {
   /**
    * Advance the fade animation for all active flows.
    * Call once per animation frame with the elapsed time in seconds.
+   * Only `FlowState.fadeAlpha` is mutated; `FlowObject` instances are not touched.
    */
   tick(delta: number): void {
     const toRemove: string[] = []
@@ -113,14 +117,12 @@ export class FlowEngine {
     for (const [id, state] of this.states) {
       if (state.fadeDir === 1) {
         state.fadeAlpha = Math.min(1, state.fadeAlpha + delta / FADE_IN_DURATION)
-        state.flow.visibilityState = state.fadeAlpha
         if (state.fadeAlpha >= 1) {
           state.fadeAlpha = 1
           state.fadeDir  = 0
         }
       } else if (state.fadeDir === -1) {
         state.fadeAlpha = Math.max(0, state.fadeAlpha - delta / FADE_OUT_DURATION)
-        state.flow.visibilityState = state.fadeAlpha
         if (state.fadeAlpha <= 0) {
           toRemove.push(id)
         }

@@ -12,6 +12,10 @@ let engineSingleton: FlowEngine | null = null
 
 function getEngine(): FlowEngine {
   if (!engineSingleton) {
+    // Level 0 matches the zoomStore's own initial `activeLevel: 0`.
+    // zoomStore imports flowStore (to call setLodLevel via applyLevelSideEffects),
+    // so flowStore cannot import zoomStore without creating a circular dependency.
+    // The first call to applyLevelSideEffects at startup will confirm the level.
     engineSingleton = new FlowEngine(0)
   }
   return engineSingleton

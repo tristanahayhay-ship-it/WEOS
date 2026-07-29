@@ -97,8 +97,6 @@ export default function FlowCanvas() {
   const flows        = useFlowStore((s) => s.flows)
   const visibleTypes = useFlowStore((s) => s.visibleTypes)
   const getFiltered  = useFlowStore((s) => s.getFilteredFlows)
-  const tickLodEngine = useFlowStore((s) => s.tickLodEngine)
-  const getLodEngine  = useFlowStore((s) => s.getLodEngine)
   const realtimeRecords = useRealtimeStore((s) => s.records)
 
   // ── Renderer bootstrap ────────────────────────────────────────────────────
@@ -154,10 +152,12 @@ export default function FlowCanvas() {
     renderer.setTime(useFlowStore.getState().animationTime)
 
     // ── LOD engine integration ─────────────────────────────────────────────
-    // Advance the engine's fade timers and retrieve the current frame's snapshot.
+    // Access store methods via getState() to avoid capturing new selector
+    // references in the dependency array on every render.
 
-    const snapshot = tickLodEngine(delta)
-    const engine   = getLodEngine()
+    const flowState = useFlowStore.getState()
+    const snapshot  = flowState.tickLodEngine(delta)
+    const engine    = flowState.getLodEngine()
 
     if (engine.hasChanged()) {
       // Geometry rebuild: add flows that appeared in the snapshot but aren't in
@@ -187,7 +187,7 @@ export default function FlowCanvas() {
     }
 
     renderer.render()
-  }, [isVisible, tick, tickLodEngine, getLodEngine])
+  }, [isVisible, tick])
 
   useEffect(() => {
     rafRef.current = requestAnimationFrame(animate)

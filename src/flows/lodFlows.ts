@@ -798,8 +798,8 @@ export const LOD_FLOWS: Record<ZoomLevelId, FlowObject[]> = {
     },
     {
       id: 'i5-fra-ecb',
-      startPoint: [8.682, 50.111],     // Frankfurt ECB
-      endPoint:   [8.697, 50.112],     // Deutsche Bank HQ
+      startPoint: [8.697, 50.112],     // Deutsche Bank HQ
+      endPoint:   [8.682, 50.111],     // ECB / Frankfurt banking district
       dataType:   'capital',
       value:      490,
       color:      '#14b8a6',
