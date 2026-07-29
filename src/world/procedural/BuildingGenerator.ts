@@ -1,6 +1,8 @@
 import { createSeededRandom } from './random'
 import type { Building, Parcel, ZoningType } from './types'
 
+const HEIGHT_PER_LEVEL = 0.0045
+
 function heightRange(zoning: ZoningType): [number, number] {
   switch (zoning) {
     case 'cbd':
@@ -53,7 +55,7 @@ export function generateBuildings(parcels: Parcel[], seed: number): Building[] {
 
     const [minHeight, maxHeight] = heightRange(parcel.zoning)
     const height = minHeight + rand() * (maxHeight - minHeight)
-    const levels = Math.max(1, Math.round(height / 0.0045))
+    const levels = Math.max(1, Math.round(height / HEIGHT_PER_LEVEL))
     const footprint = createFootprint(parcel, rand)
 
     buildings.push({

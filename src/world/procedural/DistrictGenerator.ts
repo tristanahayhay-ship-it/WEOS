@@ -1,4 +1,9 @@
-import type { Block, District, DistrictType } from './types'
+import type { Block, District, DistrictType, Vec2 } from './types'
+
+const BASE_POPULATION = 18000
+const POPULATION_PER_BLOCK = 1200
+const BASE_GDP_BILLIONS = 8
+const GDP_PER_BLOCK = 0.65
 
 function districtTypeFromBlock(block: Block): DistrictType {
   switch (block.zoning) {
@@ -40,7 +45,7 @@ function districtName(type: DistrictType): string {
   }
 }
 
-function centerOfBlock(block: Block) {
+function centerOfBlock(block: Block): Vec2 {
   const [sw, se, ne, nw] = block.polygon
   if (!sw || !se || !ne || !nw) return { x: 0, y: 0 }
   return {
@@ -49,7 +54,7 @@ function centerOfBlock(block: Block) {
   }
 }
 
-function polygonFromExtents(minX: number, maxX: number, minY: number, maxY: number) {
+function polygonFromExtents(minX: number, maxX: number, minY: number, maxY: number): Vec2[] {
   return [
     { x: minX, y: minY },
     { x: maxX, y: minY },
@@ -98,8 +103,8 @@ export function generateDistricts(blocks: Block[]): District[] {
       type,
       polygon: polygonFromExtents(minX, maxX, minY, maxY),
       blockIds: districtBlocks.map((block) => block.id),
-      population: Math.round(18000 + districtBlocks.length * 1200 * density),
-      gdpUsdBillions: Number((8 + districtBlocks.length * 0.65 * density).toFixed(2)),
+      population: Math.round(BASE_POPULATION + districtBlocks.length * POPULATION_PER_BLOCK * density),
+      gdpUsdBillions: Number((BASE_GDP_BILLIONS + districtBlocks.length * GDP_PER_BLOCK * density).toFixed(2)),
       density,
     })
     index += 1

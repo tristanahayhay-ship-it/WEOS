@@ -63,7 +63,6 @@ function createPolygonShape(points: Vec2[]): Shape {
     if (!point) continue
     shape.lineTo(point.x, point.y)
   }
-  shape.lineTo(points[0]!.x, points[0]!.y)
   return shape
 }
 

@@ -20,7 +20,7 @@ const ROAD_WIDTH: Record<RoadType, number> = {
   local: 0.003,
 }
 
-function createStraightRoad(id: string, type: RoadType, start: Vec2, end: Vec2): RoadSegment {
+function createRoadSegment(id: string, type: RoadType, start: Vec2, end: Vec2): RoadSegment {
   return {
     id,
     type,
@@ -141,7 +141,7 @@ function buildRoadsFromCorridors(corridors: RoadCorridor[]): RoadSegment[] {
     index += 1
     if (corridor.axis === 'x') {
       roads.push(
-        createStraightRoad(
+        createRoadSegment(
           id,
           corridor.type,
           { x: corridor.coord, y: -CITY_EXTENT },
@@ -150,7 +150,7 @@ function buildRoadsFromCorridors(corridors: RoadCorridor[]): RoadSegment[] {
       )
     } else {
       roads.push(
-        createStraightRoad(
+        createRoadSegment(
           id,
           corridor.type,
           { x: -CITY_EXTENT, y: corridor.coord },
@@ -163,9 +163,23 @@ function buildRoadsFromCorridors(corridors: RoadCorridor[]): RoadSegment[] {
   return roads
 }
 
+function hasTwoPoints(road: RoadSegment): boolean {
+  return road.points.length >= 2
+}
+
 function buildIntersections(roads: RoadSegment[]): Intersection[] {
-  const vertical = roads.filter((road) => Math.abs(road.points[0]!.x - road.points[1]!.x) < 1e-6)
-  const horizontal = roads.filter((road) => Math.abs(road.points[0]!.y - road.points[1]!.y) < 1e-6)
+  const vertical = roads.filter((road) => {
+    if (!hasTwoPoints(road)) return false
+    const [start, end] = road.points
+    if (!start || !end) return false
+    return Math.abs(start.x - end.x) < 1e-6
+  })
+  const horizontal = roads.filter((road) => {
+    if (!hasTwoPoints(road)) return false
+    const [start, end] = road.points
+    if (!start || !end) return false
+    return Math.abs(start.y - end.y) < 1e-6
+  })
 
   const intersections: Intersection[] = []
   let index = 0

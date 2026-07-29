@@ -1,7 +1,7 @@
 import { createSeededRandom } from './random'
-import type { Block, Park, Parcel } from './types'
+import type { Block, Park, Parcel, Vec2 } from './types'
 
-function centerOfPolygon(polygon: Array<{ x: number, y: number }>) {
+function centerOfPolygon(polygon: Vec2[]): Vec2 {
   let x = 0
   let y = 0
   for (const point of polygon) {
@@ -15,7 +15,7 @@ function centerOfPolygon(polygon: Array<{ x: number, y: number }>) {
 }
 
 function treeGridForPolygon(
-  polygon: Array<{ x: number, y: number }>,
+  polygon: Vec2[],
   count: number,
   rand: () => number,
 ) {
@@ -26,7 +26,7 @@ function treeGridForPolygon(
   const minY = sw.y
   const maxY = nw.y
 
-  const trees: Array<{ x: number, y: number }> = []
+  const trees: Vec2[] = []
   for (let i = 0; i < count; i += 1) {
     trees.push({
       x: minX + (maxX - minX) * rand(),

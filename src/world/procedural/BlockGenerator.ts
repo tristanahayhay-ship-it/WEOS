@@ -1,5 +1,8 @@
 import { clamp } from './random'
-import type { Block, RoadCorridor, RoadType, ZoningType } from './types'
+import type { Block, RoadCorridor, RoadType, Vec2, ZoningType } from './types'
+
+const MIN_BLOCK_WIDTH = 0.008
+const MIN_BLOCK_DEPTH = 0.008
 
 function zoningFromBlockCenter(x: number, y: number, density: number): ZoningType {
   const radial = Math.hypot(x, y)
@@ -28,7 +31,7 @@ function sortByCoord(corridors: RoadCorridor[], axis: 'x' | 'y'): RoadCorridor[]
     .sort((a, b) => a.coord - b.coord)
 }
 
-function polygonArea(points: Array<{ x: number, y: number }>): number {
+function polygonArea(points: Vec2[]): number {
   let area = 0
   for (let i = 0; i < points.length; i += 1) {
     const current = points[i]
@@ -53,7 +56,7 @@ export function generateBlocks(corridors: RoadCorridor[]): Block[] {
     const minX = west.coord + west.width * 0.5
     const maxX = east.coord - east.width * 0.5
     const width = maxX - minX
-    if (width <= 0.008) continue
+    if (width <= MIN_BLOCK_WIDTH) continue
 
     for (let yi = 0; yi < horizontal.length - 1; yi += 1) {
       const south = horizontal[yi]
@@ -63,7 +66,7 @@ export function generateBlocks(corridors: RoadCorridor[]): Block[] {
       const minY = south.coord + south.width * 0.5
       const maxY = north.coord - north.width * 0.5
       const depth = maxY - minY
-      if (depth <= 0.008) continue
+      if (depth <= MIN_BLOCK_DEPTH) continue
 
       const polygon = [
         { x: minX, y: minY },
