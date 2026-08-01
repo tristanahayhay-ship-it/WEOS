@@ -1,49 +1,91 @@
+import { useEffect, useMemo, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useCountryStore } from '../../stores/countryStore'
-import { useRealtimeStore } from '../../stores/realtimeStore'
 import { useZoomStore } from '../../stores/zoomStore'
-import { ZOOM_LEVELS } from '../../zoom/levels'
 import { isoToFlag, formatArea } from '../../data/countries'
 import { ECONOMIC_DATA_BY_ISO } from '../../data/economicData'
-import { buildRealtimeEconomicMap, getLatestRealtimeRecordsByIndicator } from '../../utils/realtimeEconomic'
+import { buildCountryDashboardMock } from '../../data/countryDashboardMock'
 
-const toTimestamp = (value: string): number => {
-  const parsed = Date.parse(value)
-  return Number.isNaN(parsed) ? -1 : parsed
+const EXIT_ANIMATION_MS = 260
+
+function formatNumber(value: number | null, suffix = '') {
+  if (value == null) return '—'
+  return `${value.toLocaleString('en-US')}${suffix}`
 }
 
-const PANEL_LABELS: Record<string, string> = {
-  isoCode:      'ISO CODE',
-  capital:      'CAPITAL',
-  continent:    'CONTINENT',
-  area:         'AREA',
-  population:   'POPULATION',
-  gdp:          'GDP',
-  gdpPerCapita: 'GDP PER CAPITA',
-  inflation:    'INFLATION',
-  interestRate: 'INTEREST RATE',
-  unemployment: 'UNEMPLOYMENT',
-  dataSource:   'DATA SOURCE',
-  lastUpdated:  'LAST UPDATED',
-  loadingState: 'LOADING STATE',
-  errorState:   'ERROR STATE',
-  currency:     'CURRENCY',
-  timeZone:     'TIME ZONE',
+function formatMoneyUsdB(value: number | null) {
+  if (value == null) return '—'
+  if (value >= 1000) return `$${(value / 1000).toFixed(2)}T`
+  return `$${value.toFixed(2)}B`
 }
 
-function DataRow({ label, value }: { label: string; value: string }) {
+function formatRate(value: number | null) {
+  if (value == null) return '—'
+  return `${value.toFixed(2)}%`
+}
+
+function MiniChart({
+  title,
+  series,
+  color,
+  unit = '',
+}: {
+  title: string
+  series: Array<{ label: string; value: number }>
+  color: string
+  unit?: string
+}) {
+  const width = 240
+  const height = 68
+  const padded = 8
+  const values = series.map((point) => point.value)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+
+  const points = series
+    .map((point, index) => {
+      const x = padded + (index * (width - padded * 2)) / Math.max(series.length - 1, 1)
+      const y = height - padded - ((point.value - min) / range) * (height - padded * 2)
+      return `${x},${y}`
+    })
+    .join(' ')
+
   return (
-    <div className="flex flex-col gap-0.5 py-2" style={{ borderBottom: '1px solid rgba(121,196,255,0.1)' }}>
-      <span
-        className="text-[10px] tracking-[0.18em] uppercase"
-        style={{ color: 'rgba(121,196,255,0.55)' }}
-      >
-        {label}
-      </span>
-      <span className="text-sm" style={{ color: '#d9efff' }}>
-        {value}
-      </span>
+    <div className="rounded-lg border p-2" style={sectionBoxStyle}>
+      <div className="mb-1 flex items-baseline justify-between">
+        <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.68)' }}>
+          {title}
+        </span>
+        <span className="text-xs" style={{ color: '#d9efff' }}>
+          {series[series.length - 1]?.value.toFixed(2)}{unit}
+        </span>
+      </div>
+      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={title}>
+        <polyline fill="none" stroke={color} strokeWidth="2" points={points} />
+      </svg>
+      <div className="mt-1 flex justify-between text-[10px]" style={{ color: 'rgba(217,239,255,0.52)' }}>
+        <span>{series[0]?.label}</span>
+        <span>{min.toFixed(1)}{unit}</span>
+        <span>{max.toFixed(1)}{unit}</span>
+        <span>{series[series.length - 1]?.label}</span>
+      </div>
     </div>
   )
+}
+
+function LabelRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5 text-xs">
+      <span style={{ color: 'rgba(121,196,255,0.66)' }}>{label}</span>
+      <span className="text-right" style={{ color: '#d9efff' }}>{value}</span>
+    </div>
+  )
+}
+
+const sectionBoxStyle: CSSProperties = {
+  background: 'rgba(11, 17, 30, 0.68)',
+  borderColor: 'rgba(121,196,255,0.16)',
 }
 
 export default function CountryPanel() {
@@ -51,149 +93,167 @@ export default function CountryPanel() {
   const isPanelOpen = useCountryStore((s) => s.isPanelOpen)
   const closePanel = useCountryStore((s) => s.closePanel)
   const activeLevel = useZoomStore((s) => s.activeLevel)
-  const records = useRealtimeStore((s) => s.records)
-  const sourceState = useRealtimeStore((s) => s.sourceState)
-  const lastPipelineRunAt = useRealtimeStore((s) => s.lastPipelineRunAt)
 
-  if (!ZOOM_LEVELS[activeLevel].panel.showCountryPanel || !isPanelOpen || !selectedCountry) return null
+  const shouldBeVisible = activeLevel === 2 && isPanelOpen && selectedCountry !== null
+  const [isMounted, setIsMounted] = useState(shouldBeVisible)
+  const [isVisible, setIsVisible] = useState(shouldBeVisible)
+  const [displayCountry, setDisplayCountry] = useState(selectedCountry)
 
-  const flag = isoToFlag(selectedCountry.isoCode)
-  const realtimeEconomicData = buildRealtimeEconomicMap(records, ECONOMIC_DATA_BY_ISO)
-  const econ =
-    realtimeEconomicData.get(selectedCountry.isoCode) ??
-    ECONOMIC_DATA_BY_ISO.get(selectedCountry.isoCode) ??
-    null
-  const latestByIndicator = getLatestRealtimeRecordsByIndicator(records, selectedCountry.isoCode)
-  const unemployment = latestByIndicator.unemployment?.value ?? null
+  useEffect(() => {
+    if (shouldBeVisible && selectedCountry) {
+      setDisplayCountry(selectedCountry)
+      setIsMounted(true)
+      const frame = window.requestAnimationFrame(() => setIsVisible(true))
+      return () => window.cancelAnimationFrame(frame)
+    }
 
-  const activeSourceIds = Array.from(
-    new Set(
-      Object.values(latestByIndicator)
-        .map((record) => record.source)
-        .filter((source): source is keyof typeof sourceState => source != null),
-    ),
+    setIsVisible(false)
+    const timer = window.setTimeout(() => {
+      setIsMounted(false)
+      setDisplayCountry(null)
+    }, EXIT_ANIMATION_MS)
+    return () => window.clearTimeout(timer)
+  }, [shouldBeVisible, selectedCountry])
+
+  const economic = displayCountry ? ECONOMIC_DATA_BY_ISO.get(displayCountry.isoCode) ?? null : null
+  const dashboard = useMemo(
+    () => (displayCountry ? buildCountryDashboardMock(displayCountry, economic) : null),
+    [displayCountry, economic],
   )
 
-  const dataSource = activeSourceIds.length > 0
-    ? activeSourceIds
-      .map((source) => sourceState[source].sourceName || source)
-      .join(', ')
-    : 'Placeholder'
-
-  const sourceStates = activeSourceIds.length > 0
-    ? activeSourceIds.map((source) => sourceState[source])
-    : Object.values(sourceState)
-
-  const lastUpdated = sourceStates
-    .map((state) => state.lastUpdatedAt)
-    .filter((value): value is string => value != null)
-    .reduce<string | null>((latest, current) => {
-      if (!latest) return current
-      return toTimestamp(current) >= toTimestamp(latest) ? current : latest
-    }, null) ?? lastPipelineRunAt
-
-  const isLoading = sourceStates.some(
-    (state) =>
-      state.loading ||
-      state.connectorStatus === 'fetching' ||
-      state.connectorStatus === 'retrying',
-  )
-
-  const errorState = sourceStates
-    .map((state) => state.error ?? state.lastError)
-    .find((message): message is string => message != null) ?? null
-
-  const fmt = (n: number | null, suffix = '') =>
-    n == null ? '—' : n.toLocaleString('en-US') + suffix
-
-  const BILLION = 1_000
-  const fmtGdp = (n: number | null) => {
-    if (n == null) return '—'
-    if (n >= BILLION) return `$${(n / BILLION).toFixed(2)}T`
-    return `$${n.toFixed(2)}B`
-  }
-
-  const fmtGdpPerCapita = (n: number | null) =>
-    n == null ? '—' : `$${n.toLocaleString('en-US')}`
-
-  const fmtRate = (n: number | null) =>
-    n == null ? '—' : `${n.toFixed(2)}%`
-
-  const fmtLastUpdated = (value: string | null) => {
-    if (!value) return '—'
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return value
-    return date.toLocaleString('en-US')
-  }
+  if (!isMounted || !displayCountry || !dashboard) return null
 
   return (
     <aside
-      className="absolute right-0 top-0 h-full w-72 flex flex-col overflow-hidden"
+      className="absolute right-3 top-3 bottom-3 z-20 flex w-[min(30rem,42vw)] min-w-[18rem] max-w-[92vw] flex-col overflow-hidden rounded-xl border"
       style={{
-        background: 'rgba(8, 13, 24, 0.88)',
-        borderLeft: '1px solid rgba(121,196,255,0.18)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 20,
+        background: 'rgba(7, 12, 22, 0.82)',
+        borderColor: 'rgba(121,196,255,0.22)',
+        backdropFilter: 'blur(14px)',
+        boxShadow: '0 14px 40px rgba(3,7,14,0.52)',
+        transform: isVisible ? 'translateX(0)' : 'translateX(36px)',
+        opacity: isVisible ? 1 : 0,
+        transition: `opacity ${EXIT_ANIMATION_MS}ms ease, transform ${EXIT_ANIMATION_MS}ms ease`,
+        pointerEvents: isVisible ? 'auto' : 'none',
       }}
     >
-      {/* Header */}
-      <div
-        className="flex items-center justify-between px-4 py-3"
-        style={{ borderBottom: '1px solid rgba(121,196,255,0.18)' }}
-      >
-        <span
-          className="text-[10px] tracking-[0.3em] uppercase"
-          style={{ color: 'rgba(121,196,255,0.6)' }}
-        >
-          Country Info
-        </span>
+      <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(121,196,255,0.68)' }}>
+            Country Command Center
+          </p>
+          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.75)' }}>Country View V4</p>
+        </div>
         <button
           type="button"
           onClick={closePanel}
-          className="flex items-center justify-center w-6 h-6 rounded transition-opacity hover:opacity-70"
-          style={{ color: 'rgba(121,196,255,0.6)' }}
-          aria-label="Close country panel"
+          className="h-7 w-7 rounded text-sm"
+          style={{ color: 'rgba(121,196,255,0.88)', background: 'rgba(17, 25, 42, 0.74)' }}
+          aria-label="Close Country Command Center"
         >
           ✕
         </button>
       </div>
 
-      {/* Flag + name */}
-      <div
-        className="px-4 py-4 flex flex-col gap-2"
-        style={{ borderBottom: '1px solid rgba(121,196,255,0.12)' }}
-      >
-        <span className="text-5xl leading-none select-none" aria-label={`Flag of ${selectedCountry.englishName}`}>
-          {flag}
-        </span>
-        <h2 className="text-lg font-semibold leading-tight" style={{ color: '#d9efff' }}>
-          {selectedCountry.name}
-        </h2>
-        {selectedCountry.englishName !== selectedCountry.name && (
-          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.5)' }}>
-            {selectedCountry.englishName}
-          </p>
-        )}
-      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+          <div className="mb-2 flex items-start gap-3">
+            <span className="text-4xl" aria-label={`Flag of ${displayCountry.englishName}`}>{isoToFlag(displayCountry.isoCode)}</span>
+            <div>
+              <h2 className="text-lg font-semibold" style={{ color: '#d9efff' }}>{displayCountry.name}</h2>
+              <p className="text-xs" style={{ color: 'rgba(217,239,255,0.58)' }}>{displayCountry.capital} • {displayCountry.continent}</p>
+            </div>
+          </div>
+          <LabelRow label="Population" value={formatNumber(economic?.population ?? null)} />
+          <LabelRow label="Area" value={formatArea(displayCountry.area)} />
+          <LabelRow label="GDP" value={formatMoneyUsdB(economic?.gdpUsd ?? null)} />
+          <LabelRow label="GDP per Capita" value={economic?.gdpPerCapitaUsd == null ? '—' : `$${Math.round(economic.gdpPerCapitaUsd).toLocaleString('en-US')}`} />
+          <LabelRow label="GDP Growth" value={formatRate(dashboard.gdpGrowthPercent)} />
+          <LabelRow label="Inflation" value={formatRate(dashboard.inflationPercent)} />
+          <LabelRow label="Interest Rate" value={formatRate(dashboard.interestRatePercent)} />
+          <LabelRow label="Unemployment" value={formatRate(dashboard.unemploymentPercent)} />
+          <LabelRow label="PMI" value={dashboard.pmi.toFixed(1)} />
+          <LabelRow label="Public Debt" value={formatRate(dashboard.publicDebtPercentGdp)} />
+          <LabelRow label="Exports" value={formatMoneyUsdB(dashboard.exportsUsdB)} />
+          <LabelRow label="Imports" value={formatMoneyUsdB(dashboard.importsUsdB)} />
+          <LabelRow label="FX Reserves" value={formatMoneyUsdB(dashboard.fxReservesUsdB)} />
+          <LabelRow label="Credit Rating" value={dashboard.creditRating} />
+        </section>
 
-      {/* Data rows */}
-      <div className="flex-1 overflow-y-auto px-4 py-1">
-        <DataRow label={PANEL_LABELS.isoCode}      value={`${selectedCountry.isoCode} / ${selectedCountry.iso3Code}`} />
-        <DataRow label={PANEL_LABELS.capital}      value={selectedCountry.capital} />
-        <DataRow label={PANEL_LABELS.continent}    value={selectedCountry.continent} />
-        <DataRow label={PANEL_LABELS.area}         value={formatArea(selectedCountry.area)} />
-        <DataRow label={PANEL_LABELS.population}   value={econ ? fmt(econ.population) : '—'} />
-        <DataRow label={PANEL_LABELS.gdp}          value={econ ? fmtGdp(econ.gdpUsd) : '—'} />
-        <DataRow label={PANEL_LABELS.gdpPerCapita} value={econ ? fmtGdpPerCapita(econ.gdpPerCapitaUsd) : '—'} />
-        <DataRow label={PANEL_LABELS.inflation}    value={econ ? fmtRate(econ.inflationPercent) : '—'} />
-        <DataRow label={PANEL_LABELS.interestRate} value={econ ? fmtRate(econ.interestRatePercent) : '—'} />
-        <DataRow label={PANEL_LABELS.unemployment} value={fmtRate(unemployment)} />
-        <DataRow label={PANEL_LABELS.dataSource}   value={dataSource} />
-        <DataRow label={PANEL_LABELS.lastUpdated}  value={fmtLastUpdated(lastUpdated)} />
-        <DataRow label={PANEL_LABELS.loadingState} value={isLoading ? 'Refreshing' : 'Idle'} />
-        {errorState && <DataRow label={PANEL_LABELS.errorState} value={errorState} />}
-        <DataRow label={PANEL_LABELS.currency}     value={econ && econ.currency ? `${econ.currency}${econ.currencyCode ? ` (${econ.currencyCode})` : ''}` : '—'} />
-        <DataRow label={PANEL_LABELS.timeZone}     value={econ && econ.timeZones.length > 0 ? econ.timeZones[0] : '—'} />
+        <section className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <MiniChart title="GDP Chart" series={dashboard.gdpChart} color="#34d399" unit="B" />
+          <MiniChart title="Inflation Chart" series={dashboard.inflationChart} color="#f59e0b" unit="%" />
+          <MiniChart title="Interest Rate Chart" series={dashboard.interestRateChart} color="#60a5fa" unit="%" />
+          <MiniChart title="Trade Balance Chart" series={dashboard.tradeBalanceChart} color="#a78bfa" unit="B" />
+        </section>
+
+        <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Top Companies</h3>
+          <div className="space-y-2">
+            {dashboard.topCompanies.map((company) => (
+              <div key={company.name} className="rounded border px-2 py-2 text-xs" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
+                <div className="font-medium" style={{ color: '#d9efff' }}>{company.name}</div>
+                <div className="mt-1 grid grid-cols-3 gap-2" style={{ color: 'rgba(217,239,255,0.62)' }}>
+                  <span>Cap: ${company.marketCapUsdB.toFixed(1)}B</span>
+                  <span>{company.industry}</span>
+                  <span>{company.headquarters}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Economic Sectors</h3>
+          <div className="space-y-2">
+            {dashboard.sectors.map((sector) => (
+              <div key={sector.name}>
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span style={{ color: '#d9efff' }}>{sector.name}</span>
+                  <span style={{ color: 'rgba(217,239,255,0.62)' }}>{sector.sharePercent}%</span>
+                </div>
+                <div className="h-1.5 rounded" style={{ background: 'rgba(121,196,255,0.15)' }}>
+                  <div className="h-full rounded" style={{ width: `${sector.sharePercent}%`, background: '#60a5fa' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>News Panel</h3>
+          <div className="space-y-2 text-xs">
+            {dashboard.news.map((item) => (
+              <div key={`${item.category}-${item.title}`} className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.14)' }}>
+                <p className="mb-1 uppercase tracking-[0.16em]" style={{ color: 'rgba(121,196,255,0.65)' }}>{item.category}</p>
+                <p style={{ color: '#d9efff' }}>{item.title}</p>
+                <p className="mt-1" style={{ color: 'rgba(217,239,255,0.56)' }}>{item.source} • {item.time}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-lg border p-3" style={sectionBoxStyle}>
+          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Country Summary</h3>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
+              <p style={{ color: 'rgba(121,196,255,0.62)' }}>Economic Health</p>
+              <p style={{ color: '#d9efff' }}>{dashboard.summary.economicHealth}</p>
+            </div>
+            <div className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
+              <p style={{ color: 'rgba(121,196,255,0.62)' }}>Growth Trend</p>
+              <p style={{ color: '#d9efff' }}>{dashboard.summary.growthTrend}</p>
+            </div>
+            <div className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
+              <p style={{ color: 'rgba(121,196,255,0.62)' }}>Risk Level</p>
+              <p style={{ color: '#d9efff' }}>{dashboard.summary.riskLevel}</p>
+            </div>
+            <div className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
+              <p style={{ color: 'rgba(121,196,255,0.62)' }}>Capital Flow Status</p>
+              <p style={{ color: '#d9efff' }}>{dashboard.summary.capitalFlowStatus}</p>
+            </div>
+          </div>
+        </section>
       </div>
     </aside>
   )
