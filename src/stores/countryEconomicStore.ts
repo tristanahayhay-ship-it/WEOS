@@ -17,6 +17,8 @@ interface CountryEconomicState {
 
   /** Clear the active layer (e.g. when country is deselected) */
   clear: () => void
+  /** Clear active layer and cached layers to release memory when exiting Country View */
+  release: () => void
 }
 
 /** Per-session in-memory cache so re-selecting the same country is instant */
@@ -39,4 +41,8 @@ export const useCountryEconomicStore = create<CountryEconomicState>((set, get) =
   },
 
   clear: () => set({ activeIsoCode: null, layer: null }),
+  release: () => {
+    cache.clear()
+    set({ activeIsoCode: null, layer: null })
+  },
 }))

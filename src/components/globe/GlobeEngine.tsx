@@ -23,6 +23,7 @@ import {
   Scene,
   SRGBColorSpace,
   SphereGeometry,
+  Texture,
   Vector3,
   WebGLRenderer,
 } from 'three'
@@ -43,14 +44,12 @@ import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
 import type { Country } from '../../types/country'
 import { findCountryAtPoint, getCountryBoundaryRings } from '../../utils/countryGeometry'
 import { LOD_FLOWS } from '../../flows/lodFlows'
-import { addCountryInfrastructure } from '../../world/country'
-import { addEconomicCities, addEconomicNodes } from '../../world/country'
-import { generateEconomicLayer } from '../../world/country'
+import { addCountryInfrastructure, addEconomicCities, addEconomicNodes, generateEconomicLayer } from '../../world/country'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
-const CAMERA_LERP_SPEED = 3.5
+const CAMERA_DAMPING = 9
 /** Distance tolerance to consider camera "arrived" at a pending target. */
-const CAMERA_ARRIVE_TOLERANCE = 0.005
+const CAMERA_ARRIVE_TOLERANCE = 0.003
 
 const VIEW_MODE_LABELS = {
   '2d': '2D MAP',
@@ -122,9 +121,9 @@ function disposeWorld(object: Object3D) {
       child.geometry.dispose()
 
       if (Array.isArray(child.material)) {
-        child.material.forEach((material: Material) => material.dispose())
+        child.material.forEach((material: Material) => disposeMaterialWithTextures(material))
       } else {
-        child.material.dispose()
+        disposeMaterialWithTextures(child.material)
       }
     }
 
@@ -132,9 +131,9 @@ function disposeWorld(object: Object3D) {
       child.geometry.dispose()
 
       if (Array.isArray(child.material)) {
-        child.material.forEach((material: Material) => material.dispose())
+        child.material.forEach((material: Material) => disposeMaterialWithTextures(material))
       } else {
-        child.material.dispose()
+        disposeMaterialWithTextures(child.material)
       }
     }
   })
@@ -147,8 +146,32 @@ const COUNTRY_BORDER_ALTITUDE = 0.018
 const COUNTRY_CITY_ALTITUDE = 0.024
 const COUNTRY_CITY_MARKER_RADIUS = 0.01
 const MAX_COUNTRY_CITY_MARKERS = 12
-const COUNTRY_DETAIL_LEVELS = [2, 3, 4, 5, 6] as const
+const COUNTRY_DETAIL_LEVELS = [2] as const
 const BASE_OPACITY_BY_MATERIAL = new WeakMap<Material, number>()
+const MATERIAL_TEXTURE_KEYS = [
+  'map',
+  'alphaMap',
+  'aoMap',
+  'bumpMap',
+  'displacementMap',
+  'emissiveMap',
+  'envMap',
+  'lightMap',
+  'metalnessMap',
+  'normalMap',
+  'roughnessMap',
+  'specularMap',
+  'gradientMap',
+] as const
+
+function disposeMaterialWithTextures(material: Material) {
+  const textureAwareMaterial = material as Material & Partial<Record<(typeof MATERIAL_TEXTURE_KEYS)[number], unknown>>
+  for (const key of MATERIAL_TEXTURE_KEYS) {
+    const texture = textureAwareMaterial[key]
+    if (texture instanceof Texture) texture.dispose()
+  }
+  material.dispose()
+}
 
 interface WorldLayerState {
   group: Group
@@ -441,13 +464,14 @@ export default function GlobeEngine() {
 
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
+    controls.dampingFactor = 0.08
     controls.enablePan = true
     controls.enableZoom = true
     controls.screenSpacePanning = false
     controls.rotateSpeed = 0.65
     controls.zoomSpeed = 0.85
     controls.panSpeed = 0.7
-    controls.minDistance = 1.75
+    controls.minDistance = 2.2
     controls.maxDistance = 5.5
     controls.target.copy(focusTarget)
 
@@ -462,7 +486,7 @@ export default function GlobeEngine() {
     world.add(debugMarkers)
 
     scene.add(fillLight, keyLight, world)
-    camera.position.set(0, 0, DESKTOP_CAMERA_DISTANCE)
+    camera.position.set(0, 0, getCameraDistance(container.clientWidth))
 
     rendererRef.current = renderer
     cameraRef.current = camera
@@ -489,9 +513,8 @@ export default function GlobeEngine() {
           camera.position.normalize().multiplyScalar(pendingDist)
           zoomState.clearPendingCamera()
         } else {
-          // Lerp toward target distance, preserving direction
-          const step = Math.sign(diff) * Math.min(Math.abs(diff), CAMERA_LERP_SPEED * deltaSeconds)
-          camera.position.normalize().multiplyScalar(currentDist + step)
+          const nextDist = MathUtils.damp(currentDist, pendingDist, CAMERA_DAMPING, deltaSeconds)
+          camera.position.normalize().multiplyScalar(nextDist)
         }
       }
 
@@ -511,10 +534,8 @@ export default function GlobeEngine() {
         for (const level of COUNTRY_DETAIL_LEVELS) {
           populateCountryDetailLayer(worldBundle.layers[level].group, selectedCountry)
         }
-        // Country View V2: append national infrastructure to the level-2 layer.
         if (selectedCountry) {
           addCountryInfrastructure(worldBundle.layers[2].group, selectedCountry)
-          // Country View V3: economic cities and nodes.
           const econLayer = generateEconomicLayer(selectedCountry)
           addEconomicCities(worldBundle.layers[2].group, econLayer.cities)
           addEconomicNodes(worldBundle.layers[2].group, econLayer.nodes)
@@ -625,7 +646,6 @@ export default function GlobeEngine() {
 
     renderer.setSize(size.width, size.height, false)
     camera.aspect = size.width / size.height
-    camera.position.set(0, 0, getCameraDistance(size.width))
     camera.updateProjectionMatrix()
   }, [size])
 

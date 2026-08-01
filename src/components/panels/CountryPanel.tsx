@@ -38,6 +38,21 @@ function MiniChart({
   const width = 240
   const height = 68
   const padded = 8
+  if (series.length === 0) {
+    return (
+      <div className="rounded-lg border p-2" style={sectionBoxStyle}>
+        <div className="mb-1 flex items-baseline justify-between">
+          <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.68)' }}>
+            {title}
+          </span>
+          <span className="text-xs" style={{ color: '#d9efff' }}>—</span>
+        </div>
+        <div className="flex h-[68px] items-center justify-center text-[10px]" style={{ color: 'rgba(217,239,255,0.52)' }}>
+          No data
+        </div>
+      </div>
+    )
+  }
   const values = series.map((point) => point.value)
   const min = Math.min(...values)
   const max = Math.max(...values)
@@ -125,7 +140,7 @@ export default function CountryPanel() {
 
   return (
     <aside
-      className="absolute right-3 top-3 bottom-3 z-20 flex w-[min(30rem,42vw)] min-w-[18rem] max-w-[92vw] flex-col overflow-hidden rounded-xl border"
+      className="absolute inset-3 z-20 flex w-auto flex-col overflow-hidden rounded-xl border sm:inset-auto sm:right-3 sm:top-3 sm:bottom-3 sm:w-[min(30rem,42vw)] sm:min-w-[18rem] sm:max-w-[92vw]"
       style={{
         background: 'rgba(7, 12, 22, 0.82)',
         borderColor: 'rgba(121,196,255,0.22)',
@@ -142,7 +157,7 @@ export default function CountryPanel() {
           <p className="text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(121,196,255,0.68)' }}>
             Country Command Center
           </p>
-          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.75)' }}>Country View V4</p>
+          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.75)' }}>Country View V5</p>
         </div>
         <button
           type="button"
