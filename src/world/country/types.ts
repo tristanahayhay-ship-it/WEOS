@@ -62,3 +62,67 @@ export interface CountryInfrastructure {
   parks: CountryPark[]
   landuse: CountryLanduse[]
 }
+
+// ── Country View V3 ───────────────────────────────────────────────────────────
+
+/** Economic role a city plays within its country */
+export type CityType = 'capital' | 'financial' | 'industrial' | 'port' | 'logistics' | 'technology'
+
+/** Type of economic node attached to a city */
+export type EconomicNodeType =
+  | 'financial_hub'
+  | 'industrial_hub'
+  | 'logistics_hub'
+  | 'port'
+  | 'airport'
+  | 'tech_hub'
+  | 'central_bank'
+  | 'government'
+
+/** Category of capital/goods flow between two cities */
+export type CityFlowType = 'capital' | 'trade' | 'supply' | 'logistics'
+
+/**
+ * A named economic city within a country.
+ * `importance` is in [0, 1]: 1 = primate city, lower = secondary.
+ */
+export interface EconomicCity {
+  id: string
+  name: string
+  position: GeoPoint
+  type: CityType
+  /** Relative importance in [0, 1]; drives marker size and glow intensity */
+  importance: number
+}
+
+/**
+ * An economic node co-located with or near a city.
+ * Multiple nodes can exist per city.
+ */
+export interface EconomicNode {
+  id: string
+  cityId: string
+  type: EconomicNodeType
+  position: GeoPoint
+}
+
+/**
+ * A directional flow between two cities.
+ * `value` is an arbitrary economic magnitude (USD billions or index units).
+ */
+export interface CityFlow {
+  id: string
+  fromCityId: string
+  toCityId: string
+  type: CityFlowType
+  /** Economic magnitude (USD billions or relative index) */
+  value: number
+}
+
+/** Full V3 economic layer for one country */
+export interface CountryEconomicLayer {
+  isoCode: string
+  cities: EconomicCity[]
+  nodes: EconomicNode[]
+  flows: CityFlow[]
+}

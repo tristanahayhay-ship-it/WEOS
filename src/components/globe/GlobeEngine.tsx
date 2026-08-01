@@ -44,6 +44,8 @@ import type { Country } from '../../types/country'
 import { findCountryAtPoint, getCountryBoundaryRings } from '../../utils/countryGeometry'
 import { LOD_FLOWS } from '../../flows/lodFlows'
 import { addCountryInfrastructure } from '../../world/country'
+import { addEconomicCities, addEconomicNodes } from '../../world/country'
+import { generateEconomicLayer } from '../../world/country'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
 const CAMERA_LERP_SPEED = 3.5
@@ -512,6 +514,10 @@ export default function GlobeEngine() {
         // Country View V2: append national infrastructure to the level-2 layer.
         if (selectedCountry) {
           addCountryInfrastructure(worldBundle.layers[2].group, selectedCountry)
+          // Country View V3: economic cities and nodes.
+          const econLayer = generateEconomicLayer(selectedCountry)
+          addEconomicCities(worldBundle.layers[2].group, econLayer.cities)
+          addEconomicNodes(worldBundle.layers[2].group, econLayer.nodes)
         }
         countryDetailKeyRef.current = countryDetailKey
       }

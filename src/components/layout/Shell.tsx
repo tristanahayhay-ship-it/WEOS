@@ -4,7 +4,7 @@ import Footer from './Footer'
 import GlobeEngine from '../globe/GlobeEngine'
 import CountryPanel from '../panels/CountryPanel'
 import { OverlayCanvas, OverlayPanel, OverlayLegend } from '../overlay'
-import { FlowCanvas, FlowPanel } from '../flow'
+import { FlowCanvas, FlowPanel, CountryFlowCanvas } from '../flow'
 import { DebugCanvas } from '../debug'
 import { useDebugStore } from '../../stores/debugStore'
 import ZoomLevelHUD from '../zoom/ZoomLevelHUD'
@@ -86,6 +86,7 @@ export default function Shell({ children }: ShellProps) {
           <OverlayPanel />
           <OverlayLegend />
           <FlowCanvas />
+          <CountryFlowCanvas />
           <FlowPanel />
           <CountryPanel />
           <DebugCanvas />
