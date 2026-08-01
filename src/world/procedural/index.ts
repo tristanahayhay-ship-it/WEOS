@@ -1,6 +1,6 @@
 export { generateProceduralWorld } from './ProceduralWorldGenerator'
 export { createProceduralLayers } from './ProceduralWorldScene'
-export { generateRoadGraph } from './RoadGenerator'
+export { generateRoadGraph, selectMorphology } from './RoadGenerator'
 export { generateBlocks } from './BlockGenerator'
 export { generateParcels } from './ParcelGenerator'
 export { generateBuildings } from './BuildingGenerator'

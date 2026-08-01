@@ -12,7 +12,7 @@ import type { ProceduralWorldModel } from './types'
 export function generateProceduralWorld(seed: number): ProceduralWorldModel {
   const rivers = generateRivers(seed)
   const roads = generateRoadGraph(seed, rivers)
-  const blocks = generateBlocks(roads.corridors)
+  const blocks = generateBlocks(roads)
   const parcels = generateParcels(blocks, seed)
   const buildings = generateBuildings(parcels, seed)
   const districts = generateDistricts(blocks)

@@ -46,12 +46,14 @@ function districtName(type: DistrictType): string {
 }
 
 function centerOfBlock(block: Block): Vec2 {
-  const [sw, se, ne, nw] = block.polygon
-  if (!sw || !se || !ne || !nw) return { x: 0, y: 0 }
-  return {
-    x: (sw.x + se.x + ne.x + nw.x) / 4,
-    y: (sw.y + se.y + ne.y + nw.y) / 4,
+  if (block.polygon.length === 0) return { x: 0, y: 0 }
+  let x = 0
+  let y = 0
+  for (const pt of block.polygon) {
+    x += pt.x
+    y += pt.y
   }
+  return { x: x / block.polygon.length, y: y / block.polygon.length }
 }
 
 function polygonFromExtents(minX: number, maxX: number, minY: number, maxY: number): Vec2[] {

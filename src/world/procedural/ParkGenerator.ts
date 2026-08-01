@@ -19,12 +19,14 @@ function treeGridForPolygon(
   count: number,
   rand: () => number,
 ) {
-  const [sw, se, ne, nw] = polygon
-  if (!sw || !se || !ne || !nw) return []
-  const minX = sw.x
-  const maxX = se.x
-  const minY = sw.y
-  const maxY = nw.y
+  if (polygon.length === 0) return []
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+  for (const p of polygon) {
+    if (p.x < minX) minX = p.x
+    if (p.x > maxX) maxX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.y > maxY) maxY = p.y
+  }
 
   const trees: Vec2[] = []
   for (let i = 0; i < count; i += 1) {
