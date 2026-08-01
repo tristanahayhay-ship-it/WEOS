@@ -5,7 +5,6 @@ import {
   AdditiveBlending,
   BackSide,
   BufferGeometry,
-  CylinderGeometry,
   Color,
   DirectionalLight,
   Float32BufferAttribute,
@@ -41,8 +40,9 @@ import {
   projectLngLatToCartesian,
 } from '../../utils/globe'
 import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
-import { createProceduralLayers } from '../../world/procedural'
-import { createSeededRandom } from '../../world/procedural/random'
+import type { Country } from '../../types/country'
+import { findCountryAtPoint, getCountryBoundaryRings } from '../../utils/countryGeometry'
+import { LOD_FLOWS } from '../../flows/lodFlows'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
 const CAMERA_LERP_SPEED = 3.5
@@ -113,7 +113,7 @@ function createLineGroup(
   return group
 }
 
-function disposeWorld(object: Group | Scene) {
+function disposeWorld(object: Object3D) {
   object.traverse((child: Object3D) => {
     if (child instanceof Mesh) {
       child.geometry.dispose()
@@ -137,12 +137,14 @@ function disposeWorld(object: Group | Scene) {
   })
 }
 
-const DEFAULT_COUNTRY_CENTER: [number, number] = [10, 48]
 const LAYER_FADE_SPEED = 4.5
-const WORLD_DETAIL_SURFACE = EARTH_RADIUS * 1.03
 const DEPTH_WRITE_ALPHA_THRESHOLD = 0.35
 const ALPHA_UPDATE_THRESHOLD = 0.002
-const COUNTRY_SEED_OFFSET = 11
+const COUNTRY_BORDER_ALTITUDE = 0.018
+const COUNTRY_CITY_ALTITUDE = 0.024
+const COUNTRY_CITY_MARKER_RADIUS = 0.01
+const MAX_COUNTRY_CITY_MARKERS = 12
+const COUNTRY_DETAIL_LEVELS = [2, 3, 4, 5, 6] as const
 const BASE_OPACITY_BY_MATERIAL = new WeakMap<Material, number>()
 
 interface WorldLayerState {
@@ -156,7 +158,6 @@ interface WorldBundle {
   atmosphere: Mesh
   coastlines: Group
   countryBoundaries: Group
-  detailAnchor: Group
   layers: Record<ZoomLevelId, WorldLayerState>
   coastlineAlpha: number
   boundaryAlpha: number
@@ -191,26 +192,99 @@ function updateGroupAlpha(
   return nextAlpha
 }
 
-function createCountryLayer(seed: number): Group {
-  const rand = createSeededRandom(seed + COUNTRY_SEED_OFFSET)
-  const layer = new Group()
-  const colors = ['#f97316', '#0ea5e9', '#34d399', '#f43f5e']
+function buildCountryLinePaths(rings: number[][][], radius: number) {
+  const paths: Float32Array[] = []
 
-  for (let i = 0; i < 16; i += 1) {
-    const radius = 0.03 + rand() * 0.18
-    const angle = rand() * Math.PI * 2
-    const x = Math.cos(angle) * radius
-    const y = Math.sin(angle) * radius
-    const h = 0.01 + rand() * 0.02
-    const marker = new Mesh(
-      new CylinderGeometry(0.007, 0.01, h, 10),
-      new MeshPhongMaterial({ color: colors[i % colors.length], transparent: true, opacity: 0.9 }),
-    )
-    marker.position.set(x, y, h * 0.5 + 0.0015)
-    layer.add(marker)
+  for (const ring of rings) {
+    if (ring.length < 2) continue
+
+    let currentPoints: number[] = []
+
+    for (let index = 0; index < ring.length; index += 1) {
+      const [longitude, latitude] = ring[index] ?? []
+      if (longitude == null || latitude == null) continue
+
+      if (
+        index > 0 &&
+        Math.abs(longitude - ring[index - 1]![0]) > 180 &&
+        currentPoints.length >= 6
+      ) {
+        paths.push(new Float32Array(currentPoints))
+        currentPoints = []
+      }
+
+      const [x, y, z] = projectLngLatToCartesian(longitude, latitude, radius)
+      currentPoints.push(x, y, z)
+    }
+
+    if (currentPoints.length >= 6) {
+      paths.push(new Float32Array(currentPoints))
+    }
   }
 
-  return layer
+  return paths
+}
+
+function dedupePoints(points: Array<[number, number]>) {
+  const seen = new Set<string>()
+  return points.filter(([lon, lat]) => {
+    const key = `${lon.toFixed(3)}:${lat.toFixed(3)}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+const COUNTRY_CITY_MARKERS = (() => {
+  const markers = new Map<string, Array<[number, number]>>()
+
+  for (const flows of Object.values(LOD_FLOWS)) {
+    for (const flow of flows) {
+      for (const point of [flow.startPoint, flow.endPoint] as const) {
+        const country = findCountryAtPoint(point[0], point[1])
+        if (!country) continue
+        const existing = markers.get(country.isoCode) ?? []
+        existing.push(point)
+        markers.set(country.isoCode, existing)
+      }
+    }
+  }
+
+  for (const [isoCode, points] of markers) {
+    markers.set(isoCode, dedupePoints(points).slice(0, MAX_COUNTRY_CITY_MARKERS))
+  }
+
+  return markers
+})()
+
+function clearGroup(group: Group) {
+  while (group.children.length > 0) {
+    const child = group.children[0]!
+    group.remove(child)
+    disposeWorld(child)
+  }
+}
+
+function populateCountryDetailLayer(group: Group, country: Country | null) {
+  clearGroup(group)
+
+  if (!country) return
+
+  const rings = getCountryBoundaryRings(country.numericCode)
+  if (rings.length > 0) {
+    group.add(createLineGroup(buildCountryLinePaths(rings, EARTH_RADIUS + COUNTRY_BORDER_ALTITUDE), '#f8fafc', 0.95))
+  }
+
+  const cityPoints = COUNTRY_CITY_MARKERS.get(country.isoCode) ?? []
+  for (const [lon, lat] of cityPoints) {
+    const [x, y, z] = projectLngLatToCartesian(lon, lat, EARTH_RADIUS + COUNTRY_CITY_ALTITUDE)
+    const marker = new Mesh(
+      new SphereGeometry(COUNTRY_CITY_MARKER_RADIUS, 8, 8),
+      new MeshBasicMaterial({ color: '#f97316', transparent: true, opacity: 0.95 }),
+    )
+    marker.position.set(x, y, z)
+    group.add(marker)
+  }
 }
 
 function createContinentLayer(): Group {
@@ -250,18 +324,6 @@ function createContinentLayer(): Group {
   return layer
 }
 
-function updateAnchorTransform(anchor: Group, lon: number, lat: number) {
-  const lonRad = MathUtils.degToRad(lon)
-  const [x, y, z] = projectLngLatToCartesian(lon, lat, WORLD_DETAIL_SURFACE)
-  const up = new Vector3(x, y, z).normalize()
-  const east = new Vector3(-Math.sin(lonRad), 0, -Math.cos(lonRad)).normalize()
-  const north = new Vector3().crossVectors(up, east).normalize()
-
-  anchor.position.set(x, y, z)
-  const basis = new Matrix4().makeBasis(east, north, up)
-  anchor.setRotationFromMatrix(basis)
-}
-
 function createWorld(): WorldBundle {
   const world = new Group()
 
@@ -291,22 +353,17 @@ function createWorld(): WorldBundle {
 
   const coastlines = createLineGroup(COASTLINE_PATHS, '#79c4ff', 0.9)
   const countryBoundaries = createLineGroup(COUNTRY_BOUNDARY_PATHS, '#d9efff', 0.45)
-  const detailAnchor = new Group()
 
   const layer0 = new Group()
   const layer1 = createContinentLayer()
-  const layer2 = createCountryLayer(7)
-  const proceduralLayers = createProceduralLayers(11)
-  const layer3 = proceduralLayers.city
-  const layer4 = proceduralLayers.district
-  const layer5 = proceduralLayers.institution
-  const layer6 = proceduralLayers.corporation
-  detailAnchor.add(layer2, layer3, layer4, layer5, layer6)
-
-  updateAnchorTransform(detailAnchor, DEFAULT_COUNTRY_CENTER[0], DEFAULT_COUNTRY_CENTER[1])
+  const layer2 = new Group()
+  const layer3 = new Group()
+  const layer4 = new Group()
+  const layer5 = new Group()
+  const layer6 = new Group()
 
   world.rotation.z = MathUtils.degToRad(23.4)
-  world.add(earth, atmosphere, coastlines, countryBoundaries, layer0, layer1, detailAnchor)
+  world.add(earth, atmosphere, coastlines, countryBoundaries, layer0, layer1, layer2, layer3, layer4, layer5, layer6)
 
   const layers: Record<ZoomLevelId, WorldLayerState> = {
     0: { group: layer0, alpha: 1 },
@@ -328,7 +385,6 @@ function createWorld(): WorldBundle {
     atmosphere,
     coastlines,
     countryBoundaries,
-    detailAnchor,
     layers,
     coastlineAlpha: 1,
     boundaryAlpha: 1,
@@ -345,7 +401,7 @@ export default function GlobeEngine() {
   const worldRef = useRef<Group | null>(null)
   const worldBundleRef = useRef<WorldBundle | null>(null)
   const debugMarkersRef = useRef<Group | null>(null)
-  const detailAnchorKeyRef = useRef<string>('')
+  const countryDetailKeyRef = useRef<string>('')
   const focusTarget = useMemo(() => new Vector3(0, 0, 0), [])
   /** Monotonic clock used for camera-distance lerp delta-time calculation. */
   const lastFrameTimeRef = useRef<number>(performance.now())
@@ -354,7 +410,9 @@ export default function GlobeEngine() {
   useCountryInteraction(containerRef, cameraRef, worldRef)
 
   const hoveredCountry = useCountryStore((s) => s.hoveredCountry)
+  const selectedCountry = useCountryStore((s) => s.selectedCountry)
   const tooltipPos = useCountryStore((s) => s.tooltipScreenPos)
+  const activeLevel = useZoomStore((s) => s.activeLevel)
 
   useEffect(() => {
     const container = containerRef.current
@@ -444,13 +502,16 @@ export default function GlobeEngine() {
 
       const activeLevel = zoomState.activeLevel
       const countryState = useCountryStore.getState()
-      const focusedCountry = countryState.selectedCountry ?? countryState.hoveredCountry
-      const [focusLon, focusLat] = focusedCountry?.center ?? DEFAULT_COUNTRY_CENTER
-      const focusKey = focusedCountry?.isoCode ?? 'default'
-      if (focusKey !== detailAnchorKeyRef.current) {
-        updateAnchorTransform(worldBundle.detailAnchor, focusLon, focusLat)
-        detailAnchorKeyRef.current = focusKey
+      const selectedCountry = countryState.selectedCountry
+      const countryDetailKey = selectedCountry?.isoCode ?? ''
+      if (countryDetailKey !== countryDetailKeyRef.current) {
+        for (const level of COUNTRY_DETAIL_LEVELS) {
+          populateCountryDetailLayer(worldBundle.layers[level].group, selectedCountry)
+        }
+        countryDetailKeyRef.current = countryDetailKey
       }
+
+      const preserveCountryView = selectedCountry !== null && activeLevel >= 2
 
       // Clamp to 1 to keep interpolation stable on dropped/long frames.
       const fadeLerp = Math.min(1, LAYER_FADE_SPEED * deltaSeconds)
@@ -460,14 +521,14 @@ export default function GlobeEngine() {
         state.alpha = updateGroupAlpha(state.group, state.alpha, targetAlpha, fadeLerp)
       }
 
-      const globeAlphaTarget = activeLevel <= 2 ? 1 : 0.22
+      const globeAlphaTarget = activeLevel <= 2 || preserveCountryView ? 1 : 0.22
       const earthMaterial = worldBundle.earth.material as MeshPhongMaterial
       earthMaterial.opacity = MathUtils.lerp(earthMaterial.opacity, globeAlphaTarget, fadeLerp)
       const atmosphereMaterial = worldBundle.atmosphere.material as MeshBasicMaterial
-      const atmosphereTarget = activeLevel <= 2 ? 0.12 : 0.02
+      const atmosphereTarget = activeLevel <= 2 || preserveCountryView ? 0.12 : 0.02
       atmosphereMaterial.opacity = MathUtils.lerp(atmosphereMaterial.opacity, atmosphereTarget, fadeLerp)
-      const boundaryAlphaTarget = activeLevel <= 2 ? 1 : 0.15
-      const coastAlphaTarget = activeLevel <= 2 ? 1 : 0.2
+      const boundaryAlphaTarget = activeLevel <= 2 || preserveCountryView ? 1 : 0.15
+      const coastAlphaTarget = activeLevel <= 2 || preserveCountryView ? 1 : 0.2
       worldBundle.boundaryAlpha = updateGroupAlpha(
         worldBundle.countryBoundaries,
         worldBundle.boundaryAlpha,
@@ -530,7 +591,7 @@ export default function GlobeEngine() {
       worldRef.current = null
       worldBundleRef.current = null
       debugMarkersRef.current = null
-      detailAnchorKeyRef.current = ''
+      countryDetailKeyRef.current = ''
       useGlobeViewStore.getState().clearFrame()
     }
   }, [containerRef, focusTarget])
@@ -590,6 +651,23 @@ export default function GlobeEngine() {
       >
         Rotate • Zoom • Pan
       </div>
+
+      {selectedCountry && activeLevel >= 2 && (
+        <div
+          className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-md border px-4 py-2 text-center"
+          style={{
+            background: 'rgba(8, 13, 24, 0.78)',
+            borderColor: 'rgba(121, 196, 255, 0.32)',
+            color: '#d9efff',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: 'rgba(121, 196, 255, 0.72)' }}>
+            Country View
+          </div>
+          <div className="text-sm font-semibold">{selectedCountry.name}</div>
+        </div>
+      )}
 
       {hoveredCountry && tooltipPos && (
         <div

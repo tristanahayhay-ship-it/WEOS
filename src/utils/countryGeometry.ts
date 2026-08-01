@@ -135,6 +135,10 @@ export function findCountryAtPoint(lng: number, lat: number): Country | null {
   return null
 }
 
+export function getCountryBoundaryRings(numericCode: number): number[][][] {
+  return POLYGON_INDEX.find((entry) => entry.numericCode === numericCode)?.rings ?? []
+}
+
 // ─── Three.js mesh builder ────────────────────────────────────────────────────
 
 /**

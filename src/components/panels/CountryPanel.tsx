@@ -1,5 +1,7 @@
 import { useCountryStore } from '../../stores/countryStore'
 import { useRealtimeStore } from '../../stores/realtimeStore'
+import { useZoomStore } from '../../stores/zoomStore'
+import { ZOOM_LEVELS } from '../../zoom/levels'
 import { isoToFlag, formatArea } from '../../data/countries'
 import { ECONOMIC_DATA_BY_ISO } from '../../data/economicData'
 import { buildRealtimeEconomicMap, getLatestRealtimeRecordsByIndicator } from '../../utils/realtimeEconomic'
@@ -48,11 +50,12 @@ export default function CountryPanel() {
   const selectedCountry = useCountryStore((s) => s.selectedCountry)
   const isPanelOpen = useCountryStore((s) => s.isPanelOpen)
   const closePanel = useCountryStore((s) => s.closePanel)
+  const activeLevel = useZoomStore((s) => s.activeLevel)
   const records = useRealtimeStore((s) => s.records)
   const sourceState = useRealtimeStore((s) => s.sourceState)
   const lastPipelineRunAt = useRealtimeStore((s) => s.lastPipelineRunAt)
 
-  if (!isPanelOpen || !selectedCountry) return null
+  if (!ZOOM_LEVELS[activeLevel].panel.showCountryPanel || !isPanelOpen || !selectedCountry) return null
 
   const flag = isoToFlag(selectedCountry.isoCode)
   const realtimeEconomicData = buildRealtimeEconomicMap(records, ECONOMIC_DATA_BY_ISO)
