@@ -1,5 +1,7 @@
 export type RoadType = 'highway' | 'primary' | 'secondary' | 'local'
 
+export type CityMorphology = 'grid' | 'radial' | 'organic' | 'coastal' | 'river'
+
 export type ZoningType =
   | 'residential'
   | 'commercial'
@@ -65,7 +67,26 @@ export interface RoadCorridor {
   width: number
 }
 
+export interface RoadNode {
+  id: string
+  position: Vec2
+}
+
+export interface RoadEdge {
+  id: string
+  fromNodeId: string
+  toNodeId: string
+  type: RoadType
+  width: number
+  points: Vec2[]
+  bridges: RoadBridge[]
+}
+
 export interface RoadGraph {
+  nodes: RoadNode[]
+  edges: RoadEdge[]
+  morphology: CityMorphology
+  cbdCenter: Vec2
   roads: RoadSegment[]
   intersections: Intersection[]
   roundabouts: Roundabout[]

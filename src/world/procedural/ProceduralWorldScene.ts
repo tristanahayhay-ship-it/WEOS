@@ -66,26 +66,41 @@ function createPolygonShape(points: Vec2[]): Shape {
   return shape
 }
 
+/**
+ * Render roads – handles multi-point polylines by creating a quad for
+ * each consecutive pair of points along the road.
+ */
 function addRoads(target: Group, roads: RoadSegment[], visibleTypes: Set<RoadType>) {
   for (const road of roads) {
     if (!visibleTypes.has(road.type)) continue
-    const [start, end] = road.points
-    if (!start || !end) continue
+    const pts = road.points
+    if (pts.length < 2) continue
 
-    const length = Math.hypot(end.x - start.x, end.y - start.y)
-    const angle = Math.atan2(end.y - start.y, end.x - start.x)
-    const centerX = (start.x + end.x) * 0.5
-    const centerY = (start.y + end.y) * 0.5
+    const color = ROAD_COLORS[road.type]
+    const mat = new MeshPhongMaterial({ color, transparent: true, opacity: 0.95 })
 
-    const mesh = new Mesh(
-      new PlaneGeometry(length, road.width),
-      new MeshPhongMaterial({ color: ROAD_COLORS[road.type], transparent: true, opacity: 0.95 }),
-    )
-    mesh.position.set(centerX, centerY, 0.001)
-    mesh.rotation.z = angle
-    target.add(mesh)
+    for (let i = 0; i < pts.length - 1; i += 1) {
+      const start = pts[i]
+      const end = pts[i + 1]
+      if (!start || !end) continue
+
+      const length = Math.hypot(end.x - start.x, end.y - start.y)
+      if (length < 1e-6) continue
+      const angle = Math.atan2(end.y - start.y, end.x - start.x)
+      const cx = (start.x + end.x) * 0.5
+      const cy = (start.y + end.y) * 0.5
+
+      const mesh = new Mesh(new PlaneGeometry(length, road.width), mat)
+      mesh.position.set(cx, cy, 0.001)
+      mesh.rotation.z = angle
+      target.add(mesh)
+    }
 
     for (const bridge of road.bridges) {
+      const angle =
+        pts.length >= 2
+          ? Math.atan2(pts[1]!.y - pts[0]!.y, pts[1]!.x - pts[0]!.x)
+          : 0
       addBridge(target, bridge, angle)
     }
   }
@@ -150,6 +165,7 @@ function addDistrictBoundaries(target: Group, districts: District[]) {
 
 function addBuildings(target: Group, buildings: Building[]) {
   for (const building of buildings) {
+    if (building.footprint.length < 3) continue
     const shape = createPolygonShape(building.footprint)
     const extrude = new ExtrudeGeometry(shape, {
       depth: building.height,
@@ -263,3 +279,4 @@ export function createProceduralLayers(seed: number): ProceduralLayerBundle {
     model,
   }
 }
+
