@@ -2,6 +2,8 @@ import { useZoomStore } from '../../stores/zoomStore'
 import { ZOOM_LEVEL_LIST } from '../../zoom/levels'
 import type { ZoomLevelId } from '../../zoom/types'
 
+const COUNTRY_VIEW_LEVELS = ZOOM_LEVEL_LIST.slice(0, 3)
+
 /**
  * ZoomLevelHUD — compact overlay widget that shows the current zoom level and
  * lets the user jump directly to any level via the level ladder.
@@ -16,7 +18,7 @@ export default function ZoomLevelHUD() {
   const zoomOut     = useZoomStore((s) => s.zoomOut)
   const transition  = useZoomStore((s) => s.transition)
 
-  const currentMeta = ZOOM_LEVEL_LIST[activeLevel]
+  const currentMeta = COUNTRY_VIEW_LEVELS[activeLevel] ?? COUNTRY_VIEW_LEVELS[COUNTRY_VIEW_LEVELS.length - 1]
 
   return (
     <div
@@ -51,7 +53,7 @@ export default function ZoomLevelHUD() {
           backdropFilter: 'blur(8px)',
         }}
       >
-        {ZOOM_LEVEL_LIST.map((level) => {
+        {COUNTRY_VIEW_LEVELS.map((level) => {
           const isActive = level.id === activeLevel
           return (
             <button
@@ -104,9 +106,9 @@ export default function ZoomLevelHUD() {
       <button
         type="button"
         onClick={zoomIn}
-        disabled={activeLevel === ZOOM_LEVEL_LIST.length - 1}
+        disabled={activeLevel === COUNTRY_VIEW_LEVELS.length - 1}
         title="Zoom in one level"
-        style={buttonStyle(activeLevel === ZOOM_LEVEL_LIST.length - 1)}
+        style={buttonStyle(activeLevel === COUNTRY_VIEW_LEVELS.length - 1)}
       >
         ▼
       </button>

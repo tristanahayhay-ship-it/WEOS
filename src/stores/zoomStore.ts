@@ -1,8 +1,17 @@
 import { create } from 'zustand'
 import type { ZoomLevelId, ZoomTransitionState } from '../zoom/types'
-import { ZOOM_LEVELS, ZOOM_LEVEL_LIST, levelFromCameraDistance } from '../zoom/levels'
+import { ZOOM_LEVELS, levelFromCameraDistance } from '../zoom/levels'
 import { useOverlayStore } from './overlayStore'
 import { useFlowStore } from './flowStore'
+import { useCountryStore } from './countryStore'
+import { useCountryEconomicStore } from './countryEconomicStore'
+
+const COUNTRY_VIEW_MAX_LEVEL: ZoomLevelId = 2
+const LEVEL_SYNC_HYSTERESIS = 0.06
+
+function clampLevelToCountryScope(id: ZoomLevelId): ZoomLevelId {
+  return (Math.min(id, COUNTRY_VIEW_MAX_LEVEL) as ZoomLevelId)
+}
 
 interface ZoomState {
   /** Currently active zoom level */
@@ -53,7 +62,8 @@ interface ZoomState {
 
 /** Apply level-specific settings to dependent stores (overlay / flow). */
 function applyLevelSideEffects(id: ZoomLevelId) {
-  const level = ZOOM_LEVELS[id]
+  const clampedLevel = clampLevelToCountryScope(id)
+  const level = ZOOM_LEVELS[clampedLevel]
 
   // Overlay
   const overlayStore = useOverlayStore.getState()
@@ -67,7 +77,12 @@ function applyLevelSideEffects(id: ZoomLevelId) {
   flowStore.setVisible(level.flow.visible)
   // Notify the LOD engine regardless of master visibility so fade transitions
   // begin immediately; the canvas CSS opacity gate handles the full hide.
-  flowStore.setLodLevel(id)
+  flowStore.setLodLevel(clampedLevel)
+
+  if (clampedLevel < COUNTRY_VIEW_MAX_LEVEL) {
+    useCountryStore.getState().selectCountry(null)
+    useCountryEconomicStore.getState().release()
+  }
 }
 
 export const useZoomStore = create<ZoomState>()((set, get) => ({
@@ -76,38 +91,38 @@ export const useZoomStore = create<ZoomState>()((set, get) => ({
     pendingCameraDistance: null,
 
     setLevel: (id) => {
+      const nextLevel = clampLevelToCountryScope(id)
       const current = get().activeLevel
-      if (current === id) return
+      if (current === nextLevel) return
 
       set({
-        activeLevel: id,
+        activeLevel: nextLevel,
         transition: null,
       })
 
-      applyLevelSideEffects(id)
+      applyLevelSideEffects(nextLevel)
     },
 
     goToLevel: (id) => {
       const current = get().activeLevel
-      const level = ZOOM_LEVELS[id]
+      const target = clampLevelToCountryScope(id)
+      const level = ZOOM_LEVELS[target]
+      if (current === target && get().pendingCameraDistance === null) return
 
       set({
-        activeLevel: id,
         pendingCameraDistance: level.cameraDistance,
         transition: {
           isTransitioning: true,
           fromLevel: current,
-          toLevel: id,
+          toLevel: target,
           startedAt: Date.now(),
         },
       })
-
-      applyLevelSideEffects(id)
     },
 
     zoomIn: () => {
       const { activeLevel } = get()
-      const nextId = Math.min(activeLevel + 1, ZOOM_LEVEL_LIST.length - 1) as ZoomLevelId
+      const nextId = Math.min(activeLevel + 1, COUNTRY_VIEW_MAX_LEVEL) as ZoomLevelId
       get().goToLevel(nextId)
     },
 
@@ -118,13 +133,14 @@ export const useZoomStore = create<ZoomState>()((set, get) => ({
     },
 
     syncFromCameraDistance: (distance) => {
-      // Don't override level while a programmatic transition is pending
-      if (get().pendingCameraDistance !== null) return
-
-      const detectedLevel = levelFromCameraDistance(distance)
+      const detectedLevel = clampLevelToCountryScope(levelFromCameraDistance(distance))
       const { activeLevel } = get()
+      const [min, max] = ZOOM_LEVELS[activeLevel].cameraDistanceRange
 
-      if (detectedLevel !== activeLevel) {
+      if (
+        detectedLevel !== activeLevel &&
+        (distance < min - LEVEL_SYNC_HYSTERESIS || distance > max + LEVEL_SYNC_HYSTERESIS)
+      ) {
         set({ activeLevel: detectedLevel })
         applyLevelSideEffects(detectedLevel)
       }
@@ -137,3 +153,5 @@ export const useZoomStore = create<ZoomState>()((set, get) => ({
       })
     },
   }))
+
+applyLevelSideEffects(0)

@@ -10,6 +10,7 @@ import {
   selectedMaterial,
 } from '../utils/countryGeometry'
 import { useCountryStore } from '../stores/countryStore'
+import { useZoomStore } from '../stores/zoomStore'
 
 /**
  * Intersect a ray (origin + normalised direction) with a unit sphere centred at the origin.
@@ -166,6 +167,9 @@ export function useCountryInteraction(
       const [lng, lat] = coords
       const country = findCountryAtPoint(lng, lat)
       selectCountry(country)
+      if (country) {
+        useZoomStore.getState().goToLevel(2)
+      }
     }
 
     container.addEventListener('mousemove', onMouseMove)

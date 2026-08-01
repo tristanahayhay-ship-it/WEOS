@@ -72,15 +72,13 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
     showBoundaries: true,
     showCountryLayer: true,
     overlay: {
-      visible: true,
-      metric: 'gdp',
+      visible: false,
     },
     flow: {
-      visible: true,
-      visibleTypes: ['trade', 'investment'],
+      visible: false,
     },
     panel: {
-      showCountryPanel: true,
+      showCountryPanel: false,
     },
     transitionDuration: 900,
   },
@@ -95,14 +93,13 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
     showBoundaries: true,
     showCountryLayer: true,
     overlay: {
-      visible: true,
-      metric: 'population',
+      visible: false,
     },
     flow: {
-      visible: true,
+      visible: false,
     },
     panel: {
-      showCountryPanel: true,
+      showCountryPanel: false,
     },
     transitionDuration: 800,
   },
@@ -120,7 +117,7 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
       visible: false,
     },
     flow: {
-      visible: true,
+      visible: false,
     },
     panel: {
       showCountryPanel: false,
@@ -141,7 +138,7 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
       visible: false,
     },
     flow: {
-      visible: true,
+      visible: false,
     },
     panel: {
       showCountryPanel: false,
@@ -162,7 +159,7 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
       visible: false,
     },
     flow: {
-      visible: true,
+      visible: false,
     },
     panel: {
       showCountryPanel: false,
