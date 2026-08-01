@@ -43,6 +43,7 @@ import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
 import type { Country } from '../../types/country'
 import { findCountryAtPoint, getCountryBoundaryRings } from '../../utils/countryGeometry'
 import { LOD_FLOWS } from '../../flows/lodFlows'
+import { addCountryInfrastructure } from '../../world/country'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
 const CAMERA_LERP_SPEED = 3.5
@@ -507,6 +508,10 @@ export default function GlobeEngine() {
       if (countryDetailKey !== countryDetailKeyRef.current) {
         for (const level of COUNTRY_DETAIL_LEVELS) {
           populateCountryDetailLayer(worldBundle.layers[level].group, selectedCountry)
+        }
+        // Country View V2: append national infrastructure to the level-2 layer.
+        if (selectedCountry) {
+          addCountryInfrastructure(worldBundle.layers[2].group, selectedCountry)
         }
         countryDetailKeyRef.current = countryDetailKey
       }
