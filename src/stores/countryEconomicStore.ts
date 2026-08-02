@@ -73,10 +73,10 @@ export const useCountryEconomicStore = create<CountryEconomicState>((set, get) =
 
       pendingLoadCancel = scheduleCountryLoad(() => {
         pendingLoadCancel = null
-        const cachedLayer = cache.get(country.isoCode) ?? generateEconomicLayer(country)
+        const economicData = ECONOMIC_DATA_BY_ISO.get(country.isoCode) ?? null
+        const cachedLayer = cache.get(country.isoCode) ?? generateEconomicLayer(country, economicData)
         cache.set(country.isoCode, cachedLayer)
 
-        const economicData = ECONOMIC_DATA_BY_ISO.get(country.isoCode) ?? null
         const cachedDashboard = dashboardCache.get(country.isoCode) ?? buildCountryDashboardMock(country, economicData)
         dashboardCache.set(country.isoCode, cachedDashboard)
 
