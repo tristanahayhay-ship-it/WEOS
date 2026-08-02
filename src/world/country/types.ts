@@ -78,6 +78,13 @@ export type EconomicNodeType =
   | 'tech_hub'
   | 'central_bank'
   | 'government'
+  | 'financial_center'
+  | 'industrial_center'
+  | 'trade_hub'
+  | 'administrative_center'
+  | 'production_zone'
+  | 'consumption_zone'
+  | 'special_economic_zone'
 
 /** Category of capital/goods flow between two cities */
 export type CityFlowType = 'capital' | 'trade' | 'supply' | 'logistics'

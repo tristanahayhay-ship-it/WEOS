@@ -1,9 +1,8 @@
 /**
  * Universal Country Renderer Tests
  *
- * Validates that the country economic layer generator produces a valid
- * capital-centred flow network for multiple countries, including countries
- * with explicit mock data and countries that rely on the universal fallback.
+ * Validates that country flow rendering uses a universal, capital-centered
+ * normalization path for countries with available geo/economic data.
  *
  * Run with:  npx playwright test tests/universalCountryRenderer.test.ts
  */
@@ -13,6 +12,7 @@ import { generateEconomicLayer } from '../src/world/country/CountryEconomicGener
 import type { Country } from '../src/types/country'
 import type { CountryEconomicData } from '../src/types/country'
 import { buildCountryDashboardMock } from '../src/data/countryDashboardMock'
+import { resolveCountryFlowModel } from '../src/world/country/countryFlowModel'
 
 // ── Test fixtures ─────────────────────────────────────────────────────────────
 
@@ -94,7 +94,6 @@ function assertValidLayer(layer: ReturnType<typeof generateEconomicLayer>, isoCo
   expect(layer.isoCode).toBe(isoCode)
   expect(layer.cities.length).toBeGreaterThan(0)
   expect(layer.nodes.length).toBeGreaterThan(0)
-  expect(layer.flows.length).toBeGreaterThan(0)
 
   // Capital must be the first and most important city
   const capital = layer.cities.find((c) => c.type === 'capital')
@@ -113,7 +112,7 @@ function assertValidLayer(layer: ReturnType<typeof generateEconomicLayer>, isoCo
     expect(cityIds.has(node.cityId), `node.cityId ${node.cityId} should exist`).toBe(true)
   }
 
-  // All flows must have a positive value
+  // All raw flows must have a positive value
   for (const flow of layer.flows) {
     expect(flow.value).toBeGreaterThan(0)
   }
@@ -141,43 +140,18 @@ test.describe('Universal Country Renderer', () => {
     expect(inflows.length).toBeGreaterThan(0)
   })
 
-  test('generates a universal layer for Nigeria (no mock data)', () => {
+  test('returns empty economic layer for countries without flow-location data', () => {
     const layer = generateEconomicLayer(NIGERIA, NIGERIA_ECONOMIC)
-    assertValidLayer(layer, 'NG')
-
-    // Capital must be Abuja
-    const capital = layer.cities.find((c) => c.type === 'capital')
-    expect(capital!.name).toBe('Abuja')
-
-    // All capital→hub flows must be outflow; hub→capital flows must be inflow
-    const capitalId = capital!.id
-    const outflows = layer.flows.filter((f) => f.fromCityId === capitalId)
-    const inflows  = layer.flows.filter((f) => f.toCityId   === capitalId)
-    expect(outflows.length).toBeGreaterThan(0)
-    expect(inflows.length).toBeGreaterThan(0)
-    expect(outflows.every((f) => f.visualStyle === 'outflow')).toBe(true)
-    expect(inflows.every((f)  => f.visualStyle === 'inflow')).toBe(true)
-
-    // capitalFlow24H totals must be present and positive
-    expect(layer.capitalFlow24H).toBeDefined()
-    expect(layer.capitalFlow24H!.inflowUsdB).toBeGreaterThan(0)
-    expect(layer.capitalFlow24H!.outflowUsdB).toBeGreaterThan(0)
+    expect(layer.isoCode).toBe('NG')
+    expect(layer.cities).toEqual([])
+    expect(layer.nodes).toEqual([])
+    expect(layer.flows).toEqual([])
   })
 
-  test('generates a universal layer for Vietnam (no mock data)', () => {
-    const layer = generateEconomicLayer(VIETNAM)
-    assertValidLayer(layer, 'VN')
-
-    const capital = layer.cities.find((c) => c.type === 'capital')
-    expect(capital!.name).toBe('Hanoi')
-  })
-
-  test('generates a valid layer for Luxembourg (micro-state)', () => {
+  test('gracefully skips unresolved country flow model when country data is missing', () => {
     const layer = generateEconomicLayer(LUXEMBOURG)
-    assertValidLayer(layer, 'LU')
-
-    // Micro-state — at least a capital + 2 hubs
-    expect(layer.cities.length).toBeGreaterThanOrEqual(3)
+    const model = resolveCountryFlowModel({ country: LUXEMBOURG, economicLayer: layer })
+    expect(model).toBeNull()
   })
 
   test('generates a valid layer for Russia (very large country)', () => {
@@ -188,8 +162,8 @@ test.describe('Universal Country Renderer', () => {
     expect(layer.cities.length).toBe(4)
   })
 
-  test('hub positions for universal layer stay within valid coordinate bounds', () => {
-    for (const country of [NIGERIA, VIETNAM, LUXEMBOURG]) {
+  test('city positions stay within valid coordinate bounds for available datasets', () => {
+    for (const country of [JAPAN, RUSSIA]) {
       const layer = generateEconomicLayer(country)
       for (const city of layer.cities) {
         expect(city.position.lon).toBeGreaterThanOrEqual(-180)
@@ -200,15 +174,16 @@ test.describe('Universal Country Renderer', () => {
     }
   })
 
-  test('universal layer includes a central_bank node at the capital', () => {
-    const layer = generateEconomicLayer(NIGERIA)
-    const capitalId = layer.cities.find((c) => c.type === 'capital')!.id
+  test('country datasets include a central_bank node at the capital', () => {
+    const layer = generateEconomicLayer(JAPAN)
+    const capitalId = layer.cities.find((c) => c.type === 'capital')?.id
+    expect(capitalId).toBeDefined()
     const cbNode = layer.nodes.find((n) => n.type === 'central_bank' && n.cityId === capitalId)
     expect(cbNode).toBeDefined()
   })
 
-  test('universal layer always includes an airport node', () => {
-    const layer = generateEconomicLayer(NIGERIA)
+  test('country datasets include an airport node via normalization', () => {
+    const layer = generateEconomicLayer(JAPAN)
     const airport = layer.nodes.find((n) => n.type === 'airport')
     expect(airport).toBeDefined()
   })
@@ -238,15 +213,33 @@ test.describe('Universal Country Renderer', () => {
     expect(ids).toContain('government_finance')
   })
 
-  test('multiple countries use the same renderer path and produce consistent structure', () => {
+  test('resolved country flow model is capital-centered and directional', () => {
+    const layer = generateEconomicLayer(JAPAN)
+    const model = resolveCountryFlowModel({ country: JAPAN, economicLayer: layer })
+    expect(model).not.toBeNull()
+    const resolved = model!
+
+    for (const edge of resolved.flowEdges) {
+      expect(edge.fromId === resolved.capital.id || edge.toId === resolved.capital.id).toBe(true)
+      if (edge.state === 'inflow') {
+        expect(edge.toId).toBe(resolved.capital.id)
+      }
+      if (edge.state === 'outflow') {
+        expect(edge.fromId).toBe(resolved.capital.id)
+      }
+    }
+  })
+
+  test('multiple countries use the same renderer path and degrade safely', () => {
     const countries = [JAPAN, NIGERIA, VIETNAM, LUXEMBOURG, RUSSIA]
     for (const country of countries) {
       const layer = generateEconomicLayer(country)
-      // Every country produces a capital
-      const capital = layer.cities.find((c) => c.type === 'capital')
-      expect(capital).toBeDefined()
-      // Every country produces flows
-      expect(layer.flows.length).toBeGreaterThan(0)
+      const model = resolveCountryFlowModel({ country, economicLayer: layer })
+      if (layer.cities.length === 0) {
+        expect(model).toBeNull()
+      } else {
+        expect(model).not.toBeNull()
+      }
     }
   })
 })

@@ -6,47 +6,25 @@ import { useGlobeViewStore } from '../../stores/globeViewStore'
 import { useElementSize } from '../../hooks/useElementSize'
 import { FlowRenderer } from '../../flows/FlowRenderer'
 import type { FlowObject } from '../../flows/types'
-import type { CityFlow, EconomicCity } from '../../world/country/types'
+import type { NodeType, FlowState } from '../../world/country/countryFlowModel'
+import { resolveCountryFlowModel } from '../../world/country/countryFlowModel'
 
 // ── City flow → FlowObject conversion ────────────────────────────────────────
 
-/** CSS + Three.js hex pairs for each visual style / flow type */
-const FLOW_STYLE_COLORS: Record<string, { css: string; hex: number }> = {
-  inflow:    { css: '#10b981', hex: 0x10b981 },  // emerald green — capital inflow
-  outflow:   { css: '#ef4444', hex: 0xef4444 },  // red          — capital outflow
-  capital:   { css: '#10b981', hex: 0x10b981 },  // default capital = green
-  trade:     { css: '#3b82f6', hex: 0x3b82f6 },  // blue         — goods & services
-  supply:    { css: '#f59e0b', hex: 0xf59e0b },  // amber        — supply chain
-  logistics: { css: '#8b5cf6', hex: 0x8b5cf6 },  // violet       — logistics
-}
-
-const VALUE_MAX = 600  // normalise flow value to [0, 1]
-
-function cityFlowToFlowObject(
-  flow: CityFlow,
-  cityMap: Map<string, EconomicCity>,
-): FlowObject | null {
-  const from = cityMap.get(flow.fromCityId)
-  const to   = cityMap.get(flow.toCityId)
-  if (!from || !to) return null
-
-  const cfg = FLOW_STYLE_COLORS[flow.visualStyle ?? flow.type] ?? FLOW_STYLE_COLORS.capital
-  const thickness = Math.min(1, 0.3 + (flow.value / VALUE_MAX) * 0.7)
-
-  return {
-    id:            `cv3-${flow.id}`,
-    startPoint:    [from.position.lon, from.position.lat],
-    endPoint:      [to.position.lon,   to.position.lat],
-    dataType:      flow.type === 'capital' ? 'capital' : flow.type === 'trade' ? 'trade' : 'supply-chain',
-    value:         flow.value,
-    color:         cfg.css,
-    colorHex:      cfg.hex,
-    thickness,
-    animationSpeed: 0.9 + thickness * 0.5,
-    displayPriority: Math.round(flow.value),
-    lodRules:      { visibleAtLevels: [2] },
-    visibilityState: 0,
+function colorForFlowState(state: FlowState, nodeType: NodeType): { css: string; hex: number } {
+  if (state === 'inflow') {
+    const blueTypes: NodeType[] = ['port', 'airport', 'trade_hub', 'logistics_hub']
+    return blueTypes.includes(nodeType)
+      ? { css: '#3b82f6', hex: 0x3b82f6 }
+      : { css: '#10b981', hex: 0x10b981 }
   }
+  if (state === 'outflow') {
+    const orangeTypes: NodeType[] = ['industrial_center', 'production_zone', 'consumption_zone']
+    return orangeTypes.includes(nodeType)
+      ? { css: '#f97316', hex: 0xf97316 }
+      : { css: '#ef4444', hex: 0xef4444 }
+  }
+  return { css: '#64748b', hex: 0x64748b }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -137,16 +115,52 @@ export default function CountryFlowCanvas() {
       }
       fadeAlphasRef.current.clear()
 
-      if (currentLayer) {
-        // Build a city lookup map
-        const cityMap = new Map<string, EconomicCity>(currentLayer.cities.map((c) => [c.id, c]))
+      const currentCountry = useCountryStore.getState().selectedCountry
+      if (currentLayer && currentCountry) {
+        const model = resolveCountryFlowModel({
+          country: currentCountry,
+          economicLayer: currentLayer,
+        })
 
-        // Upsert new flow objects
-        for (const flow of currentLayer.flows) {
-          const fo = cityFlowToFlowObject(flow, cityMap)
-          if (!fo) continue
-          renderer.upsertFlowObject(fo)
-          fadeAlphasRef.current.set(fo.id, 0)
+        if (model) {
+          const positions = new Map<string, [number, number]>([
+            [model.capital.id, [model.capital.position.lon, model.capital.position.lat]],
+            ...model.flowLocations.map(
+              (location) => [location.id, [location.position.lon, location.position.lat] as [number, number]] as [string, [number, number]],
+            ),
+          ])
+
+          const nodeTypeById = new Map<string, NodeType>([
+            [model.capital.id, 'capital'],
+            ...model.flowLocations.map((location) => [location.id, location.nodeType] as [string, NodeType]),
+          ])
+
+          for (const edge of model.flowEdges) {
+            const start = positions.get(edge.fromId)
+            const end = positions.get(edge.toId)
+            if (!start || !end) continue
+            const nonCapitalId = edge.fromId === model.capital.id ? edge.toId : edge.fromId
+            const nodeType = nodeTypeById.get(nonCapitalId) ?? 'trade_hub'
+            const color = colorForFlowState(edge.state, nodeType)
+            const thickness = 0.25 + edge.intensity * 0.75
+
+            const flowObject: FlowObject = {
+              id: `country-flow-${edge.id}`,
+              startPoint: start,
+              endPoint: end,
+              dataType: nodeType === 'capital' ? 'capital' : nodeType === 'trade_hub' ? 'trade' : 'supply-chain',
+              value: edge.value,
+              color: color.css,
+              colorHex: color.hex,
+              thickness,
+              animationSpeed: 0.8 + edge.intensity * 0.9,
+              displayPriority: Math.round(edge.value),
+              lodRules: { visibleAtLevels: [2] },
+              visibilityState: 0,
+            }
+            renderer.upsertFlowObject(flowObject)
+            fadeAlphasRef.current.set(flowObject.id, 0)
+          }
         }
       }
     }

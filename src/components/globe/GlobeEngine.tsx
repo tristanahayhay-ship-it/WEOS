@@ -47,6 +47,8 @@ import { LOD_FLOWS } from '../../flows/lodFlows'
 import { addCountryInfrastructure } from '../../world/country/CountryInfrastructureScene'
 import { generateEconomicLayer } from '../../world/country/CountryEconomicGenerator'
 import { addEconomicCities, addEconomicNodes } from '../../world/country/CountryEconomicScene'
+import { getAdminData } from '../../view/adminDivisionMockData'
+import { resolveCountryFlowModel } from '../../world/country/countryFlowModel'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
 const CAMERA_DAMPING = 9
@@ -294,14 +296,56 @@ function clearGroup(group: Group) {
   }
 }
 
+function animateCapitalPulse(group: Group, nowMs: number) {
+  const phase = nowMs * 0.0045
+  group.traverse((object) => {
+    const role = object.userData?.capitalPulseRole
+    if (!role || !(object instanceof Mesh)) return
+
+    if (role === 'core') {
+      const scale = 1 + 0.18 * (0.5 + 0.5 * Math.sin(phase))
+      object.scale.setScalar(scale)
+      return
+    }
+
+    if (role === 'glow' && object.material instanceof MeshBasicMaterial) {
+      const baseOpacity = typeof object.userData.baseOpacity === 'number' ? object.userData.baseOpacity : 0.25
+      const pulse = 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(phase + Math.PI / 2))
+      object.material.opacity = baseOpacity * pulse
+    }
+  })
+}
+
 function populateCountryDetailLayer(group: Group, country: Country | null) {
   clearGroup(group)
 
   if (!country) return
 
   const rings = getCountryBoundaryRings(country.numericCode)
-  if (rings.length > 0) {
-    group.add(createLineGroup(buildCountryLinePaths(rings, EARTH_RADIUS + COUNTRY_BORDER_ALTITUDE), '#f8fafc', 0.95))
+  const adminData = getAdminData(country.isoCode)
+
+  const economicLayer = generateEconomicLayer(country)
+  const flowModel = resolveCountryFlowModel({
+    country,
+    economicLayer,
+    nationalBoundaryRings: rings,
+    adminData,
+  })
+
+  const nationalRings = flowModel?.geo.nationalBoundary?.rings ?? rings
+  if (nationalRings.length > 0) {
+    group.add(createLineGroup(buildCountryLinePaths(nationalRings, EARTH_RADIUS + COUNTRY_BORDER_ALTITUDE), '#f8fafc', 0.95))
+  }
+
+  const divisionRings = flowModel?.geo.administrativeDivisions
+    .flatMap((division) => division.boundary?.rings ?? [])
+    ?? []
+  if (divisionRings.length > 0) {
+    group.add(createLineGroup(
+      buildCountryLinePaths(divisionRings, EARTH_RADIUS + COUNTRY_BORDER_ALTITUDE + 0.0007),
+      '#67e8f9',
+      0.56,
+    ))
   }
 
   // V2: infrastructure layer (highways, roads, railways, airports, seaports,
@@ -310,7 +354,6 @@ function populateCountryDetailLayer(group: Group, country: Country | null) {
 
   // V3: country-scale economic hubs (major cities, ports/logistics/airport/
   //     industrial/financial nodes), data-driven only.
-  const economicLayer = generateEconomicLayer(country)
   addEconomicCities(group, economicLayer.cities)
   addEconomicNodes(group, economicLayer.nodes)
 
@@ -563,6 +606,9 @@ export default function GlobeEngine() {
         const state = worldBundle.layers[level]
         const targetAlpha = level === activeLevel ? 1 : 0
         state.alpha = updateGroupAlpha(state.group, state.alpha, targetAlpha, fadeLerp)
+      }
+      for (const level of COUNTRY_DETAIL_LEVELS) {
+        animateCapitalPulse(worldBundle.layers[level].group, now)
       }
 
       const globeAlphaTarget = activeLevel <= 3 || preserveCountryView ? 1 : 0.22

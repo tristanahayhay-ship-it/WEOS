@@ -20,7 +20,7 @@ const ALT_NODE      = EARTH_RADIUS + 0.030
 // ── Colour maps ───────────────────────────────────────────────────────────────
 
 const CITY_COLORS: Record<CityType, string> = {
-  capital:    '#fde68a',  // warm gold
+  capital:    '#facc15',  // pulsing yellow
   financial:  '#60a5fa',  // bright blue
   industrial: '#fb923c',  // orange
   port:       '#22d3ee',  // cyan
@@ -37,6 +37,13 @@ const NODE_COLORS: Record<EconomicNodeType, string> = {
   port:          '#22d3ee',
   airport:       '#f97316',
   tech_hub:      '#4ade80',
+  financial_center: '#60a5fa',
+  industrial_center: '#fb923c',
+  trade_hub: '#38bdf8',
+  administrative_center: '#fde68a',
+  production_zone: '#4ade80',
+  consumption_zone: '#f59e0b',
+  special_economic_zone: '#14b8a6',
 }
 
 /** Inner sphere radius (world units) — scales with city importance */
@@ -77,6 +84,9 @@ function addCityMarker(group: Group, city: EconomicCity): void {
     new MeshBasicMaterial({ color }),
   )
   inner.position.set(x, y, z)
+  if (city.type === 'capital') {
+    inner.userData.capitalPulseRole = 'core'
+  }
   group.add(inner)
 
   // ── Glow halo (additively blended larger sphere) ───────────────────────────
@@ -92,6 +102,12 @@ function addCityMarker(group: Group, city: EconomicCity): void {
     }),
   )
   glow.position.set(x, y, z)
+  if (city.type === 'capital') {
+    glow.userData.capitalPulseRole = 'glow'
+    glow.userData.baseOpacity = 0.22 + city.importance * 0.14
+    const glowMaterial = glow.material as MeshBasicMaterial
+    glowMaterial.opacity = glow.userData.baseOpacity as number
+  }
   group.add(glow)
 
   // ── Capital star ring – extra prominence for the primate city ─────────────
