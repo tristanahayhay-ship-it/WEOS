@@ -78,7 +78,7 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
       visible: false,
     },
     panel: {
-      showCountryPanel: false,
+      showCountryPanel: true,
     },
     transitionDuration: 900,
   },

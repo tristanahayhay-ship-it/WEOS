@@ -9,6 +9,7 @@ import { useZoomStore } from '../../stores/zoomStore'
 import type { CountryEconomicData } from '../../types/country'
 import type { EconomicDataPoint } from '../../types/economic'
 import { buildRealtimeEconomicMap } from '../../utils/realtimeEconomic'
+import type { CountryDashboardData } from '../../data/countryDashboardMock'
 
 const EXIT_ANIMATION_MS = 260
 
@@ -109,9 +110,191 @@ function LabelRow({ label, value }: { label: string; value: string }) {
   )
 }
 
+const HEALTH_COLORS: Record<string, string> = {
+  Strong: '#34d399',
+  Stable: '#60a5fa',
+  Watching: '#f59e0b',
+}
+
+const TREND_COLORS: Record<string, string> = {
+  Upward: '#34d399',
+  Flat: '#94a3b8',
+  Cooling: '#f87171',
+}
+
+const RISK_COLORS: Record<string, string> = {
+  Low: '#34d399',
+  Medium: '#f59e0b',
+  High: '#f87171',
+}
+
+const FLOW_COLORS: Record<string, string> = {
+  Inflow: '#34d399',
+  Balanced: '#60a5fa',
+  Outflow: '#f87171',
+}
+
+function SummaryBadge({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div className="flex flex-col items-center rounded-md border p-2 text-center" style={{ background: 'rgba(11,17,30,0.7)', borderColor: 'rgba(121,196,255,0.14)' }}>
+      <span className="text-[9px] uppercase tracking-[0.18em] mb-1" style={{ color: 'rgba(121,196,255,0.6)' }}>{label}</span>
+      <span className="text-xs font-semibold" style={{ color }}>{value}</span>
+    </div>
+  )
+}
+
+function SparklineChart({ points, color, height = 40 }: { points: { label: string; value: number }[]; color: string; height?: number }) {
+  if (points.length < 2) return null
+  const values = points.map((p) => p.value)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const w = 240
+  const step = w / (points.length - 1)
+  const pathD = points.map((p, i) => {
+    const x = i * step
+    const y = height - ((p.value - min) / range) * (height - 6) - 3
+    return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+  return (
+    <svg width="100%" height={height} viewBox={`0 0 ${w} ${height}`} preserveAspectRatio="none" aria-hidden="true">
+      <path d={pathD} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function SparklineCard({ title, valueLabel, points, color }: { title: string; valueLabel: string; points: { label: string; value: number }[]; color: string }) {
+  return (
+    <div className="rounded-lg border p-2" style={sectionBoxStyle}>
+      <div className="mb-1 flex items-baseline justify-between">
+        <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.68)' }}>{title}</span>
+        <span className="text-xs" style={{ color: '#d9efff' }}>{valueLabel}</span>
+      </div>
+      <SparklineChart points={points} color={color} />
+    </div>
+  )
+}
+
+function SectorBar({ name, share }: { name: string; share: number }) {
+  return (
+    <div className="mb-1.5">
+      <div className="flex justify-between text-[10px] mb-0.5">
+        <span style={{ color: 'rgba(217,239,255,0.72)' }}>{name}</span>
+        <span style={{ color: '#d9efff' }}>{share}%</span>
+      </div>
+      <div className="w-full rounded-full h-1.5" style={{ background: 'rgba(121,196,255,0.12)' }}>
+        <div className="h-1.5 rounded-full" style={{ width: `${share}%`, background: 'rgba(96,165,250,0.7)' }} />
+      </div>
+    </div>
+  )
+}
+
+const NEWS_CATEGORY_COLORS: Record<string, string> = {
+  economic: '#34d399',
+  policy: '#a78bfa',
+  market: '#60a5fa',
+}
+
 const sectionBoxStyle: CSSProperties = {
   background: 'rgba(11, 17, 30, 0.68)',
   borderColor: 'rgba(121,196,255,0.16)',
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>
+      {children}
+    </h3>
+  )
+}
+
+function DashboardSections({ dashboard }: { dashboard: CountryDashboardData }) {
+  return (
+    <>
+      {/* Summary badges */}
+      <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+        <SectionTitle>Economic Summary</SectionTitle>
+        <div className="grid grid-cols-2 gap-1.5">
+          <SummaryBadge label="Health" value={dashboard.summary.economicHealth} color={HEALTH_COLORS[dashboard.summary.economicHealth] ?? '#d9efff'} />
+          <SummaryBadge label="Growth" value={dashboard.summary.growthTrend} color={TREND_COLORS[dashboard.summary.growthTrend] ?? '#d9efff'} />
+          <SummaryBadge label="Risk" value={dashboard.summary.riskLevel} color={RISK_COLORS[dashboard.summary.riskLevel] ?? '#d9efff'} />
+          <SummaryBadge label="Capital" value={dashboard.summary.capitalFlowStatus} color={FLOW_COLORS[dashboard.summary.capitalFlowStatus] ?? '#d9efff'} />
+        </div>
+      </section>
+
+      {/* Macro dashboard metrics */}
+      <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+        <SectionTitle>Key Indicators</SectionTitle>
+        <LabelRow label="GDP Growth" value={`${dashboard.gdpGrowthPercent.toFixed(2)}%`} />
+        <LabelRow label="PMI" value={dashboard.pmi.toFixed(1)} />
+        <LabelRow label="Public Debt / GDP" value={`${dashboard.publicDebtPercentGdp.toFixed(1)}%`} />
+        <LabelRow label="FX Reserves" value={formatMoneyUsdB(dashboard.fxReservesUsdB)} />
+        <LabelRow label="Credit Rating" value={dashboard.creditRating} />
+        <LabelRow label="Exports" value={formatMoneyUsdB(dashboard.exportsUsdB)} />
+        <LabelRow label="Imports" value={formatMoneyUsdB(dashboard.importsUsdB)} />
+        <LabelRow
+          label="Trade Balance"
+          value={`${dashboard.exportsUsdB - dashboard.importsUsdB >= 0 ? '+' : ''}${formatMoneyUsdB(dashboard.exportsUsdB - dashboard.importsUsdB)}`}
+        />
+      </section>
+
+      {/* Sparkline charts */}
+      <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+        <SectionTitle>Historical Trends</SectionTitle>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <SparklineCard title="GDP" valueLabel={`${dashboard.gdpGrowthPercent.toFixed(1)}% growth`} points={dashboard.gdpChart} color="#34d399" />
+          <SparklineCard title="Inflation" valueLabel={formatRate(dashboard.inflationPercent)} points={dashboard.inflationChart} color="#f59e0b" />
+          <SparklineCard title="Interest Rate" valueLabel={formatRate(dashboard.interestRatePercent)} points={dashboard.interestRateChart} color="#22c55e" />
+          <SparklineCard title="Trade Balance" valueLabel="6-month" points={dashboard.tradeBalanceChart} color="#60a5fa" />
+        </div>
+      </section>
+
+      {/* Sectors */}
+      <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+        <SectionTitle>Economic Sectors</SectionTitle>
+        {dashboard.sectors.map((sector) => (
+          <SectorBar key={sector.name} name={sector.name} share={sector.sharePercent} />
+        ))}
+      </section>
+
+      {/* Top companies */}
+      <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+        <SectionTitle>Top Companies</SectionTitle>
+        {dashboard.topCompanies.map((company) => (
+          <div key={company.name} className="flex items-start justify-between gap-2 py-1.5 border-b last:border-0" style={{ borderColor: 'rgba(121,196,255,0.1)' }}>
+            <div>
+              <p className="text-[11px]" style={{ color: '#d9efff' }}>{company.name}</p>
+              <p className="text-[10px]" style={{ color: 'rgba(121,196,255,0.6)' }}>{company.industry} · {company.headquarters}</p>
+            </div>
+            <span className="text-[11px] shrink-0" style={{ color: '#34d399' }}>{formatMoneyUsdB(company.marketCapUsdB)}</span>
+          </div>
+        ))}
+      </section>
+
+      {/* News feed */}
+      <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+        <SectionTitle>Latest News</SectionTitle>
+        {dashboard.news.map((item) => (
+          <div key={item.title} className="mb-2 last:mb-0">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span
+                className="text-[9px] uppercase tracking-[0.15em] rounded px-1 py-0.5"
+                style={{
+                  color: NEWS_CATEGORY_COLORS[item.category] ?? '#d9efff',
+                  background: 'rgba(121,196,255,0.1)',
+                }}
+              >
+                {item.category}
+              </span>
+              <span className="text-[10px]" style={{ color: 'rgba(217,239,255,0.45)' }}>{item.time}</span>
+            </div>
+            <p className="text-[11px] leading-snug" style={{ color: 'rgba(217,239,255,0.85)' }}>{item.title}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: 'rgba(121,196,255,0.5)' }}>{item.source}</p>
+          </div>
+        ))}
+      </section>
+    </>
+  )
 }
 
 export default function CountryPanel() {
@@ -121,6 +304,7 @@ export default function CountryPanel() {
   const activeLevel = useZoomStore((s) => s.activeLevel)
   const economicRecords = useEconomicStore((s) => s.data)
   const realtimeRecords = useRealtimeStore((s) => s.records)
+  const dashboard = useCountryEconomicStore((s) => s.dashboard)
   const countryEconomicLayer = useCountryEconomicStore((s) => s.layer)
   const loadCountryEconomicLayer = useCountryEconomicStore((s) => s.loadForCountry)
 
@@ -332,10 +516,6 @@ export default function CountryPanel() {
     return rows
   }, [countryEconomicLayer, displayCountry])
 
-  const unavailableSections = useMemo(() => {
-    return ['PMI', 'Imports / exports', 'Top companies', 'News', 'Risk index']
-  }, [])
-
   if (!isMounted || !displayCountry) return null
 
   return (
@@ -357,7 +537,7 @@ export default function CountryPanel() {
           <p className="text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(121,196,255,0.68)' }}>
             National Dashboard
           </p>
-          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.75)' }}>Country View V5</p>
+          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.75)' }}>Country View Final</p>
         </div>
         <button
           type="button"
@@ -371,6 +551,7 @@ export default function CountryPanel() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
+        {/* Country identity */}
         <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
           <div className="mb-2 flex items-start gap-3">
             <span className="text-4xl" aria-label={`Flag of ${displayCountry.englishName}`}>{isoToFlag(displayCountry.isoCode)}</span>
@@ -388,9 +569,10 @@ export default function CountryPanel() {
           )}
         </section>
 
+        {/* Realtime bar charts — from live economic store */}
         {miniCharts.length > 0 ? (
           <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
-            <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Mini Realtime Charts</h3>
+            <SectionTitle>Live Metrics</SectionTitle>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {miniCharts.map((chart) => (
                 <MiniMetricChart
@@ -406,22 +588,16 @@ export default function CountryPanel() {
           </section>
         ) : null}
 
+        {/* Capital flow summary — from 3D economic layer */}
         {capitalFlowSummary.length > 0 ? (
           <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
-            <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Capital Flow Summary</h3>
+            <SectionTitle>Capital Flow Summary</SectionTitle>
             {capitalFlowSummary.map((item) => <LabelRow key={item.label} label={item.label} value={item.value} />)}
           </section>
         ) : null}
 
-        <section className="rounded-lg border p-3" style={sectionBoxStyle}>
-          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Data Availability</h3>
-          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.62)' }}>
-            Structured fields render automatically when store data exists. Unavailable feeds stay hidden instead of being fabricated.
-          </p>
-          <p className="mt-2 text-[10px]" style={{ color: 'rgba(121,196,255,0.56)' }}>
-            Hidden for now: {unavailableSections.join(' • ')}
-          </p>
-        </section>
+        {/* Full dashboard sections — rendered once dashboard data is available */}
+        {dashboard ? <DashboardSections dashboard={dashboard} /> : null}
       </div>
     </aside>
   )
