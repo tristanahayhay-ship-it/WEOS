@@ -9,7 +9,7 @@ import { useZoomStore } from '../../stores/zoomStore'
 import type { CountryEconomicData } from '../../types/country'
 import type { EconomicDataPoint } from '../../types/economic'
 import { buildRealtimeEconomicMap } from '../../utils/realtimeEconomic'
-import type { CountryDashboardData } from '../../data/countryDashboardMock'
+import type { CountryDashboardData, IndicatorGroup } from '../../data/countryDashboardMock'
 
 const EXIT_ANIMATION_MS = 260
 
@@ -208,6 +208,27 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   )
 }
 
+/**
+ * Renders a single indicator group cluster.
+ * Hidden automatically when the group has no metrics.
+ */
+function IndicatorGroupSection({ group }: { group: IndicatorGroup }) {
+  if (group.metrics.length === 0) return null
+  return (
+    <div className="rounded-md border px-3 py-2" style={sectionBoxStyle}>
+      <p className="mb-1.5 text-[10px] uppercase tracking-[0.18em]" style={{ color: 'rgba(121,196,255,0.6)' }}>
+        {group.title}
+      </p>
+      {group.metrics.map((metric) => (
+        <div key={metric.label} className="flex items-center justify-between gap-2 py-0.5 text-[11px]">
+          <span style={{ color: 'rgba(121,196,255,0.6)' }}>{metric.label}</span>
+          <span style={{ color: metric.color ?? '#d9efff' }}>{metric.value}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function DashboardSections({ dashboard }: { dashboard: CountryDashboardData }) {
   return (
     <>
@@ -270,6 +291,18 @@ function DashboardSections({ dashboard }: { dashboard: CountryDashboardData }) {
           </div>
         ))}
       </section>
+
+      {/* Indicator groups — only rendered groups with available data are shown */}
+      {dashboard.indicatorGroups && dashboard.indicatorGroups.length > 0 ? (
+        <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+          <SectionTitle>Economic Indicators</SectionTitle>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {dashboard.indicatorGroups.map((group) => (
+              <IndicatorGroupSection key={group.id} group={group} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* News feed */}
       <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
