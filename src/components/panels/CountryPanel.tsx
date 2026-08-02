@@ -357,7 +357,7 @@ export default function CountryPanel() {
           <p className="text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(121,196,255,0.68)' }}>
             National Dashboard
           </p>
-          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.75)' }}>Country View V4</p>
+          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.75)' }}>Country View V5</p>
         </div>
         <button
           type="button"
