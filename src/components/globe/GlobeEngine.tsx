@@ -44,7 +44,6 @@ import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
 import type { Country } from '../../types/country'
 import { findCountryAtPoint, getCountryBoundaryRings } from '../../utils/countryGeometry'
 import { LOD_FLOWS } from '../../flows/lodFlows'
-import { addCountryInfrastructure, addEconomicCities, addEconomicNodes, generateEconomicLayer } from '../../world/country'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
 const CAMERA_DAMPING = 9
@@ -533,12 +532,6 @@ export default function GlobeEngine() {
       if (countryDetailKey !== countryDetailKeyRef.current) {
         for (const level of COUNTRY_DETAIL_LEVELS) {
           populateCountryDetailLayer(worldBundle.layers[level].group, selectedCountry)
-        }
-        if (selectedCountry) {
-          addCountryInfrastructure(worldBundle.layers[2].group, selectedCountry)
-          const econLayer = generateEconomicLayer(selectedCountry)
-          addEconomicCities(worldBundle.layers[2].group, econLayer.cities)
-          addEconomicNodes(worldBundle.layers[2].group, econLayer.nodes)
         }
         countryDetailKeyRef.current = countryDetailKey
       }
