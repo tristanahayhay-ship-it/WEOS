@@ -1,5 +1,5 @@
-import countriesTopology from 'world-atlas/countries-110m.json'
-import landTopology from 'world-atlas/land-110m.json'
+import countriesTopology from 'world-atlas/countries-110m.json' with { type: 'json' }
+import landTopology from 'world-atlas/land-110m.json' with { type: 'json' }
 import { mesh } from 'topojson-client'
 
 export const EARTH_RADIUS = 1

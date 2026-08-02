@@ -158,7 +158,7 @@ export const CAPITAL_COORDINATES_BY_ISO: Record<string, CapitalCoordinate> = {
   SB: { capital: 'Honiara', lat: -9.4456381, lng: 159.9728999 },
   SD: { capital: 'Khartoum', lat: 15.5006544, lng: 32.5598994 },
   SE: { capital: 'Stockholm', lat: 59.3293235, lng: 18.0685808 },
-  SI: { capital: 'Ljubljana', lat: 46.0569465, lng: 14.5057515 },
+  SG: { capital: 'Singapore', lat: 1.3520830, lng: 103.8198360 },
   SK: { capital: 'Bratislava', lat: 48.1458923, lng: 17.1071373 },
   SL: { capital: 'Freetown', lat: 8.4656765, lng: -13.2317225 },
   SM: { capital: 'City of San Marino', lat: 43.9355907, lng: 12.4472806 },

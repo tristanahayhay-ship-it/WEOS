@@ -1,6 +1,6 @@
 import { BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, DoubleSide, Vector2, ShapeUtils } from 'three'
 import { feature } from 'topojson-client'
-import countriesTopology from 'world-atlas/countries-110m.json'
+import countriesTopology from 'world-atlas/countries-110m.json' with { type: 'json' }
 import { projectLngLatToCartesian, EARTH_RADIUS } from './globe'
 import type { Country } from '../types/country'
 import { COUNTRY_BY_NUMERIC } from '../data/countries'
