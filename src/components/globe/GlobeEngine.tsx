@@ -44,6 +44,7 @@ import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
 import type { Country } from '../../types/country'
 import { findCountryAtPoint, getCountryBoundaryRings } from '../../utils/countryGeometry'
 import { LOD_FLOWS } from '../../flows/lodFlows'
+import { addCountryInfrastructure } from '../../world/country/CountryInfrastructureScene'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
 const CAMERA_DAMPING = 9
@@ -299,6 +300,10 @@ function populateCountryDetailLayer(group: Group, country: Country | null) {
   if (rings.length > 0) {
     group.add(createLineGroup(buildCountryLinePaths(rings, EARTH_RADIUS + COUNTRY_BORDER_ALTITUDE), '#f8fafc', 0.95))
   }
+
+  // V2: infrastructure layer (highways, roads, railways, airports, seaports,
+  //     landuse zones, rivers, parks) — rendered beneath V1 city markers.
+  addCountryInfrastructure(group, country)
 
   const cityPoints = COUNTRY_CITY_MARKERS.get(country.isoCode) ?? []
   for (const [lon, lat] of cityPoints) {
@@ -687,7 +692,7 @@ export default function GlobeEngine() {
           }}
         >
           <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: 'rgba(121, 196, 255, 0.72)' }}>
-            Country View
+            Country View V2
           </div>
           <div className="text-sm font-semibold">{selectedCountry.name}</div>
         </div>
