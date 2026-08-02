@@ -7,6 +7,7 @@ import { FlowCanvas, FlowPanel, CountryFlowCanvas } from '../flow'
 import { DebugCanvas } from '../debug'
 import { useDebugStore } from '../../stores/debugStore'
 import ZoomLevelHUD from '../zoom/ZoomLevelHUD'
+import CountryPanel from '../panels/CountryPanel'
 
 // ─── Error boundary — catches any render-time crash and shows a recoverable UI ─
 
@@ -86,6 +87,7 @@ export default function Shell({ children }: ShellProps) {
           <OverlayLegend />
           <FlowCanvas />
           <CountryFlowCanvas />
+          <CountryPanel />
           <FlowPanel />
           <DebugCanvas />
           <ZoomLevelHUD />

@@ -700,7 +700,7 @@ export default function GlobeEngine() {
           }}
         >
           <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: 'rgba(121, 196, 255, 0.72)' }}>
-            Country View V3
+            Country View V4
           </div>
           <div className="text-sm font-semibold">{selectedCountry.name}</div>
         </div>

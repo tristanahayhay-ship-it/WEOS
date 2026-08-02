@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { useCountryStore } from '../../stores/countryStore'
-import { useZoomStore } from '../../stores/zoomStore'
 import { isoToFlag, formatArea } from '../../data/countries'
-import { ECONOMIC_DATA_BY_ISO } from '../../data/economicData'
-import { buildCountryDashboardMock } from '../../data/countryDashboardMock'
+import { useCountryStore } from '../../stores/countryStore'
+import { useCountryEconomicStore } from '../../stores/countryEconomicStore'
+import { useEconomicStore } from '../../stores/economicStore'
+import { useRealtimeStore } from '../../stores/realtimeStore'
+import { useZoomStore } from '../../stores/zoomStore'
+import type { CountryEconomicData } from '../../types/country'
+import type { EconomicDataPoint } from '../../types/economic'
+import { buildRealtimeEconomicMap } from '../../utils/realtimeEconomic'
 
 const EXIT_ANIMATION_MS = 260
 
@@ -24,48 +28,57 @@ function formatRate(value: number | null) {
   return `${value.toFixed(2)}%`
 }
 
-function MiniChart({
+function formatObservedAt(value: string | null) {
+  if (!value) return null
+  const parsed = Date.parse(value)
+  if (Number.isNaN(parsed)) return null
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(parsed))
+}
+
+function getNormalizedWidth(values: number[], current: number) {
+  const max = Math.max(1, current, ...values)
+  return Math.max(0.14, Math.min(current / max, 1))
+}
+
+function collectEconomicValues(
+  records: ReadonlyMap<string, CountryEconomicData>,
+  selector: (value: CountryEconomicData) => number | null,
+) {
+  const values: number[] = []
+  for (const record of records.values()) {
+    const next = selector(record)
+    if (next != null && Number.isFinite(next)) {
+      values.push(next)
+    }
+  }
+  return values
+}
+
+function getLatestRecord(records: EconomicDataPoint[]) {
+  return records.reduce<EconomicDataPoint | null>((latest, record) => {
+    if (record.value == null) return latest
+    if (!latest) return record
+    return Date.parse(record.observedAt) >= Date.parse(latest.observedAt) ? record : latest
+  }, null)
+}
+
+function MiniMetricChart({
   title,
-  series,
+  valueLabel,
+  width,
   color,
-  unit = '',
+  caption,
 }: {
   title: string
-  series: Array<{ label: string; value: number }>
+  valueLabel: string
+  width: number
   color: string
-  unit?: string
+  caption?: string | null
 }) {
-  const width = 240
-  const height = 68
-  const padded = 8
-  if (series.length === 0) {
-    return (
-      <div className="rounded-lg border p-2" style={sectionBoxStyle}>
-        <div className="mb-1 flex items-baseline justify-between">
-          <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.68)' }}>
-            {title}
-          </span>
-          <span className="text-xs" style={{ color: '#d9efff' }}>—</span>
-        </div>
-        <div className="flex h-[68px] items-center justify-center text-[10px]" style={{ color: 'rgba(217,239,255,0.52)' }}>
-          No data
-        </div>
-      </div>
-    )
-  }
-  const values = series.map((point) => point.value)
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const range = max - min || 1
-
-  const points = series
-    .map((point, index) => {
-      const x = padded + (index * (width - padded * 2)) / Math.max(series.length - 1, 1)
-      const y = height - padded - ((point.value - min) / range) * (height - padded * 2)
-      return `${x},${y}`
-    })
-    .join(' ')
-
   return (
     <div className="rounded-lg border p-2" style={sectionBoxStyle}>
       <div className="mb-1 flex items-baseline justify-between">
@@ -73,18 +86,16 @@ function MiniChart({
           {title}
         </span>
         <span className="text-xs" style={{ color: '#d9efff' }}>
-          {series[series.length - 1]?.value.toFixed(2)}{unit}
+          {valueLabel}
         </span>
       </div>
-      <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={title}>
-        <polyline fill="none" stroke={color} strokeWidth="2" points={points} />
+      <svg width="100%" height="56" viewBox="0 0 240 56" preserveAspectRatio="none" role="img" aria-label={title}>
+        <rect x="0" y="20" width="240" height="16" rx="8" fill="rgba(121,196,255,0.12)" />
+        <rect x="0" y="20" width={240 * width} height="16" rx="8" fill={color} />
       </svg>
-      <div className="mt-1 flex justify-between text-[10px]" style={{ color: 'rgba(217,239,255,0.52)' }}>
-        <span>{series[0]?.label}</span>
-        <span>{min.toFixed(1)}{unit}</span>
-        <span>{max.toFixed(1)}{unit}</span>
-        <span>{series[series.length - 1]?.label}</span>
-      </div>
+      {caption ? (
+        <p className="mt-1 text-[10px]" style={{ color: 'rgba(217,239,255,0.52)' }}>{caption}</p>
+      ) : null}
     </div>
   )
 }
@@ -108,6 +119,10 @@ export default function CountryPanel() {
   const isPanelOpen = useCountryStore((s) => s.isPanelOpen)
   const closePanel = useCountryStore((s) => s.closePanel)
   const activeLevel = useZoomStore((s) => s.activeLevel)
+  const economicRecords = useEconomicStore((s) => s.data)
+  const realtimeRecords = useRealtimeStore((s) => s.records)
+  const countryEconomicLayer = useCountryEconomicStore((s) => s.layer)
+  const loadCountryEconomicLayer = useCountryEconomicStore((s) => s.loadForCountry)
 
   const shouldBeVisible = activeLevel === 2 && isPanelOpen && selectedCountry !== null
   const [isMounted, setIsMounted] = useState(shouldBeVisible)
@@ -130,13 +145,198 @@ export default function CountryPanel() {
     return () => window.clearTimeout(timer)
   }, [shouldBeVisible, selectedCountry])
 
-  const economic = displayCountry ? ECONOMIC_DATA_BY_ISO.get(displayCountry.isoCode) ?? null : null
-  const dashboard = useMemo(
-    () => (displayCountry ? buildCountryDashboardMock(displayCountry, economic) : null),
-    [displayCountry, economic],
+  useEffect(() => {
+    if (displayCountry) {
+      loadCountryEconomicLayer(displayCountry)
+    }
+  }, [displayCountry, loadCountryEconomicLayer])
+
+  const liveRecords = useMemo(
+    () => Object.values(realtimeRecords).filter((record) => !record.isMock),
+    [realtimeRecords],
+  )
+  const liveRecordsByKey = useMemo(
+    () => Object.fromEntries(liveRecords.map((record) => [record.key, record])),
+    [liveRecords],
+  )
+  const mergedEconomicRecords = useMemo(
+    () => buildRealtimeEconomicMap(liveRecordsByKey, economicRecords),
+    [liveRecordsByKey, economicRecords],
+  )
+  const economic = displayCountry ? mergedEconomicRecords.get(displayCountry.isoCode) ?? null : null
+
+  const liveRecordsForCountry = useMemo(() => {
+    if (!displayCountry) return []
+    return liveRecords.filter((record) => record.countryCode === displayCountry.isoCode)
+  }, [displayCountry, liveRecords])
+
+  const unemploymentRecord = useMemo(
+    () => getLatestRecord(liveRecordsForCountry.filter((record) => record.indicator === 'unemployment')),
+    [liveRecordsForCountry],
+  )
+  const macroMetrics = useMemo(() => {
+    if (!displayCountry) return []
+
+    const rows: Array<{ label: string; value: string }> = [
+      { label: 'Population', value: formatNumber(economic?.population ?? null) },
+      { label: 'Area', value: formatArea(displayCountry.area) },
+      { label: 'GDP', value: formatMoneyUsdB(economic?.gdpUsd ?? null) },
+      {
+        label: 'GDP per Capita',
+        value: economic?.gdpPerCapitaUsd == null ? '—' : `$${Math.round(economic.gdpPerCapitaUsd).toLocaleString('en-US')}`,
+      },
+      { label: 'Inflation', value: formatRate(economic?.inflationPercent ?? null) },
+      { label: 'Interest Rate', value: formatRate(economic?.interestRatePercent ?? null) },
+    ]
+
+    if (unemploymentRecord?.value != null) {
+      rows.push({ label: 'Unemployment', value: formatRate(unemploymentRecord.value) })
+    }
+
+    return rows.filter((row) => row.value !== '—')
+  }, [displayCountry, economic, unemploymentRecord])
+
+  const gdpValues = useMemo(
+    () => collectEconomicValues(mergedEconomicRecords, (record) => record.gdpUsd),
+    [mergedEconomicRecords],
+  )
+  const gdpPerCapitaValues = useMemo(
+    () => collectEconomicValues(mergedEconomicRecords, (record) => record.gdpPerCapitaUsd),
+    [mergedEconomicRecords],
+  )
+  const populationValues = useMemo(
+    () => collectEconomicValues(mergedEconomicRecords, (record) => record.population),
+    [mergedEconomicRecords],
+  )
+  const inflationValues = useMemo(
+    () => collectEconomicValues(mergedEconomicRecords, (record) => record.inflationPercent),
+    [mergedEconomicRecords],
+  )
+  const interestRateValues = useMemo(
+    () => collectEconomicValues(mergedEconomicRecords, (record) => record.interestRatePercent),
+    [mergedEconomicRecords],
+  )
+  const unemploymentValues = useMemo(
+    () => liveRecords
+      .filter((record) => record.indicator === 'unemployment' && record.value != null)
+      .map((record) => record.value as number),
+    [liveRecords],
   )
 
-  if (!isMounted || !displayCountry || !dashboard) return null
+  const miniCharts = useMemo(() => {
+    if (!economic) return []
+
+    const charts: Array<{ title: string; valueLabel: string; width: number; color: string; caption?: string | null }> = []
+
+    if (economic.gdpUsd != null) {
+      charts.push({
+        title: 'GDP',
+        valueLabel: formatMoneyUsdB(economic.gdpUsd),
+        width: getNormalizedWidth(gdpValues, economic.gdpUsd),
+        color: '#34d399',
+      })
+    }
+
+    if (economic.gdpPerCapitaUsd != null) {
+      charts.push({
+        title: 'GDP per Capita',
+        valueLabel: `$${Math.round(economic.gdpPerCapitaUsd).toLocaleString('en-US')}`,
+        width: getNormalizedWidth(gdpPerCapitaValues, economic.gdpPerCapitaUsd),
+        color: '#60a5fa',
+      })
+    }
+
+    if (economic.population != null) {
+      charts.push({
+        title: 'Population',
+        valueLabel: formatNumber(economic.population),
+        width: getNormalizedWidth(populationValues, economic.population),
+        color: '#a78bfa',
+      })
+    }
+
+    if (economic.inflationPercent != null) {
+      charts.push({
+        title: 'Inflation',
+        valueLabel: formatRate(economic.inflationPercent),
+        width: getNormalizedWidth(inflationValues, economic.inflationPercent),
+        color: '#f59e0b',
+      })
+    }
+
+    if (economic.interestRatePercent != null) {
+      charts.push({
+        title: 'Interest Rate',
+        valueLabel: formatRate(economic.interestRatePercent),
+        width: getNormalizedWidth(interestRateValues, economic.interestRatePercent),
+        color: '#22c55e',
+      })
+    }
+
+    if (unemploymentRecord?.value != null) {
+      charts.push({
+        title: 'Unemployment',
+        valueLabel: formatRate(unemploymentRecord.value),
+        width: getNormalizedWidth(unemploymentValues, unemploymentRecord.value),
+        color: '#fb7185',
+        caption: formatObservedAt(unemploymentRecord.observedAt),
+      })
+    }
+
+    return charts
+  }, [
+    economic,
+    gdpPerCapitaValues,
+    gdpValues,
+    inflationValues,
+    interestRateValues,
+    populationValues,
+    unemploymentRecord,
+    unemploymentValues,
+  ])
+
+  const capitalFlowSummary = useMemo(() => {
+    if (!displayCountry || !countryEconomicLayer || countryEconomicLayer.isoCode !== displayCountry.isoCode) return []
+
+    let capitalLinks = 0
+    let capitalMagnitude = 0
+    let tradeLinks = 0
+    let tradeMagnitude = 0
+
+    for (const flow of countryEconomicLayer.flows) {
+      if (flow.type === 'capital') {
+        capitalLinks += 1
+        capitalMagnitude += flow.value
+      }
+
+      if (flow.type === 'trade') {
+        tradeLinks += 1
+        tradeMagnitude += flow.value
+      }
+    }
+
+    const rows: Array<{ label: string; value: string }> = []
+    if (capitalLinks > 0) {
+      rows.push({
+        label: 'Capital Flows',
+        value: `${capitalLinks} links • ${Math.round(capitalMagnitude).toLocaleString('en-US')} intensity`,
+      })
+    }
+    if (tradeLinks > 0) {
+      rows.push({
+        label: 'Trade Network',
+        value: `${tradeLinks} links • ${Math.round(tradeMagnitude).toLocaleString('en-US')} intensity`,
+      })
+    }
+
+    return rows
+  }, [countryEconomicLayer, displayCountry])
+
+  const unavailableSections = useMemo(() => {
+    return ['PMI', 'Imports / exports', 'Top companies', 'News', 'Risk index']
+  }, [])
+
+  if (!isMounted || !displayCountry) return null
 
   return (
     <aside
@@ -155,16 +355,16 @@ export default function CountryPanel() {
       <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
         <div>
           <p className="text-[10px] uppercase tracking-[0.24em]" style={{ color: 'rgba(121,196,255,0.68)' }}>
-            Country Command Center
+            National Dashboard
           </p>
-          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.75)' }}>Country View V5</p>
+          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.75)' }}>Country View V4</p>
         </div>
         <button
           type="button"
           onClick={closePanel}
           className="h-7 w-7 rounded text-sm"
           style={{ color: 'rgba(121,196,255,0.88)', background: 'rgba(17, 25, 42, 0.74)' }}
-          aria-label="Close Country Command Center"
+          aria-label="Close country dashboard"
         >
           ✕
         </button>
@@ -179,95 +379,48 @@ export default function CountryPanel() {
               <p className="text-xs" style={{ color: 'rgba(217,239,255,0.58)' }}>{displayCountry.capital} • {displayCountry.continent}</p>
             </div>
           </div>
-          <LabelRow label="Population" value={formatNumber(economic?.population ?? null)} />
-          <LabelRow label="Area" value={formatArea(displayCountry.area)} />
-          <LabelRow label="GDP" value={formatMoneyUsdB(economic?.gdpUsd ?? null)} />
-          <LabelRow label="GDP per Capita" value={economic?.gdpPerCapitaUsd == null ? '—' : `$${Math.round(economic.gdpPerCapitaUsd).toLocaleString('en-US')}`} />
-          <LabelRow label="GDP Growth" value={formatRate(dashboard.gdpGrowthPercent)} />
-          <LabelRow label="Inflation" value={formatRate(dashboard.inflationPercent)} />
-          <LabelRow label="Interest Rate" value={formatRate(dashboard.interestRatePercent)} />
-          <LabelRow label="Unemployment" value={formatRate(dashboard.unemploymentPercent)} />
-          <LabelRow label="PMI" value={dashboard.pmi.toFixed(1)} />
-          <LabelRow label="Public Debt" value={formatRate(dashboard.publicDebtPercentGdp)} />
-          <LabelRow label="Exports" value={formatMoneyUsdB(dashboard.exportsUsdB)} />
-          <LabelRow label="Imports" value={formatMoneyUsdB(dashboard.importsUsdB)} />
-          <LabelRow label="FX Reserves" value={formatMoneyUsdB(dashboard.fxReservesUsdB)} />
-          <LabelRow label="Credit Rating" value={dashboard.creditRating} />
+          {macroMetrics.length > 0 ? (
+            macroMetrics.map((metric) => <LabelRow key={metric.label} label={metric.label} value={metric.value} />)
+          ) : (
+            <p className="text-xs" style={{ color: 'rgba(217,239,255,0.58)' }}>
+              Macro data will appear here as structured country data becomes available.
+            </p>
+          )}
         </section>
 
-        <section className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <MiniChart title="GDP Chart" series={dashboard.gdpChart} color="#34d399" unit="B" />
-          <MiniChart title="Inflation Chart" series={dashboard.inflationChart} color="#f59e0b" unit="%" />
-          <MiniChart title="Interest Rate Chart" series={dashboard.interestRateChart} color="#60a5fa" unit="%" />
-          <MiniChart title="Trade Balance Chart" series={dashboard.tradeBalanceChart} color="#a78bfa" unit="B" />
-        </section>
+        {miniCharts.length > 0 ? (
+          <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+            <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Mini Realtime Charts</h3>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {miniCharts.map((chart) => (
+                <MiniMetricChart
+                  key={chart.title}
+                  title={chart.title}
+                  valueLabel={chart.valueLabel}
+                  width={chart.width}
+                  color={chart.color}
+                  caption={chart.caption}
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
-        <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
-          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Top Companies</h3>
-          <div className="space-y-2">
-            {dashboard.topCompanies.map((company) => (
-              <div key={company.name} className="rounded border px-2 py-2 text-xs" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
-                <div className="font-medium" style={{ color: '#d9efff' }}>{company.name}</div>
-                <div className="mt-1 grid grid-cols-3 gap-2" style={{ color: 'rgba(217,239,255,0.62)' }}>
-                  <span>Cap: ${company.marketCapUsdB.toFixed(1)}B</span>
-                  <span>{company.industry}</span>
-                  <span>{company.headquarters}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
-          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Economic Sectors</h3>
-          <div className="space-y-2">
-            {dashboard.sectors.map((sector) => (
-              <div key={sector.name}>
-                <div className="mb-1 flex items-center justify-between text-xs">
-                  <span style={{ color: '#d9efff' }}>{sector.name}</span>
-                  <span style={{ color: 'rgba(217,239,255,0.62)' }}>{sector.sharePercent}%</span>
-                </div>
-                <div className="h-1.5 rounded" style={{ background: 'rgba(121,196,255,0.15)' }}>
-                  <div className="h-full rounded" style={{ width: `${sector.sharePercent}%`, background: '#60a5fa' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
-          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>News Panel</h3>
-          <div className="space-y-2 text-xs">
-            {dashboard.news.map((item) => (
-              <div key={`${item.category}-${item.title}`} className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.14)' }}>
-                <p className="mb-1 uppercase tracking-[0.16em]" style={{ color: 'rgba(121,196,255,0.65)' }}>{item.category}</p>
-                <p style={{ color: '#d9efff' }}>{item.title}</p>
-                <p className="mt-1" style={{ color: 'rgba(217,239,255,0.56)' }}>{item.source} • {item.time}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        {capitalFlowSummary.length > 0 ? (
+          <section className="mb-3 rounded-lg border p-3" style={sectionBoxStyle}>
+            <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Capital Flow Summary</h3>
+            {capitalFlowSummary.map((item) => <LabelRow key={item.label} label={item.label} value={item.value} />)}
+          </section>
+        ) : null}
 
         <section className="rounded-lg border p-3" style={sectionBoxStyle}>
-          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Country Summary</h3>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
-              <p style={{ color: 'rgba(121,196,255,0.62)' }}>Economic Health</p>
-              <p style={{ color: '#d9efff' }}>{dashboard.summary.economicHealth}</p>
-            </div>
-            <div className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
-              <p style={{ color: 'rgba(121,196,255,0.62)' }}>Growth Trend</p>
-              <p style={{ color: '#d9efff' }}>{dashboard.summary.growthTrend}</p>
-            </div>
-            <div className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
-              <p style={{ color: 'rgba(121,196,255,0.62)' }}>Risk Level</p>
-              <p style={{ color: '#d9efff' }}>{dashboard.summary.riskLevel}</p>
-            </div>
-            <div className="rounded border p-2" style={{ borderColor: 'rgba(121,196,255,0.16)' }}>
-              <p style={{ color: 'rgba(121,196,255,0.62)' }}>Capital Flow Status</p>
-              <p style={{ color: '#d9efff' }}>{dashboard.summary.capitalFlowStatus}</p>
-            </div>
-          </div>
+          <h3 className="mb-2 text-[11px] uppercase tracking-[0.2em]" style={{ color: 'rgba(121,196,255,0.7)' }}>Data Availability</h3>
+          <p className="text-xs" style={{ color: 'rgba(217,239,255,0.62)' }}>
+            Structured fields render automatically when store data exists. Unavailable feeds stay hidden instead of being fabricated.
+          </p>
+          <p className="mt-2 text-[10px]" style={{ color: 'rgba(121,196,255,0.56)' }}>
+            Hidden for now: {unavailableSections.join(' • ')}
+          </p>
         </section>
       </div>
     </aside>
