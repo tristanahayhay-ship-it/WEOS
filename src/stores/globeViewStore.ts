@@ -24,13 +24,14 @@ export interface GlobeFrameSnapshot {
 
 interface GlobeViewState {
   frame: GlobeFrameSnapshot | null
+  frameVersion: number
   setFrame: (frame: GlobeFrameSnapshot) => void
   clearFrame: () => void
 }
 
 export const useGlobeViewStore = create<GlobeViewState>((set) => ({
   frame: null,
-  setFrame: (frame) => set({ frame }),
-  clearFrame: () => set({ frame: null }),
+  frameVersion: 0,
+  setFrame: (frame) => set((state) => ({ frame, frameVersion: state.frameVersion + 1 })),
+  clearFrame: () => set((state) => ({ frame: null, frameVersion: state.frameVersion + 1 })),
 }))
-

@@ -149,6 +149,7 @@ const COUNTRY_CITY_ALTITUDE = 0.024
 const COUNTRY_CITY_MARKER_RADIUS = 0.01
 const MAX_COUNTRY_CITY_MARKERS = 12
 const COUNTRY_DETAIL_LEVELS = [2] as const
+const COUNTRY_DETAIL_CLEAR_ALPHA_THRESHOLD = 0.06
 const BASE_OPACITY_BY_MATERIAL = new WeakMap<Material, number>()
 const MATERIAL_TEXTURE_KEYS = [
   'map',
@@ -542,9 +543,16 @@ export default function GlobeEngine() {
       const countryState = useCountryStore.getState()
       const selectedCountry = countryState.selectedCountry
       const countryDetailKey = selectedCountry?.isoCode ?? ''
-      if (countryDetailKey !== countryDetailKeyRef.current) {
+      const shouldClearCountryDetail = (
+        countryDetailKey === ''
+        && countryDetailKeyRef.current !== ''
+        && activeLevel < 2
+        && worldBundle.layers[2].alpha <= COUNTRY_DETAIL_CLEAR_ALPHA_THRESHOLD
+      )
+
+      if ((selectedCountry && countryDetailKey !== countryDetailKeyRef.current) || shouldClearCountryDetail) {
         for (const level of COUNTRY_DETAIL_LEVELS) {
-          populateCountryDetailLayer(worldBundle.layers[level].group, selectedCountry)
+          populateCountryDetailLayer(worldBundle.layers[level].group, selectedCountry ?? null)
         }
         countryDetailKeyRef.current = countryDetailKey
       }
@@ -700,7 +708,7 @@ export default function GlobeEngine() {
           }}
         >
           <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: 'rgba(121, 196, 255, 0.72)' }}>
-            Country View V4
+            Country View V5
           </div>
           <div className="text-sm font-semibold">{selectedCountry.name}</div>
         </div>

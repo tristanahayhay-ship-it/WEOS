@@ -16,6 +16,7 @@ import { buildRealtimeEconomicMap } from '../../utils/realtimeEconomic'
  * Dot radius in canvas pixels for each country marker.
  */
 const DOT_RADIUS = 3.5
+const OVERLAY_FADE_MS = 220
 
 // Re-usable singletons — allocated once, mutated in-place each frame.
 const worldMatrix   = new Matrix4()
@@ -147,10 +148,29 @@ export default function OverlayCanvas() {
     [records],
   )
   const econDataRef = useRef<ReadonlyMap<string, CountryEconomicData>>(econData)
+  const econDataVersionRef = useRef(0)
+  const hideAfterRef = useRef(0)
+  const lastDrawRef = useRef({
+    frameVersion: -1,
+    dataVersion: -1,
+    metric: activeMetric,
+    width: 0,
+    height: 0,
+    cleared: false,
+  })
 
   useEffect(() => {
     econDataRef.current = econData
+    econDataVersionRef.current += 1
   }, [econData])
+
+  useEffect(() => {
+    hideAfterRef.current = isVisible ? 0 : performance.now() + OVERLAY_FADE_MS
+    if (isVisible) {
+      lastDrawRef.current.frameVersion = -1
+      lastDrawRef.current.cleared = false
+    }
+  }, [isVisible])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -172,11 +192,46 @@ export default function OverlayCanvas() {
     const drawFrame = () => {
       syncSize()
 
-      const { isVisible: visible, activeMetric: metric } = useOverlayStore.getState()
-      if (!visible) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
+      const width = canvas.width
+      const height = canvas.height
+      const {
+        isVisible: visible,
+        activeMetric: metric,
+      } = useOverlayStore.getState()
+      const {
+        frame,
+        frameVersion,
+      } = useGlobeViewStore.getState()
+      const keepLastFrame = visible || performance.now() < hideAfterRef.current
+      const sizeChanged = width !== lastDrawRef.current.width || height !== lastDrawRef.current.height
+
+      if (!keepLastFrame || !frame || width === 0 || height === 0) {
+        if (!lastDrawRef.current.cleared) {
+          ctx.clearRect(0, 0, width, height)
+          lastDrawRef.current.cleared = true
+        }
       } else {
-        drawDots(ctx, metric, econDataRef.current)
+        const shouldRedraw = (
+          sizeChanged
+          || frameVersion !== lastDrawRef.current.frameVersion
+          || metric !== lastDrawRef.current.metric
+          || econDataVersionRef.current !== lastDrawRef.current.dataVersion
+        )
+
+        if (shouldRedraw) {
+          lastDrawRef.current = {
+            frameVersion,
+            dataVersion: econDataVersionRef.current,
+            metric,
+            width,
+            height,
+            cleared: false,
+          }
+        }
+
+        if (shouldRedraw && visible) {
+          drawDots(ctx, metric, econDataRef.current)
+        }
       }
 
       rafId = window.requestAnimationFrame(drawFrame)
@@ -199,10 +254,7 @@ export default function OverlayCanvas() {
     const ctx = canvas?.getContext('2d')
     if (!ctx) return
 
-    if (!isVisible) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      return
-    }
+    if (!isVisible) return
 
     drawDots(ctx, activeMetric, econData)
   }, [isVisible, activeMetric, econData])
@@ -211,7 +263,11 @@ export default function OverlayCanvas() {
     <canvas
       ref={canvasRef}
       className="pointer-events-none absolute inset-0 w-full h-full"
-      style={{ zIndex: 5 }}
+      style={{
+        zIndex: 5,
+        opacity: isVisible ? 1 : 0,
+        transition: `opacity ${OVERLAY_FADE_MS}ms ease`,
+      }}
       aria-hidden="true"
     />
   )
