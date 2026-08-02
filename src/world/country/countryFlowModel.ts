@@ -1,5 +1,6 @@
 import type { Country } from '../../types/country'
 import { EARTH_RADIUS, projectLngLatToCartesian } from '../../utils/globe'
+import type { CountryBoundaryGeometry } from '../../utils/countryGeometry'
 import type { CountryAdminData } from '../../view/types'
 import type { CountryEconomicLayer, CityType, CityFlowType, EconomicNodeType } from './types'
 
@@ -289,7 +290,7 @@ export function resolveCountryFlowModel({
     priorityScore: 1,
   }
 
-  const locationsById = new Map<string, Omit<FlowLocation, 'flowState' | 'intensity'>>()
+  const locationsById = new Map<string, Omit<FlowLocation, 'flowState' | 'intensity' | 'priority' | 'priorityScore'>>()
 
   for (const node of economicLayer.nodes) {
     if (node.cityId === capital.id) continue
@@ -384,7 +385,7 @@ export function resolveCountryFlowModel({
     const fromNodeType = state === 'inflow' ? location.nodeType : 'capital'
     const toNodeType = state === 'inflow' ? 'capital' : location.nodeType
 
-    flowEdges.push({
+    flowEdgesAll.push({
       id: `${country.isoCode.toLowerCase()}-${location.id}-capital`,
       sourceId: fromId,
       targetId: toId,
