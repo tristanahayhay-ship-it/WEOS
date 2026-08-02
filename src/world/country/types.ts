@@ -93,6 +93,15 @@ export interface EconomicCity {
   type: CityType
   /** Relative importance in [0, 1]; drives marker size and glow intensity */
   importance: number
+  /** Total 24-hour capital flow volume in USD billions */
+  volume24H?: number
+  /** Net 24-hour flow in USD billions (positive = net inflow) */
+  netFlow24H?: number
+  /**
+   * Pixel offset from the projected city dot for the floating city card.
+   * Positive x = right, positive y = down.
+   */
+  cardOffset?: { x: number; y: number }
 }
 
 /**
@@ -117,6 +126,8 @@ export interface CityFlow {
   type: CityFlowType
   /** Economic magnitude (USD billions or relative index) */
   value: number
+  /** Visual color style — 'inflow' renders green, 'outflow' renders red */
+  visualStyle?: 'inflow' | 'outflow'
 }
 
 /** Full V3 economic layer for one country */
@@ -125,4 +136,6 @@ export interface CountryEconomicLayer {
   cities: EconomicCity[]
   nodes: EconomicNode[]
   flows: CityFlow[]
+  /** Aggregate 24-hour capital flow totals for the country */
+  capitalFlow24H?: { inflowUsdB: number; outflowUsdB: number }
 }

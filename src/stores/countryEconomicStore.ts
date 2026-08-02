@@ -2,6 +2,9 @@ import { create } from 'zustand'
 import type { Country } from '../types/country'
 import type { CountryEconomicLayer } from '../world/country/types'
 import { generateEconomicLayer } from '../world/country/CountryEconomicGenerator'
+import type { CountryDashboardData } from '../data/countryDashboardMock'
+import { buildCountryDashboardMock } from '../data/countryDashboardMock'
+import { ECONOMIC_DATA_BY_ISO } from '../data/economicData'
 
 interface CountryEconomicState {
   /** ISO code of the country whose layer is currently loaded */
@@ -10,6 +13,8 @@ interface CountryEconomicState {
   loadingIsoCode: string | null
   /** The currently loaded economic layer (null when no country is selected) */
   layer: CountryEconomicLayer | null
+  /** Full dashboard data (charts, sectors, companies, news, summary) for the active country */
+  dashboard: CountryDashboardData | null
 
   /**
    * Load (or retrieve from cache) the economic layer for the given country.
@@ -25,6 +30,7 @@ interface CountryEconomicState {
 
 /** Per-session in-memory cache so re-selecting the same country is instant */
 const cache = new Map<string, CountryEconomicLayer>()
+const dashboardCache = new Map<string, CountryDashboardData>()
 let pendingLoadCancel: (() => void) | null = null
 let loadRequestToken = 0
 
@@ -42,6 +48,7 @@ export const useCountryEconomicStore = create<CountryEconomicState>((set, get) =
   activeIsoCode: null,
   loadingIsoCode: null,
   layer: null,
+  dashboard: null,
 
   loadForCountry: (country) => {
     const currentState = get()
@@ -61,6 +68,7 @@ export const useCountryEconomicStore = create<CountryEconomicState>((set, get) =
         activeIsoCode: country.isoCode,
         loadingIsoCode: country.isoCode,
         layer: null,
+        dashboard: null,
       })
 
       pendingLoadCancel = scheduleCountryLoad(() => {
@@ -68,29 +76,39 @@ export const useCountryEconomicStore = create<CountryEconomicState>((set, get) =
         const cachedLayer = cache.get(country.isoCode) ?? generateEconomicLayer(country)
         cache.set(country.isoCode, cachedLayer)
 
+        const economicData = ECONOMIC_DATA_BY_ISO.get(country.isoCode) ?? null
+        const cachedDashboard = dashboardCache.get(country.isoCode) ?? buildCountryDashboardMock(country, economicData)
+        dashboardCache.set(country.isoCode, cachedDashboard)
+
         if (requestToken !== loadRequestToken || get().activeIsoCode !== country.isoCode) return
         set({
           loadingIsoCode: null,
           layer: cachedLayer,
+          dashboard: cachedDashboard,
         })
       })
       return
     }
 
+    const economicData = ECONOMIC_DATA_BY_ISO.get(country.isoCode) ?? null
+    const cachedDashboard = dashboardCache.get(country.isoCode) ?? buildCountryDashboardMock(country, economicData)
+    dashboardCache.set(country.isoCode, cachedDashboard)
+
     pendingLoadCancel?.()
     pendingLoadCancel = null
-    set({ activeIsoCode: country.isoCode, loadingIsoCode: null, layer })
+    set({ activeIsoCode: country.isoCode, loadingIsoCode: null, layer, dashboard: cachedDashboard })
   },
 
   clear: () => {
     pendingLoadCancel?.()
     pendingLoadCancel = null
-    set({ activeIsoCode: null, loadingIsoCode: null, layer: null })
+    set({ activeIsoCode: null, loadingIsoCode: null, layer: null, dashboard: null })
   },
   release: () => {
     pendingLoadCancel?.()
     pendingLoadCancel = null
     cache.clear()
-    set({ activeIsoCode: null, loadingIsoCode: null, layer: null })
+    dashboardCache.clear()
+    set({ activeIsoCode: null, loadingIsoCode: null, layer: null, dashboard: null })
   },
 }))

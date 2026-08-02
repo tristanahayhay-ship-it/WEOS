@@ -44,6 +44,7 @@ export function generateEconomicLayer(country: Country): CountryEconomicLayer {
       cities: mock.cities,
       nodes: ensureAirportHubs(mock.cities, mock.nodes),
       flows: mock.flows,
+      capitalFlow24H: mock.capitalFlow24H,
     }
   }
   return {

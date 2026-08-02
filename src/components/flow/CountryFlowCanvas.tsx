@@ -6,16 +6,18 @@ import { useGlobeViewStore } from '../../stores/globeViewStore'
 import { useElementSize } from '../../hooks/useElementSize'
 import { FlowRenderer } from '../../flows/FlowRenderer'
 import type { FlowObject } from '../../flows/types'
-import type { CityFlow, EconomicCity, CityFlowType } from '../../world/country/types'
+import type { CityFlow, EconomicCity } from '../../world/country/types'
 
 // ── City flow → FlowObject conversion ────────────────────────────────────────
 
-/** CSS + Three.js hex pairs for each city-flow type */
-const FLOW_TYPE_COLORS: Record<CityFlowType, { css: string; hex: number }> = {
-  capital:   { css: '#10b981', hex: 0x10b981 },  // emerald  — investment/government
-  trade:     { css: '#3b82f6', hex: 0x3b82f6 },  // blue     — goods & services
-  supply:    { css: '#f59e0b', hex: 0xf59e0b },  // amber    — supply chain
-  logistics: { css: '#8b5cf6', hex: 0x8b5cf6 },  // violet   — logistics
+/** CSS + Three.js hex pairs for each visual style / flow type */
+const FLOW_STYLE_COLORS: Record<string, { css: string; hex: number }> = {
+  inflow:    { css: '#10b981', hex: 0x10b981 },  // emerald green — capital inflow
+  outflow:   { css: '#ef4444', hex: 0xef4444 },  // red          — capital outflow
+  capital:   { css: '#10b981', hex: 0x10b981 },  // default capital = green
+  trade:     { css: '#3b82f6', hex: 0x3b82f6 },  // blue         — goods & services
+  supply:    { css: '#f59e0b', hex: 0xf59e0b },  // amber        — supply chain
+  logistics: { css: '#8b5cf6', hex: 0x8b5cf6 },  // violet       — logistics
 }
 
 const VALUE_MAX = 600  // normalise flow value to [0, 1]
@@ -28,7 +30,7 @@ function cityFlowToFlowObject(
   const to   = cityMap.get(flow.toCityId)
   if (!from || !to) return null
 
-  const cfg = FLOW_TYPE_COLORS[flow.type]
+  const cfg = FLOW_STYLE_COLORS[flow.visualStyle ?? flow.type] ?? FLOW_STYLE_COLORS.capital
   const thickness = Math.min(1, 0.3 + (flow.value / VALUE_MAX) * 0.7)
 
   return {
