@@ -57,7 +57,7 @@ function buildDivision(
     ] ?? 'Finance',
     netCapitalFlowUsdB: seeded(s, 6, -12, 22),
     outlook: divisionOutlook(growth),
-    boundaryRings: realRing !== null ? [realRing] : undefined,
+    boundaryRings: realRing && realRing.length >= 4 ? [realRing] : undefined,
   }
 }
 
