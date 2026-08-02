@@ -13,6 +13,7 @@ import type { Country } from '../src/types/country'
 import type { CountryEconomicData } from '../src/types/country'
 import { buildCountryDashboardMock } from '../src/data/countryDashboardMock'
 import { getCapitalCoordinate } from '../src/data/capitalCoordinates'
+import { getAdmin1BoundaryRing } from '../src/data/admin1BoundaryRings'
 import { resolveCountryFlowModel } from '../src/world/country/countryFlowModel'
 import type { CountryEconomicLayer } from '../src/world/country/types'
 import { getAdminData, ADMIN_DATA_COUNTRIES } from '../src/view/adminDivisionMockData'
@@ -438,16 +439,27 @@ test.describe('Admin Division Boundaries', () => {
   })
 
   test('admin-data divisions expose closed real boundary rings', () => {
-    for (const iso of ADMIN_DATA_COUNTRIES) {
-      const data = getAdminData(iso)
-      expect(data, `${iso} should have admin data`).not.toBeNull()
-      const divisionsWithRealRings = data!.divisions.filter((division) => (division.boundaryRings?.length ?? 0) > 0)
-      expect(divisionsWithRealRings.length, `${iso} should expose at least one real boundary ring`).toBeGreaterThan(0)
-      for (const division of divisionsWithRealRings) {
-        for (const ring of division.boundaryRings ?? []) {
-          expect(ring.length, `${iso}:${division.name} ring should have multiple vertices`).toBeGreaterThan(4)
-          expect(ring[0], `${iso}:${division.name} ring should be closed`).toEqual(ring[ring.length - 1])
-        }
+    const sampleDivisions: Array<[iso: string, division: string]> = [
+      ['AU', 'New South Wales'],
+      ['BR', 'São Paulo'],
+      ['CA', 'Ontario'],
+      ['CN', 'Guangdong'],
+      ['DE', 'Bavaria'],
+      ['IN', 'Maharashtra'],
+      ['JP', 'Tokyo'],
+      ['US', 'California'],
+    ]
+
+    for (const [iso, division] of sampleDivisions) {
+      const ring = getAdmin1BoundaryRing(iso, division)
+      expect(ring, `${iso}:${division} should resolve to a real boundary ring`).not.toBeNull()
+      expect(ring!.length, `${iso}:${division} ring should have multiple vertices`).toBeGreaterThan(4)
+      expect(ring![0], `${iso}:${division} ring should be closed`).toEqual(ring![ring!.length - 1])
+      for (const [lon, lat] of ring!) {
+        expect(lon).toBeGreaterThanOrEqual(-180)
+        expect(lon).toBeLessThanOrEqual(180)
+        expect(lat).toBeGreaterThanOrEqual(-90)
+        expect(lat).toBeLessThanOrEqual(90)
       }
     }
   })

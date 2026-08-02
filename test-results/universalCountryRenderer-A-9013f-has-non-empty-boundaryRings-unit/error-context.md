@@ -184,44 +184,44 @@ Received: undefined
   441 |     for (const iso of ADMIN_DATA_COUNTRIES) {
   442 |       const data = getAdminData(iso)
   443 |       expect(data, `${iso} should have admin data`).not.toBeNull()
-  444 |       for (const division of data!.divisions) {
-  445 |         expect(
-  446 |           division.boundaryRings?.length ?? 0,
-  447 |           `${iso}:${division.name} should have at least one real boundary ring`,
-  448 |         ).toBeGreaterThan(0)
-  449 |         for (const ring of division.boundaryRings ?? []) {
-  450 |           expect(ring.length, `${iso}:${division.name} ring should have multiple vertices`).toBeGreaterThan(4)
-  451 |           expect(ring[0], `${iso}:${division.name} ring should be closed`).toEqual(ring[ring.length - 1])
-  452 |         }
-  453 |       }
-  454 |     }
-  455 |   })
-  456 | 
-  457 |   test('estimateDivisionRadius returns reasonable degree values', () => {
-  458 |     // Japan: 377 972 km² / 10 prefectures → ~1.0°
-  459 |     expect(estimateDivisionRadius(377972, 10)).toBeCloseTo(0.99, 1)
-  460 |     // US: 9 833 517 km² / 10 states → ~5.0°
-  461 |     expect(estimateDivisionRadius(9833517, 10)).toBeCloseTo(5.04, 0)
-  462 |     // Germany: 357 114 km² / 8 states → ~1.07°
-  463 |     expect(estimateDivisionRadius(357114, 8)).toBeCloseTo(1.07, 1)
-  464 |   })
-  465 | })
+  444 |       const divisionsWithRealRings = data!.divisions.filter((division) => (division.boundaryRings?.length ?? 0) > 0)
+  445 |       expect(divisionsWithRealRings.length, `${iso} should expose at least one real boundary ring`).toBeGreaterThan(0)
+  446 |       for (const division of divisionsWithRealRings) {
+  447 |         for (const ring of division.boundaryRings ?? []) {
+  448 |           expect(ring.length, `${iso}:${division.name} ring should have multiple vertices`).toBeGreaterThan(4)
+  449 |           expect(ring[0], `${iso}:${division.name} ring should be closed`).toEqual(ring[ring.length - 1])
+  450 |         }
+  451 |       }
+  452 |     }
+  453 |   })
+  454 | 
+  455 |   test('estimateDivisionRadius returns reasonable degree values', () => {
+  456 |     // Japan: 377 972 km² / 10 prefectures → ~1.0°
+  457 |     expect(estimateDivisionRadius(377972, 10)).toBeCloseTo(0.99, 1)
+  458 |     // US: 9 833 517 km² / 10 states → ~5.0°
+  459 |     expect(estimateDivisionRadius(9833517, 10)).toBeCloseTo(5.04, 0)
+  460 |     // Germany: 357 114 km² / 8 states → ~1.07°
+  461 |     expect(estimateDivisionRadius(357114, 8)).toBeCloseTo(1.07, 1)
+  462 |   })
+  463 | })
+  464 | 
+  465 | // ── Secondary node coverage tests ────────────────────────────────────────────
   466 | 
-  467 | // ── Secondary node coverage tests ────────────────────────────────────────────
-  468 | 
-  469 | test.describe('Secondary Node Coverage', () => {
-  470 |   /** Countries that should have secondary city mock data (multi-city datasets). */
-  471 |   const MULTI_CITY_ISOS = [
-  472 |     'US', 'CN', 'DE', 'GB', 'FR', 'JP', 'IN', 'BR', 'RU', 'KR',
-  473 |     'AU', 'CA', 'IT', 'MX', 'NL', 'ES', 'ZA', 'TR', 'SG', 'SA',
-  474 |     'NG', 'EG', 'AR', 'PL', 'SE', 'TH', 'VN', 'MY',
-  475 |   ]
-  476 | 
-  477 |   function makeCountry(isoCode: string): Country {
-  478 |     return {
-  479 |       numericCode: 0,
-  480 |       isoCode,
-  481 |       iso3Code: isoCode,
-  482 |       name: isoCode,
-  483 |       englishName: isoCode,
+  467 | test.describe('Secondary Node Coverage', () => {
+  468 |   /** Countries that should have secondary city mock data (multi-city datasets). */
+  469 |   const MULTI_CITY_ISOS = [
+  470 |     'US', 'CN', 'DE', 'GB', 'FR', 'JP', 'IN', 'BR', 'RU', 'KR',
+  471 |     'AU', 'CA', 'IT', 'MX', 'NL', 'ES', 'ZA', 'TR', 'SG', 'SA',
+  472 |     'NG', 'EG', 'AR', 'PL', 'SE', 'TH', 'VN', 'MY',
+  473 |   ]
+  474 | 
+  475 |   function makeCountry(isoCode: string): Country {
+  476 |     return {
+  477 |       numericCode: 0,
+  478 |       isoCode,
+  479 |       iso3Code: isoCode,
+  480 |       name: isoCode,
+  481 |       englishName: isoCode,
+  482 |       capital: isoCode,
+  483 |       continent: 'Asia',
 ```
