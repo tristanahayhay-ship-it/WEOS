@@ -83,13 +83,13 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
     transitionDuration: 900,
   },
 
-  // ── Level 3: City ─────────────────────────────────────────────────────────
+  // ── Level 3: Administrative Division ─────────────────────────────────────
   3: {
     id: 3,
-    name: 'City',
-    label: 'City View',
+    name: 'Division',
+    label: 'Administrative Division View',
     cameraDistance: 2.0,
-    cameraDistanceRange: [1.95, 2.2],
+    cameraDistanceRange: [1.75, 2.2],
     showBoundaries: true,
     showCountryLayer: true,
     overlay: {

@@ -6,7 +6,10 @@ import { useFlowStore } from './flowStore'
 import { useCountryStore } from './countryStore'
 import { useCountryEconomicStore } from './countryEconomicStore'
 
-const COUNTRY_VIEW_MAX_LEVEL: ZoomLevelId = 2
+/** Maximum zoom level exposed in the 4-level economic-intelligence framework (0–3). */
+const COUNTRY_VIEW_MAX_LEVEL: ZoomLevelId = 3
+/** Minimum zoom level at which a country must be selected (Country / Division). */
+const COUNTRY_SCOPE_MIN_LEVEL: ZoomLevelId = 2
 const LEVEL_SYNC_HYSTERESIS = 0.06
 
 function clampLevelToCountryScope(id: ZoomLevelId): ZoomLevelId {
@@ -79,7 +82,7 @@ function applyLevelSideEffects(id: ZoomLevelId) {
   // begin immediately; the canvas CSS opacity gate handles the full hide.
   flowStore.setLodLevel(clampedLevel)
 
-  if (clampedLevel < COUNTRY_VIEW_MAX_LEVEL) {
+  if (clampedLevel < COUNTRY_SCOPE_MIN_LEVEL) {
     useCountryStore.getState().selectCountry(null)
     useCountryEconomicStore.getState().release()
   }
