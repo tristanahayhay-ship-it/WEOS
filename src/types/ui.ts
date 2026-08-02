@@ -7,5 +7,16 @@ export type TopbarTab =
   | 'analytics'
   | 'settings'
 
+/** Per-country navigation tabs shown when a country is selected */
+export type CountryTab =
+  | 'overview'
+  | 'economy'
+  | 'markets'
+  | 'trade'
+  | 'industry'
+  | 'government'
+  | 'infrastructure'
+  | 'news'
+
 /** Visualization mode for the main canvas */
 export type ViewMode = '2d' | '3d' | 'flow' | 'chart'

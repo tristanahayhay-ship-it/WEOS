@@ -449,9 +449,7 @@ export default function GlobeEngine() {
   useCountryInteraction(containerRef, cameraRef, worldRef)
 
   const hoveredCountry = useCountryStore((s) => s.hoveredCountry)
-  const selectedCountry = useCountryStore((s) => s.selectedCountry)
   const tooltipPos = useCountryStore((s) => s.tooltipScreenPos)
-  const activeLevel = useZoomStore((s) => s.activeLevel)
 
   useEffect(() => {
     const container = containerRef.current
@@ -696,23 +694,6 @@ export default function GlobeEngine() {
       >
         Rotate • Zoom • Pan
       </div>
-
-      {selectedCountry && activeLevel >= 2 && (
-        <div
-          className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-md border px-4 py-2 text-center"
-          style={{
-            background: 'rgba(8, 13, 24, 0.78)',
-            borderColor: 'rgba(121, 196, 255, 0.32)',
-            color: '#d9efff',
-            backdropFilter: 'blur(10px)',
-          }}
-        >
-          <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: 'rgba(121, 196, 255, 0.72)' }}>
-            Country View V5
-          </div>
-          <div className="text-sm font-semibold">{selectedCountry.name}</div>
-        </div>
-      )}
 
       {hoveredCountry && tooltipPos && (
         <div

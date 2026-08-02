@@ -14,6 +14,8 @@ export interface CountryMockData {
   cities: EconomicCity[]
   nodes: EconomicNode[]
   flows: CityFlow[]
+  /** Aggregate 24-hour capital flow totals */
+  capitalFlow24H?: { inflowUsdB: number; outflowUsdB: number }
 }
 
 const DATA: Record<string, CountryMockData> = {
@@ -145,24 +147,40 @@ const DATA: Record<string, CountryMockData> = {
   // ── Japan ─────────────────────────────────────────────────────────────────
   JP: {
     cities: [
-      { id: 'jp-tok', name: 'Tokyo',    position: { lon: 139.69, lat: 35.69 }, type: 'capital',    importance: 1.0 },
-      { id: 'jp-osa', name: 'Osaka',    position: { lon: 135.50, lat: 34.69 }, type: 'industrial', importance: 0.85 },
-      { id: 'jp-nag', name: 'Nagoya',   position: { lon: 136.91, lat: 35.18 }, type: 'industrial', importance: 0.78 },
-      { id: 'jp-yok', name: 'Yokohama', position: { lon: 139.64, lat: 35.44 }, type: 'port',       importance: 0.72 },
-      { id: 'jp-fuk', name: 'Fukuoka',  position: { lon: 130.40, lat: 33.59 }, type: 'logistics',  importance: 0.62 },
+      { id: 'jp-tok', name: 'TOKYO',    position: { lon: 139.69, lat: 35.69 }, type: 'capital',    importance: 1.0,  volume24H: 9.72, netFlow24H: 1.24, cardOffset: { x: 12, y: -42 } },
+      { id: 'jp-osa', name: 'OSAKA',    position: { lon: 135.50, lat: 34.69 }, type: 'industrial', importance: 0.85, volume24H: 2.81, netFlow24H: 0.45, cardOffset: { x: -152, y: -22 } },
+      { id: 'jp-nag', name: 'NAGOYA',   position: { lon: 136.91, lat: 35.18 }, type: 'industrial', importance: 0.78, volume24H: 1.23, netFlow24H: 0.13, cardOffset: { x: 12, y: 10 } },
+      { id: 'jp-yok', name: 'YOKOHAMA', position: { lon: 139.64, lat: 35.44 }, type: 'port',       importance: 0.72 },
+      { id: 'jp-fuk', name: 'FUKUOKA',  position: { lon: 130.40, lat: 33.59 }, type: 'logistics',  importance: 0.62, volume24H: 0.72, netFlow24H: 0.09, cardOffset: { x: -152, y: 20 } },
+      { id: 'jp-sap', name: 'SAPPORO',  position: { lon: 141.35, lat: 43.06 }, type: 'logistics',  importance: 0.60, volume24H: 0.32, netFlow24H: 0.18, cardOffset: { x: 12, y: -22 } },
     ],
     nodes: [
       { id: 'jp-tok-gov',  cityId: 'jp-tok', type: 'government',    position: { lon: 139.69, lat: 35.69 } },
       { id: 'jp-tok-fin',  cityId: 'jp-tok', type: 'financial_hub', position: { lon: 139.70, lat: 35.68 } },
+      { id: 'jp-tok-cb',   cityId: 'jp-tok', type: 'central_bank',  position: { lon: 139.77, lat: 35.68 } },
       { id: 'jp-yok-port', cityId: 'jp-yok', type: 'port',          position: { lon: 139.64, lat: 35.44 } },
       { id: 'jp-nag-ind',  cityId: 'jp-nag', type: 'industrial_hub', position: { lon: 136.91, lat: 35.18 } },
+      { id: 'jp-osa-fin',  cityId: 'jp-osa', type: 'financial_hub', position: { lon: 135.50, lat: 34.69 } },
+      { id: 'jp-fuk-log',  cityId: 'jp-fuk', type: 'logistics_hub', position: { lon: 130.40, lat: 33.59 } },
+      { id: 'jp-sap-log',  cityId: 'jp-sap', type: 'logistics_hub', position: { lon: 141.35, lat: 43.06 } },
     ],
     flows: [
-      { id: 'jp-f1', fromCityId: 'jp-tok', toCityId: 'jp-osa', type: 'trade',     value: 260 },
-      { id: 'jp-f2', fromCityId: 'jp-tok', toCityId: 'jp-yok', type: 'logistics', value: 180 },
-      { id: 'jp-f3', fromCityId: 'jp-nag', toCityId: 'jp-yok', type: 'supply',    value: 155 },
-      { id: 'jp-f4', fromCityId: 'jp-osa', toCityId: 'jp-fuk', type: 'trade',     value:  90 },
+      // Tokyo outflows (capital leaving — red arcs)
+      { id: 'jp-f1',  fromCityId: 'jp-tok', toCityId: 'jp-osa', type: 'capital',   value: 260, visualStyle: 'outflow' },
+      { id: 'jp-f2',  fromCityId: 'jp-tok', toCityId: 'jp-yok', type: 'logistics', value: 180, visualStyle: 'outflow' },
+      { id: 'jp-f3',  fromCityId: 'jp-tok', toCityId: 'jp-nag', type: 'capital',   value: 150, visualStyle: 'outflow' },
+      { id: 'jp-f4',  fromCityId: 'jp-tok', toCityId: 'jp-fuk', type: 'capital',   value: 130, visualStyle: 'outflow' },
+      { id: 'jp-f5',  fromCityId: 'jp-tok', toCityId: 'jp-sap', type: 'capital',   value: 110, visualStyle: 'outflow' },
+      { id: 'jp-f6',  fromCityId: 'jp-tok', toCityId: 'jp-fuk', type: 'trade',     value:  95, visualStyle: 'outflow' },
+      { id: 'jp-f7',  fromCityId: 'jp-tok', toCityId: 'jp-osa', type: 'trade',     value: 200, visualStyle: 'outflow' },
+      { id: 'jp-f8',  fromCityId: 'jp-tok', toCityId: 'jp-nag', type: 'supply',    value: 120, visualStyle: 'outflow' },
+      // Inflows to non-Tokyo cities (green arcs)
+      { id: 'jp-f9',  fromCityId: 'jp-nag', toCityId: 'jp-yok', type: 'supply',    value: 155, visualStyle: 'inflow' },
+      { id: 'jp-f10', fromCityId: 'jp-osa', toCityId: 'jp-fuk', type: 'trade',     value:  90, visualStyle: 'inflow' },
+      { id: 'jp-f11', fromCityId: 'jp-sap', toCityId: 'jp-tok', type: 'logistics', value:  70, visualStyle: 'inflow' },
+      { id: 'jp-f12', fromCityId: 'jp-fuk', toCityId: 'jp-osa', type: 'trade',     value:  80, visualStyle: 'inflow' },
     ],
+    capitalFlow24H: { inflowUsdB: 18.62, outflowUsdB: 10.42 },
   },
 
   // ── India ─────────────────────────────────────────────────────────────────
