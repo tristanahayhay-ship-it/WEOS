@@ -194,6 +194,8 @@ export interface AdministrativeDivision {
   netCapitalFlowUsdB: number | null
   /** Regional economic outlook */
   outlook: 'expanding' | 'stable' | 'contracting' | null
+  /** Optional boundary rings (each ring is [lon, lat] points) */
+  boundaryRings?: [number, number][][]
 }
 
 export interface CountryAdminData {

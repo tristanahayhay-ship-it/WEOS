@@ -1,6 +1,6 @@
 import { BufferGeometry, Float32BufferAttribute, Mesh, MeshBasicMaterial, DoubleSide, Vector2, ShapeUtils } from 'three'
 import { feature } from 'topojson-client'
-import countriesTopology from 'world-atlas/countries-110m.json'
+import countriesTopology from 'world-atlas/countries-110m.json' with { type: 'json' }
 import { projectLngLatToCartesian, EARTH_RADIUS } from './globe'
 import type { Country } from '../types/country'
 import { COUNTRY_BY_NUMERIC } from '../data/countries'
@@ -25,6 +25,11 @@ interface GeoMultiPolygon {
 
 type GeoGeometry = GeoPolygon | GeoMultiPolygon
 
+export interface CountryBoundaryGeometry {
+  type: 'polygon' | 'multipolygon'
+  coordinates: number[][][] | number[][][][]
+}
+
 interface GeoFeature {
   type: 'Feature'
   id: number | string
@@ -43,8 +48,23 @@ interface PolygonEntry {
   numericCode: number
   /** Each element is a Polygon's outer ring as [lng, lat][] */
   rings: number[][][]
+  boundary: CountryBoundaryGeometry
   /** Bounding box [minLng, minLat, maxLng, maxLat] for quick rejection */
   bbox: [number, number, number, number]
+}
+
+function toBoundaryGeometry(geometry: GeoGeometry): CountryBoundaryGeometry {
+  if (geometry.type === 'Polygon') {
+    return {
+      type: 'polygon',
+      coordinates: geometry.coordinates,
+    }
+  }
+
+  return {
+    type: 'multipolygon',
+    coordinates: geometry.coordinates,
+  }
 }
 
 function computeBbox(rings: number[][][]): [number, number, number, number] {
@@ -86,6 +106,7 @@ function buildPolygonIndex(): PolygonEntry[] {
       return {
         numericCode,
         rings,
+        boundary: toBoundaryGeometry(f.geometry),
         bbox: computeBbox(rings),
       }
     })
@@ -137,6 +158,10 @@ export function findCountryAtPoint(lng: number, lat: number): Country | null {
 
 export function getCountryBoundaryRings(numericCode: number): number[][][] {
   return POLYGON_INDEX.find((entry) => entry.numericCode === numericCode)?.rings ?? []
+}
+
+export function getCountryBoundaryGeometry(numericCode: number): CountryBoundaryGeometry | null {
+  return POLYGON_INDEX.find((entry) => entry.numericCode === numericCode)?.boundary ?? null
 }
 
 // ─── Three.js mesh builder ────────────────────────────────────────────────────

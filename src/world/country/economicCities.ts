@@ -487,6 +487,171 @@ const DATA: Record<string, CountryMockData> = {
       { id: 'sa-f3', fromCityId: 'sa-jed', toCityId: 'sa-dam', type: 'trade',   value: 110 },
     ],
   },
+
+  // ── Nigeria ───────────────────────────────────────────────────────────────
+  NG: {
+    cities: [
+      { id: 'ng-abj', name: 'Abuja',   position: { lon:  7.49, lat:  9.06 }, type: 'capital',    importance: 1.0 },
+      { id: 'ng-lag', name: 'Lagos',   position: { lon:  3.38, lat:  6.46 }, type: 'financial',  importance: 0.97 },
+      { id: 'ng-kno', name: 'Kano',    position: { lon:  8.52, lat: 12.00 }, type: 'industrial', importance: 0.70 },
+      { id: 'ng-phc', name: 'Port Harcourt', position: { lon:  7.02, lat:  4.78 }, type: 'port', importance: 0.75 },
+    ],
+    nodes: [
+      { id: 'ng-abj-gov',  cityId: 'ng-abj', type: 'government',    position: { lon:  7.49, lat:  9.06 } },
+      { id: 'ng-lag-fin',  cityId: 'ng-lag', type: 'financial_hub', position: { lon:  3.38, lat:  6.46 } },
+      { id: 'ng-phc-port', cityId: 'ng-phc', type: 'port',          position: { lon:  7.02, lat:  4.78 } },
+      { id: 'ng-kno-ind',  cityId: 'ng-kno', type: 'industrial_hub', position: { lon:  8.52, lat: 12.00 } },
+    ],
+    flows: [
+      { id: 'ng-f1', fromCityId: 'ng-abj', toCityId: 'ng-lag', type: 'capital', value: 180 },
+      { id: 'ng-f2', fromCityId: 'ng-phc', toCityId: 'ng-lag', type: 'supply',  value: 140 },
+      { id: 'ng-f3', fromCityId: 'ng-lag', toCityId: 'ng-kno', type: 'trade',   value:  90 },
+    ],
+  },
+
+  // ── Egypt ─────────────────────────────────────────────────────────────────
+  EG: {
+    cities: [
+      { id: 'eg-cai', name: 'Cairo',       position: { lon: 31.24, lat: 30.04 }, type: 'capital',    importance: 1.0 },
+      { id: 'eg-ale', name: 'Alexandria',  position: { lon: 29.92, lat: 31.22 }, type: 'port',       importance: 0.82 },
+      { id: 'eg-giz', name: 'Giza',        position: { lon: 31.21, lat: 30.01 }, type: 'industrial', importance: 0.72 },
+      { id: 'eg-sui', name: 'Suez',        position: { lon: 32.55, lat: 29.97 }, type: 'port',       importance: 0.70 },
+    ],
+    nodes: [
+      { id: 'eg-cai-gov',  cityId: 'eg-cai', type: 'government',    position: { lon: 31.24, lat: 30.04 } },
+      { id: 'eg-cai-fin',  cityId: 'eg-cai', type: 'financial_hub', position: { lon: 31.24, lat: 30.05 } },
+      { id: 'eg-ale-port', cityId: 'eg-ale', type: 'port',          position: { lon: 29.92, lat: 31.22 } },
+      { id: 'eg-sui-port', cityId: 'eg-sui', type: 'port',          position: { lon: 32.55, lat: 29.97 } },
+    ],
+    flows: [
+      { id: 'eg-f1', fromCityId: 'eg-cai', toCityId: 'eg-ale', type: 'capital', value: 150 },
+      { id: 'eg-f2', fromCityId: 'eg-sui', toCityId: 'eg-cai', type: 'trade',   value: 120 },
+      { id: 'eg-f3', fromCityId: 'eg-ale', toCityId: 'eg-giz', type: 'supply',  value:  85 },
+    ],
+  },
+
+  // ── Argentina ─────────────────────────────────────────────────────────────
+  AR: {
+    cities: [
+      { id: 'ar-bue', name: 'Buenos Aires', position: { lon: -58.38, lat: -34.60 }, type: 'capital',    importance: 1.0 },
+      { id: 'ar-cor', name: 'Córdoba',      position: { lon: -64.18, lat: -31.42 }, type: 'industrial', importance: 0.75 },
+      { id: 'ar-ros', name: 'Rosario',      position: { lon: -60.67, lat: -32.95 }, type: 'port',       importance: 0.72 },
+      { id: 'ar-men', name: 'Mendoza',      position: { lon: -68.83, lat: -32.89 }, type: 'logistics',  importance: 0.65 },
+    ],
+    nodes: [
+      { id: 'ar-bue-gov',  cityId: 'ar-bue', type: 'government',    position: { lon: -58.38, lat: -34.60 } },
+      { id: 'ar-bue-fin',  cityId: 'ar-bue', type: 'financial_hub', position: { lon: -58.38, lat: -34.61 } },
+      { id: 'ar-ros-port', cityId: 'ar-ros', type: 'port',          position: { lon: -60.67, lat: -32.95 } },
+      { id: 'ar-cor-ind',  cityId: 'ar-cor', type: 'industrial_hub', position: { lon: -64.18, lat: -31.42 } },
+    ],
+    flows: [
+      { id: 'ar-f1', fromCityId: 'ar-bue', toCityId: 'ar-ros', type: 'capital', value: 130 },
+      { id: 'ar-f2', fromCityId: 'ar-ros', toCityId: 'ar-cor', type: 'trade',   value:  95 },
+      { id: 'ar-f3', fromCityId: 'ar-cor', toCityId: 'ar-men', type: 'supply',  value:  70 },
+    ],
+  },
+
+  // ── Poland ────────────────────────────────────────────────────────────────
+  PL: {
+    cities: [
+      { id: 'pl-war', name: 'Warsaw',  position: { lon: 21.01, lat: 52.23 }, type: 'capital',    importance: 1.0 },
+      { id: 'pl-kra', name: 'Kraków',  position: { lon: 19.94, lat: 50.06 }, type: 'industrial', importance: 0.78 },
+      { id: 'pl-wro', name: 'Wrocław', position: { lon: 17.04, lat: 51.11 }, type: 'industrial', importance: 0.72 },
+      { id: 'pl-gda', name: 'Gdańsk',  position: { lon: 18.65, lat: 54.35 }, type: 'port',       importance: 0.70 },
+    ],
+    nodes: [
+      { id: 'pl-war-gov',  cityId: 'pl-war', type: 'government',    position: { lon: 21.01, lat: 52.23 } },
+      { id: 'pl-war-fin',  cityId: 'pl-war', type: 'financial_hub', position: { lon: 21.02, lat: 52.23 } },
+      { id: 'pl-gda-port', cityId: 'pl-gda', type: 'port',          position: { lon: 18.65, lat: 54.35 } },
+      { id: 'pl-kra-ind',  cityId: 'pl-kra', type: 'industrial_hub', position: { lon: 19.94, lat: 50.06 } },
+    ],
+    flows: [
+      { id: 'pl-f1', fromCityId: 'pl-war', toCityId: 'pl-kra', type: 'capital', value: 110 },
+      { id: 'pl-f2', fromCityId: 'pl-kra', toCityId: 'pl-wro', type: 'trade',   value:  80 },
+      { id: 'pl-f3', fromCityId: 'pl-gda', toCityId: 'pl-war', type: 'supply',  value:  90 },
+    ],
+  },
+
+  // ── Sweden ────────────────────────────────────────────────────────────────
+  SE: {
+    cities: [
+      { id: 'se-sto', name: 'Stockholm', position: { lon: 18.07, lat: 59.33 }, type: 'capital',    importance: 1.0 },
+      { id: 'se-got', name: 'Gothenburg', position: { lon: 11.97, lat: 57.71 }, type: 'port',      importance: 0.80 },
+      { id: 'se-mal', name: 'Malmö',     position: { lon: 13.00, lat: 55.60 }, type: 'logistics',  importance: 0.68 },
+    ],
+    nodes: [
+      { id: 'se-sto-gov',  cityId: 'se-sto', type: 'government',    position: { lon: 18.07, lat: 59.33 } },
+      { id: 'se-sto-fin',  cityId: 'se-sto', type: 'financial_hub', position: { lon: 18.07, lat: 59.33 } },
+      { id: 'se-got-port', cityId: 'se-got', type: 'port',          position: { lon: 11.97, lat: 57.71 } },
+    ],
+    flows: [
+      { id: 'se-f1', fromCityId: 'se-sto', toCityId: 'se-got', type: 'capital', value: 100 },
+      { id: 'se-f2', fromCityId: 'se-got', toCityId: 'se-mal', type: 'trade',   value:  75 },
+    ],
+  },
+
+  // ── Thailand ──────────────────────────────────────────────────────────────
+  TH: {
+    cities: [
+      { id: 'th-bkk', name: 'Bangkok',   position: { lon: 100.50, lat: 13.76 }, type: 'capital',    importance: 1.0 },
+      { id: 'th-cnx', name: 'Chiang Mai', position: { lon:  98.99, lat: 18.79 }, type: 'logistics',  importance: 0.62 },
+      { id: 'th-lem', name: 'Laem Chabang', position: { lon: 100.88, lat: 13.08 }, type: 'port',    importance: 0.78 },
+      { id: 'th-ayo', name: 'Ayutthaya', position: { lon: 100.57, lat: 14.35 }, type: 'industrial', importance: 0.65 },
+    ],
+    nodes: [
+      { id: 'th-bkk-gov',  cityId: 'th-bkk', type: 'government',    position: { lon: 100.50, lat: 13.76 } },
+      { id: 'th-bkk-fin',  cityId: 'th-bkk', type: 'financial_hub', position: { lon: 100.50, lat: 13.75 } },
+      { id: 'th-lem-port', cityId: 'th-lem', type: 'port',          position: { lon: 100.88, lat: 13.08 } },
+      { id: 'th-ayo-ind',  cityId: 'th-ayo', type: 'industrial_hub', position: { lon: 100.57, lat: 14.35 } },
+    ],
+    flows: [
+      { id: 'th-f1', fromCityId: 'th-bkk', toCityId: 'th-lem', type: 'trade',   value: 145 },
+      { id: 'th-f2', fromCityId: 'th-bkk', toCityId: 'th-cnx', type: 'capital', value:  90 },
+      { id: 'th-f3', fromCityId: 'th-ayo', toCityId: 'th-bkk', type: 'supply',  value:  75 },
+    ],
+  },
+
+  // ── Vietnam ───────────────────────────────────────────────────────────────
+  VN: {
+    cities: [
+      { id: 'vn-han', name: 'Hanoi',       position: { lon: 105.83, lat: 21.03 }, type: 'capital',    importance: 1.0 },
+      { id: 'vn-hcm', name: 'Ho Chi Minh', position: { lon: 106.66, lat: 10.76 }, type: 'financial',  importance: 0.95 },
+      { id: 'vn-dng', name: 'Da Nang',     position: { lon: 108.21, lat: 16.07 }, type: 'port',       importance: 0.68 },
+      { id: 'vn-hph', name: 'Haiphong',    position: { lon: 106.69, lat: 20.86 }, type: 'port',       importance: 0.72 },
+    ],
+    nodes: [
+      { id: 'vn-han-gov',  cityId: 'vn-han', type: 'government',    position: { lon: 105.83, lat: 21.03 } },
+      { id: 'vn-hcm-fin',  cityId: 'vn-hcm', type: 'financial_hub', position: { lon: 106.66, lat: 10.76 } },
+      { id: 'vn-hph-port', cityId: 'vn-hph', type: 'port',          position: { lon: 106.69, lat: 20.86 } },
+      { id: 'vn-dng-port', cityId: 'vn-dng', type: 'port',          position: { lon: 108.21, lat: 16.07 } },
+    ],
+    flows: [
+      { id: 'vn-f1', fromCityId: 'vn-han', toCityId: 'vn-hcm', type: 'capital', value: 160 },
+      { id: 'vn-f2', fromCityId: 'vn-hcm', toCityId: 'vn-dng', type: 'trade',   value: 105 },
+      { id: 'vn-f3', fromCityId: 'vn-hph', toCityId: 'vn-han', type: 'supply',  value:  80 },
+    ],
+  },
+
+  // ── Malaysia ──────────────────────────────────────────────────────────────
+  MY: {
+    cities: [
+      { id: 'my-kul', name: 'Kuala Lumpur', position: { lon: 101.69,  lat:  3.14 }, type: 'capital',    importance: 1.0 },
+      { id: 'my-pen', name: 'Penang',       position: { lon: 100.34,  lat:  5.42 }, type: 'port',       importance: 0.78 },
+      { id: 'my-joh', name: 'Johor Bahru',  position: { lon: 103.76,  lat:  1.49 }, type: 'logistics',  importance: 0.72 },
+      { id: 'my-kch', name: 'Kuching',      position: { lon: 110.33,  lat:  1.55 }, type: 'industrial', importance: 0.58 },
+    ],
+    nodes: [
+      { id: 'my-kul-gov',  cityId: 'my-kul', type: 'government',    position: { lon: 101.69,  lat:  3.14 } },
+      { id: 'my-kul-fin',  cityId: 'my-kul', type: 'financial_hub', position: { lon: 101.69,  lat:  3.15 } },
+      { id: 'my-pen-port', cityId: 'my-pen', type: 'port',          position: { lon: 100.34,  lat:  5.42 } },
+      { id: 'my-joh-log',  cityId: 'my-joh', type: 'logistics_hub', position: { lon: 103.76,  lat:  1.49 } },
+    ],
+    flows: [
+      { id: 'my-f1', fromCityId: 'my-kul', toCityId: 'my-pen', type: 'capital', value: 130 },
+      { id: 'my-f2', fromCityId: 'my-joh', toCityId: 'my-kul', type: 'trade',   value: 110 },
+      { id: 'my-f3', fromCityId: 'my-pen', toCityId: 'my-joh', type: 'supply',  value:  85 },
+    ],
+  },
 }
 
 /**
