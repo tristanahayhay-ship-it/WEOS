@@ -42,13 +42,12 @@ import {
 } from '../../utils/globe'
 import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
 import type { Country } from '../../types/country'
-import { findCountryAtPoint, getCountryBoundaryGeometry, getCountryBoundaryRings } from '../../utils/countryGeometry'
-import { LOD_FLOWS } from '../../flows/lodFlows'
+import { getCountryBoundaryGeometry, getCountryBoundaryRings } from '../../utils/countryGeometry'
 import { addCountryInfrastructure } from '../../world/country/CountryInfrastructureScene'
 import { generateEconomicLayer } from '../../world/country/CountryEconomicGenerator'
-import { addEconomicCities, addEconomicNodes } from '../../world/country/CountryEconomicScene'
+import { addResolvedCountryFlowNodes } from '../../world/country/CountryEconomicScene'
 import { getAdminData } from '../../view/adminDivisionMockData'
-import { resolveCountryFlowModel } from '../../world/country/countryFlowModel'
+import { flattenGeoBoundaryRings, resolveCountryFlowModel } from '../../world/country/countryFlowModel'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
 const CAMERA_DAMPING = 9
@@ -147,9 +146,6 @@ const LAYER_FADE_SPEED = 4.5
 const DEPTH_WRITE_ALPHA_THRESHOLD = 0.35
 const ALPHA_UPDATE_THRESHOLD = 0.002
 const COUNTRY_BORDER_ALTITUDE = 0.018
-const COUNTRY_CITY_ALTITUDE = 0.024
-const COUNTRY_CITY_MARKER_RADIUS = 0.01
-const MAX_COUNTRY_CITY_MARKERS = 12
 const COUNTRY_DETAIL_LEVELS = [2, 3] as const
 const COUNTRY_DETAIL_CLEAR_ALPHA_THRESHOLD = 0.06
 const BASE_OPACITY_BY_MATERIAL = new WeakMap<Material, number>()
@@ -256,38 +252,6 @@ function buildCountryLinePaths(rings: number[][][], radius: number) {
   return paths
 }
 
-function dedupePoints(points: Array<[number, number]>) {
-  const seen = new Set<string>()
-  return points.filter(([lon, lat]) => {
-    const key = `${lon.toFixed(3)}:${lat.toFixed(3)}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-}
-
-const COUNTRY_CITY_MARKERS = (() => {
-  const markers = new Map<string, Array<[number, number]>>()
-
-  for (const flows of Object.values(LOD_FLOWS)) {
-    for (const flow of flows) {
-      for (const point of [flow.startPoint, flow.endPoint] as const) {
-        const country = findCountryAtPoint(point[0], point[1])
-        if (!country) continue
-        const existing = markers.get(country.isoCode) ?? []
-        existing.push(point)
-        markers.set(country.isoCode, existing)
-      }
-    }
-  }
-
-  for (const [isoCode, points] of markers) {
-    markers.set(isoCode, dedupePoints(points).slice(0, MAX_COUNTRY_CITY_MARKERS))
-  }
-
-  return markers
-})()
-
 function clearGroup(group: Group) {
   while (group.children.length > 0) {
     const child = group.children[0]!
@@ -334,14 +298,19 @@ function populateCountryDetailLayer(group: Group, country: Country | null) {
     adminData,
   })
 
-  const nationalRings = flowModel?.geo.nationalBoundary?.rings ?? rings
-  if (nationalRings.length > 0) {
-    group.add(createLineGroup(buildCountryLinePaths(nationalRings, EARTH_RADIUS + COUNTRY_BORDER_ALTITUDE), '#f8fafc', 0.95))
+  const nationalRings = flattenGeoBoundaryRings(flowModel?.country.boundary ?? null)
+  const fallbackNationalRings = nationalRings.length > 0 ? nationalRings : rings
+  const divisionRings = flowModel?.country.divisions
+    ?.flatMap((division) => flattenGeoBoundaryRings(division.boundary))
+    ?? []
+
+  const renderableModel = flowModel?.capital ? flowModel : null
+
+  const boundaryRings = renderableModel ? fallbackNationalRings : rings
+  if (boundaryRings.length > 0) {
+    group.add(createLineGroup(buildCountryLinePaths(boundaryRings, EARTH_RADIUS + COUNTRY_BORDER_ALTITUDE), '#f8fafc', 0.95))
   }
 
-  const divisionRings = flowModel?.geo.administrativeDivisions
-    .flatMap((division) => division.boundary?.rings ?? [])
-    ?? []
   if (divisionRings.length > 0) {
     group.add(createLineGroup(
       buildCountryLinePaths(divisionRings, EARTH_RADIUS + COUNTRY_BORDER_ALTITUDE + 0.0007),
@@ -351,23 +320,11 @@ function populateCountryDetailLayer(group: Group, country: Country | null) {
   }
 
   // V2: infrastructure layer (highways, roads, railways, airports, seaports,
-  //     landuse zones, rivers, parks) — rendered beneath V1 city markers.
+  //     landuse zones, rivers, parks) — rendered beneath economic nodes.
   addCountryInfrastructure(group, country)
 
-  // V3: country-scale economic hubs (major cities, ports/logistics/airport/
-  //     industrial/financial nodes), data-driven only.
-  addEconomicCities(group, economicLayer.cities)
-  addEconomicNodes(group, economicLayer.nodes)
-
-  const cityPoints = COUNTRY_CITY_MARKERS.get(country.isoCode) ?? []
-  for (const [lon, lat] of cityPoints) {
-    const [x, y, z] = projectLngLatToCartesian(lon, lat, EARTH_RADIUS + COUNTRY_CITY_ALTITUDE)
-    const marker = new Mesh(
-      new SphereGeometry(COUNTRY_CITY_MARKER_RADIUS, 8, 8),
-      new MeshBasicMaterial({ color: '#f97316', transparent: true, opacity: 0.95 }),
-    )
-    marker.position.set(x, y, z)
-    group.add(marker)
+  if (renderableModel) {
+    addResolvedCountryFlowNodes(group, renderableModel)
   }
 }
 

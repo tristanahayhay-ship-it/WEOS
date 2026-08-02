@@ -1,7 +1,7 @@
 export { generateCountryInfrastructure } from './CountryInfrastructureGenerator'
 export { addCountryInfrastructure } from './CountryInfrastructureScene'
 export { generateEconomicLayer } from './CountryEconomicGenerator'
-export { addEconomicCities, addEconomicNodes } from './CountryEconomicScene'
+export { addEconomicCities, addEconomicNodes, addResolvedCountryFlowNodes } from './CountryEconomicScene'
 export { resolveCountryFlowModel } from './countryFlowModel'
 export type * from './types'
 export type {

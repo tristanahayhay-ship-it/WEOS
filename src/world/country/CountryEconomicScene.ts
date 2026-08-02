@@ -11,6 +11,7 @@ import {
 } from 'three'
 import { EARTH_RADIUS, projectLngLatToCartesian } from '../../utils/globe'
 import type { CityType, EconomicNodeType, EconomicCity, EconomicNode } from './types'
+import type { NodeType, ResolvedCountryFlowModel, FlowLocation, FlowState } from './countryFlowModel'
 
 // ── Altitude ──────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,20 @@ const NODE_COLORS: Record<EconomicNodeType, string> = {
   tech_hub:      '#4ade80',
   financial_center: '#60a5fa',
   industrial_center: '#fb923c',
+  trade_hub: '#38bdf8',
+  administrative_center: '#fde68a',
+  production_zone: '#4ade80',
+  consumption_zone: '#f59e0b',
+  special_economic_zone: '#14b8a6',
+}
+
+const RESOLVED_NODE_COLORS: Record<NodeType, string> = {
+  capital: '#facc15',
+  financial_center: '#60a5fa',
+  industrial_center: '#fb923c',
+  port: '#22d3ee',
+  airport: '#f97316',
+  logistics_hub: '#a78bfa',
   trade_hub: '#38bdf8',
   administrative_center: '#fde68a',
   production_zone: '#4ade80',
@@ -159,5 +174,64 @@ export function addEconomicCities(group: Group, cities: EconomicCity[]): void {
 export function addEconomicNodes(group: Group, nodes: EconomicNode[]): void {
   for (const node of nodes) {
     addNodeMarker(group, node)
+  }
+}
+
+function resolvedFlowTint(state: FlowState): string {
+  if (state === 'inflow') return '#10b981'
+  if (state === 'outflow') return '#ef4444'
+  return '#94a3b8'
+}
+
+function locationRadius(location: FlowLocation): number {
+  if (location.priority === 'primary') return 0.010
+  if (location.priority === 'secondary') return 0.0075
+  return 0.006
+}
+
+/**
+ * Render normalized country capital + flow locations only from the resolved model.
+ */
+export function addResolvedCountryFlowNodes(group: Group, model: ResolvedCountryFlowModel): void {
+  const [cx, cy, cz] = projectLngLatToCartesian(model.capital.lng, model.capital.lat, cityAltitude(1))
+  const capitalCore = new Mesh(
+    new SphereGeometry(cityInnerRadius(1), 10, 10),
+    new MeshBasicMaterial({ color: '#facc15' }),
+  )
+  capitalCore.position.set(cx, cy, cz)
+  capitalCore.userData.capitalPulseRole = 'core'
+  group.add(capitalCore)
+
+  const capitalGlow = new Mesh(
+    new SphereGeometry(cityGlowRadius(1), 14, 14),
+    new MeshBasicMaterial({
+      color: '#facc15',
+      transparent: true,
+      opacity: 0.35,
+      blending: AdditiveBlending,
+      depthWrite: false,
+    }),
+  )
+  capitalGlow.position.set(cx, cy, cz)
+  capitalGlow.userData.capitalPulseRole = 'glow'
+  capitalGlow.userData.baseOpacity = 0.35
+  group.add(capitalGlow)
+
+  for (const location of model.renderFlowLocations) {
+    const [x, y, z] = projectLngLatToCartesian(location.lng, location.lat, ALT_NODE)
+    const baseColor = RESOLVED_NODE_COLORS[location.nodeType] ?? '#cbd5e1'
+    const tint = resolvedFlowTint(location.flowState)
+    const material = new MeshBasicMaterial({
+      color: location.flowState === 'neutral' ? baseColor : tint,
+      transparent: true,
+      opacity: 0.6 + location.intensity * 0.35,
+    })
+    const marker = new Mesh(
+      new SphereGeometry(locationRadius(location), 8, 8),
+      material,
+    )
+    marker.position.set(x, y, z)
+    marker.userData.priority = location.priority
+    group.add(marker)
   }
 }

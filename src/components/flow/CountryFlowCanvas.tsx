@@ -123,26 +123,23 @@ export default function CountryFlowCanvas() {
         })
 
         if (model) {
-          const positions = new Map<string, [number, number]>([
-            [model.capital.id, [model.capital.position.lon, model.capital.position.lat]],
-            ...model.flowLocations.map(
-              (location) => [location.id, [location.position.lon, location.position.lat] as [number, number]] as [string, [number, number]],
-            ),
-          ])
-
           const nodeTypeById = new Map<string, NodeType>([
             [model.capital.id, 'capital'],
-            ...model.flowLocations.map((location) => [location.id, location.nodeType] as [string, NodeType]),
+            ...model.renderFlowLocations.map((location) => [location.id, location.nodeType] as [string, NodeType]),
+          ])
+          const nodePriorityById = new Map<string, number>([
+            [model.capital.id, model.capital.priorityScore],
+            ...model.renderFlowLocations.map((location) => [location.id, location.priorityScore] as [string, number]),
           ])
 
           for (const edge of model.flowEdges) {
-            const start = positions.get(edge.fromId)
-            const end = positions.get(edge.toId)
-            if (!start || !end) continue
+            const start = edge.fromPoint
+            const end = edge.toPoint
             const nonCapitalId = edge.fromId === model.capital.id ? edge.toId : edge.fromId
             const nodeType = nodeTypeById.get(nonCapitalId) ?? 'trade_hub'
             const color = colorForFlowState(edge.state, nodeType)
             const thickness = 0.25 + edge.intensity * 0.75
+            const priority = nodePriorityById.get(nonCapitalId) ?? 0
 
             const flowObject: FlowObject = {
               id: `country-flow-${edge.id}`,
@@ -154,7 +151,7 @@ export default function CountryFlowCanvas() {
               colorHex: color.hex,
               thickness,
               animationSpeed: 0.8 + edge.intensity * 0.9,
-              displayPriority: Math.round(edge.value),
+              displayPriority: Math.round(edge.value * (0.7 + priority * 0.3)),
               lodRules: { visibleAtLevels: [2] },
               visibilityState: 0,
             }

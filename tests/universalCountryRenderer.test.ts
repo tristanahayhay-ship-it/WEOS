@@ -14,6 +14,7 @@ import type { CountryEconomicData } from '../src/types/country'
 import { buildCountryDashboardMock } from '../src/data/countryDashboardMock'
 import { getCapitalCoordinate } from '../src/data/capitalCoordinates'
 import { resolveCountryFlowModel } from '../src/world/country/countryFlowModel'
+import type { CountryEconomicLayer } from '../src/world/country/types'
 
 // ── Test fixtures ─────────────────────────────────────────────────────────────
 
@@ -239,6 +240,8 @@ test.describe('Universal Country Renderer', () => {
     const model = resolveCountryFlowModel({ country: JAPAN, economicLayer: layer })
     expect(model).not.toBeNull()
     const resolved = model!
+    expect(resolved.capital.priority).toBe('capital')
+    expect(resolved.priorityLabelIds[0]).toBe(resolved.capital.id)
 
     for (const edge of resolved.flowEdges) {
       expect(edge.fromId === resolved.capital.id || edge.toId === resolved.capital.id).toBe(true)
@@ -248,7 +251,54 @@ test.describe('Universal Country Renderer', () => {
       if (edge.state === 'outflow') {
         expect(edge.fromId).toBe(resolved.capital.id)
       }
+      expect(edge.fromPoint).toHaveLength(2)
+      expect(edge.toPoint).toHaveLength(2)
     }
+  })
+
+  test('resolver filters out invalid flow-location coordinates', () => {
+    const invalidLayer: CountryEconomicLayer = {
+      isoCode: 'JP',
+      cities: [
+        {
+          id: 'jp-capital',
+          name: 'Tokyo',
+          position: { lon: 139.7319925, lat: 35.7090259 },
+          type: 'capital',
+          importance: 1,
+        },
+        {
+          id: 'jp-invalid-city',
+          name: 'Invalid',
+          position: { lon: 999, lat: 999 },
+          type: 'industrial',
+          importance: 0.4,
+        },
+      ],
+      nodes: [
+        {
+          id: 'jp-invalid-node',
+          cityId: 'jp-invalid-city',
+          type: 'industrial_hub',
+          position: { lon: 999, lat: 999 },
+        },
+      ],
+      flows: [
+        {
+          id: 'jp-flow-invalid',
+          fromCityId: 'jp-capital',
+          toCityId: 'jp-invalid-city',
+          type: 'trade',
+          value: 100,
+          visualStyle: 'outflow',
+        },
+      ],
+    }
+
+    const model = resolveCountryFlowModel({ country: JAPAN, economicLayer: invalidLayer })
+    expect(model).not.toBeNull()
+    expect(model?.flowLocations).toHaveLength(0)
+    expect(model?.flowEdges).toHaveLength(0)
   })
 
   test('multiple countries use the same renderer path and degrade safely', () => {
