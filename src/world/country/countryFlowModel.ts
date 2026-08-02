@@ -1,6 +1,5 @@
 import type { Country } from '../../types/country'
 import { EARTH_RADIUS, projectLngLatToCartesian } from '../../utils/globe'
-import type { CountryBoundaryGeometry } from '../../utils/countryGeometry'
 import type { CountryAdminData } from '../../view/types'
 import type { CountryEconomicLayer, CityType, CityFlowType, EconomicNodeType } from './types'
 
@@ -18,6 +17,8 @@ export type NodeType =
   | 'production_zone'
   | 'consumption_zone'
   | 'special_economic_zone'
+
+type FlowLocationType = Exclude<NodeType, 'capital'>
 
 export type GeoPoint = {
   lat: number
@@ -51,17 +52,7 @@ export type AdministrativeDivision = {
 export type FlowLocation = {
   id: string
   name: string
-  type:
-    | 'financial_center'
-    | 'industrial_center'
-    | 'port'
-    | 'airport'
-    | 'logistics_hub'
-    | 'trade_hub'
-    | 'administrative_center'
-    | 'production_zone'
-    | 'consumption_zone'
-    | 'special_economic_zone'
+  type: FlowLocationType
   lat: number
   lng: number
   flowState: FlowState
@@ -130,12 +121,12 @@ export interface ResolvedCountryFlowModel {
 interface ResolveCountryFlowParams {
   country: Country
   economicLayer: CountryEconomicLayer | null
-  nationalBoundary?: GeoBoundary | CountryBoundaryGeometry | null
+  nationalBoundary?: GeoBoundary | null
   nationalBoundaryRings?: number[][][]
   adminData?: CountryAdminData | null
 }
 
-function mapNodeType(nodeType: EconomicNodeType): NodeType {
+function mapNodeType(nodeType: EconomicNodeType): FlowLocationType {
   switch (nodeType) {
     case 'financial_hub': return 'financial_center'
     case 'industrial_hub': return 'industrial_center'
@@ -156,7 +147,7 @@ function mapNodeType(nodeType: EconomicNodeType): NodeType {
   }
 }
 
-function mapCityType(cityType: CityType): NodeType | null {
+function mapCityType(cityType: CityType): FlowLocationType | null {
   switch (cityType) {
     case 'financial': return 'financial_center'
     case 'industrial': return 'industrial_center'

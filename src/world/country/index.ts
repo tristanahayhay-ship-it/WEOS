@@ -4,4 +4,14 @@ export { generateEconomicLayer } from './CountryEconomicGenerator'
 export { addEconomicCities, addEconomicNodes } from './CountryEconomicScene'
 export { resolveCountryFlowModel } from './countryFlowModel'
 export type * from './types'
-export type * from './countryFlowModel'
+export type {
+  AdministrativeDivision,
+  CapitalNode,
+  CountryGeoData,
+  FlowEdge,
+  FlowLocation,
+  FlowState,
+  GeoBoundary,
+  NodeType,
+  ResolvedCountryFlowModel,
+} from './countryFlowModel'
