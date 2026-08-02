@@ -92,8 +92,35 @@ export const ADMIN1_BOUNDARY_RINGS: Record<string, [number, number][]> = {
 
 /**
  * Look up the boundary ring for an administrative division.
- * Returns null when no real boundary data is available.
+ * Returns null when no real boundary data is available or the ring is invalid.
+ *
+ * Sanitization applied before returning:
+ *  1. Rings with fewer than 4 raw points are rejected.
+ *  2. Consecutive duplicate points are removed.
+ *  3. The ring is closed (first point appended if first ≠ last).
+ *  4. After sanitization, rings with fewer than 4 points are rejected.
  */
 export function getAdmin1BoundaryRing(isoCode: string, divisionName: string): [number, number][] | null {
-  return ADMIN1_BOUNDARY_RINGS[`${isoCode}:${divisionName}`] ?? null
+  const raw = ADMIN1_BOUNDARY_RINGS[`${isoCode}:${divisionName}`]
+  if (!raw || raw.length < 4) return null
+
+  // Remove consecutive duplicate points
+  const deduped: [number, number][] = []
+  for (const p of raw) {
+    const prev = deduped[deduped.length - 1]
+    if (!prev || prev[0] !== p[0] || prev[1] !== p[1]) {
+      deduped.push([p[0], p[1]])
+    }
+  }
+
+  if (deduped.length < 4) return null
+
+  // Ensure the ring is closed
+  const first = deduped[0]!
+  const last  = deduped[deduped.length - 1]!
+  if (first[0] !== last[0] || first[1] !== last[1]) {
+    deduped.push([first[0], first[1]])
+  }
+
+  return deduped
 }
