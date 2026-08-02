@@ -2,7 +2,7 @@ import { useZoomStore } from '../../stores/zoomStore'
 import { ZOOM_LEVEL_LIST } from '../../zoom/levels'
 import type { ZoomLevelId } from '../../zoom/types'
 
-const COUNTRY_VIEW_LEVELS = ZOOM_LEVEL_LIST.slice(0, 3)
+const COUNTRY_VIEW_LEVELS = ZOOM_LEVEL_LIST.slice(0, 4)
 
 /**
  * ZoomLevelHUD — compact overlay widget that shows the current zoom level and

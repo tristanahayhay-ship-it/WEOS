@@ -148,7 +148,7 @@ const COUNTRY_BORDER_ALTITUDE = 0.018
 const COUNTRY_CITY_ALTITUDE = 0.024
 const COUNTRY_CITY_MARKER_RADIUS = 0.01
 const MAX_COUNTRY_CITY_MARKERS = 12
-const COUNTRY_DETAIL_LEVELS = [2] as const
+const COUNTRY_DETAIL_LEVELS = [2, 3] as const
 const COUNTRY_DETAIL_CLEAR_ALPHA_THRESHOLD = 0.06
 const BASE_OPACITY_BY_MATERIAL = new WeakMap<Material, number>()
 const MATERIAL_TEXTURE_KEYS = [
@@ -482,7 +482,7 @@ export default function GlobeEngine() {
     controls.rotateSpeed = 0.65
     controls.zoomSpeed = 0.85
     controls.panSpeed = 0.7
-    controls.minDistance = 2.2
+    controls.minDistance = 1.75
     controls.maxDistance = 5.5
     controls.target.copy(focusTarget)
 
@@ -565,14 +565,14 @@ export default function GlobeEngine() {
         state.alpha = updateGroupAlpha(state.group, state.alpha, targetAlpha, fadeLerp)
       }
 
-      const globeAlphaTarget = activeLevel <= 2 || preserveCountryView ? 1 : 0.22
+      const globeAlphaTarget = activeLevel <= 3 || preserveCountryView ? 1 : 0.22
       const earthMaterial = worldBundle.earth.material as MeshPhongMaterial
       earthMaterial.opacity = MathUtils.lerp(earthMaterial.opacity, globeAlphaTarget, fadeLerp)
       const atmosphereMaterial = worldBundle.atmosphere.material as MeshBasicMaterial
-      const atmosphereTarget = activeLevel <= 2 || preserveCountryView ? 0.12 : 0.02
+      const atmosphereTarget = activeLevel <= 3 || preserveCountryView ? 0.12 : 0.02
       atmosphereMaterial.opacity = MathUtils.lerp(atmosphereMaterial.opacity, atmosphereTarget, fadeLerp)
-      const boundaryAlphaTarget = activeLevel <= 2 || preserveCountryView ? 1 : 0.15
-      const coastAlphaTarget = activeLevel <= 2 || preserveCountryView ? 1 : 0.2
+      const boundaryAlphaTarget = activeLevel <= 3 || preserveCountryView ? 1 : 0.15
+      const coastAlphaTarget = activeLevel <= 3 || preserveCountryView ? 1 : 0.2
       worldBundle.boundaryAlpha = updateGroupAlpha(
         worldBundle.countryBoundaries,
         worldBundle.boundaryAlpha,
