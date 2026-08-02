@@ -1,4 +1,5 @@
 import type { Country, CountryEconomicData } from '../../types/country'
+import { getCapitalCoordinate } from '../../data/capitalCoordinates'
 import type {
   CountryEconomicLayer,
   EconomicCity,
@@ -32,6 +33,77 @@ function ensureAirportHubs(cities: EconomicCity[], nodes: EconomicNode[]): Econo
   ]
 }
 
+function withResolvedCapitalCoordinates(country: Country, layer: CountryEconomicLayer): CountryEconomicLayer {
+  const capitalCoordinate = getCapitalCoordinate(country.isoCode)
+  if (!capitalCoordinate) return layer
+
+  const capitalCity = layer.cities.find((city) => city.type === 'capital')
+  if (!capitalCity) return layer
+
+  const capitalPosition = { lon: capitalCoordinate.lng, lat: capitalCoordinate.lat }
+  const capitalId = capitalCity.id
+
+  return {
+    ...layer,
+    cities: layer.cities.map((city) => (
+      city.id === capitalId
+        ? { ...city, position: capitalPosition }
+        : city
+    )),
+    nodes: layer.nodes.map((node) => (
+      node.cityId === capitalId
+        ? { ...node, position: capitalPosition }
+        : node
+    )),
+  }
+}
+
+function generateUniversalCapitalLayer(
+  country: Country,
+  _economicData?: CountryEconomicData | null,
+): CountryEconomicLayer {
+  const capitalCoordinate = getCapitalCoordinate(country.isoCode)
+  if (!capitalCoordinate) {
+    return {
+      isoCode: country.isoCode,
+      cities: [],
+      nodes: [],
+      flows: [],
+    }
+  }
+
+  const capitalId = `${country.isoCode.toLowerCase()}-capital`
+  const capitalPosition = { lon: capitalCoordinate.lng, lat: capitalCoordinate.lat }
+
+  return {
+    isoCode: country.isoCode,
+    cities: [
+      {
+        id: capitalId,
+        name: country.capital,
+        position: capitalPosition,
+        type: 'capital',
+        importance: 1.0,
+      },
+    ],
+    nodes: [
+      {
+        id: `${capitalId}-government`,
+        cityId: capitalId,
+        type: 'government',
+        position: capitalPosition,
+      },
+      {
+        id: `${capitalId}-central-bank`,
+        cityId: capitalId,
+        type: 'central_bank',
+        position: capitalPosition,
+      },
+    ],
+    flows: [],
+  }
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
@@ -39,31 +111,30 @@ function ensureAirportHubs(cities: EconomicCity[], nodes: EconomicNode[]): Econo
  *
  * Priority:
  *   1. Explicit mock data from `economicCities.ts` (highest fidelity).
- *   2. Universal capital-centred network derived from the Country model
- *      (works for every country on Earth).
+ *   2. Universal capital-centred fallback resolved from factual capital coordinates.
  *
- * Missing data degrades gracefully — the universal generator never fabricates
- * statistics, only positions and flow magnitudes derived from available fields.
+ * Missing data degrades gracefully — the universal generator uses real capital
+ * coordinates when available and does not fabricate secondary node positions.
  */
 export function generateEconomicLayer(
   country: Country,
-  _economicData?: CountryEconomicData | null,
+  economicData?: CountryEconomicData | null,
 ): CountryEconomicLayer {
   const mock = getMockEconomicData(country.isoCode)
   if (mock) {
-    return {
+    const resolvedMock = withResolvedCapitalCoordinates(country, {
       isoCode: country.isoCode,
       cities: mock.cities,
-      nodes: ensureAirportHubs(mock.cities, mock.nodes),
+      nodes: mock.nodes,
       flows: mock.flows,
       capitalFlow24H: mock.capitalFlow24H,
+    })
+
+    return {
+      ...resolvedMock,
+      nodes: ensureAirportHubs(resolvedMock.cities, resolvedMock.nodes),
     }
   }
 
-  return {
-    isoCode: country.isoCode,
-    cities: [],
-    nodes: [],
-    flows: [],
-  }
+  return generateUniversalCapitalLayer(country, economicData)
 }

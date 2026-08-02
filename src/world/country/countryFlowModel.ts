@@ -1,6 +1,8 @@
 import type { Country } from '../../types/country'
+import { EARTH_RADIUS, projectLngLatToCartesian } from '../../utils/globe'
+import type { CountryBoundaryGeometry } from '../../utils/countryGeometry'
 import type { CountryAdminData } from '../../view/types'
-import type { CountryEconomicLayer, CityType, EconomicNodeType } from './types'
+import type { CountryEconomicLayer, CityType, CityFlowType, EconomicNodeType } from './types'
 
 export type FlowState = 'inflow' | 'outflow' | 'neutral'
 
@@ -17,65 +19,118 @@ export type NodeType =
   | 'consumption_zone'
   | 'special_economic_zone'
 
-export interface GeoBoundary {
-  id: string
-  type: 'national' | 'administrative'
-  rings: [number, number][][]
+export type GeoPoint = {
+  lat: number
+  lng: number
 }
 
-export interface AdministrativeDivision {
-  id: string
-  name: string
-  type: string
-  center: [number, number]
-  boundary: GeoBoundary | null
+export type GeoBoundary = {
+  type: 'polygon' | 'multipolygon'
+  coordinates: number[][][] | number[][][][]
 }
 
-export interface CapitalNode {
+export type CapitalNode = {
   id: string
   name: string
+  lat: number
+  lng: number
+  flowState?: FlowState
+  intensity?: number
   nodeType: 'capital'
   position: { lon: number; lat: number }
 }
 
-export interface FlowLocation {
+export type AdministrativeDivision = {
   id: string
   name: string
-  nodeType: NodeType
-  position: { lon: number; lat: number }
-  flowState: FlowState
-  intensity: number
+  type: 'state' | 'province' | 'region' | 'district' | 'prefecture'
+  boundary: GeoBoundary
+  centroid: GeoPoint
 }
 
-export interface FlowEdge {
+export type FlowLocation = {
   id: string
+  name: string
+  type:
+    | 'financial_center'
+    | 'industrial_center'
+    | 'port'
+    | 'airport'
+    | 'logistics_hub'
+    | 'trade_hub'
+    | 'administrative_center'
+    | 'production_zone'
+    | 'consumption_zone'
+    | 'special_economic_zone'
+  lat: number
+  lng: number
+  flowState: FlowState
+  intensity: number
+  nodeType: NodeType
+  position: { lon: number; lat: number }
+}
+
+export type FlowEdge = {
+  id: string
+  sourceId: string
+  targetId: string
+  flowState: FlowState
+  intensity: number
+  type: 'capital_flow' | 'trade' | 'investment' | 'credit' | 'logistics'
   fromId: string
   toId: string
   fromNodeType: NodeType
   toNodeType: NodeType
   state: FlowState
-  intensity: number
   value: number
 }
 
-export interface CountryGeoData {
+export type CountryGeoData = {
+  countryId: string
+  name: string
+  boundary: GeoBoundary | null
+  capital: CapitalNode
+  divisions?: AdministrativeDivision[]
+  flowLocations?: FlowLocation[]
+}
+
+type LegacyGeoBoundary = {
+  id: string
+  type: 'national' | 'administrative'
+  rings: [number, number][][]
+}
+
+type LegacyAdministrativeDivision = {
+  id: string
+  name: string
+  type: string
+  center: [number, number]
+  boundary: LegacyGeoBoundary | null
+}
+
+type LegacyCountryGeoData = {
   countryIsoCode: string
-  nationalBoundary: GeoBoundary | null
-  administrativeDivisions: AdministrativeDivision[]
+  nationalBoundary: LegacyGeoBoundary | null
+  administrativeDivisions: LegacyAdministrativeDivision[]
 }
 
 export interface ResolvedCountryFlowModel {
   countryIsoCode: string
-  geo: CountryGeoData
+  country: CountryGeoData
+  geo: LegacyCountryGeoData
   capital: CapitalNode
   flowLocations: FlowLocation[]
   flowEdges: FlowEdge[]
   priorityLabelIds: string[]
+  capitalPosition: { x: number; y: number; z: number }
+  divisionGeometry: GeoBoundary[]
+  nodePositions: Record<string, { x: number; y: number; z: number }>
 }
 
 interface ResolveCountryFlowParams {
   country: Country
   economicLayer: CountryEconomicLayer | null
+  nationalBoundary?: GeoBoundary | CountryBoundaryGeometry | null
   nationalBoundaryRings?: number[][][]
   adminData?: CountryAdminData | null
 }
@@ -113,13 +168,76 @@ function mapCityType(cityType: CityType): NodeType | null {
   }
 }
 
+function mapFlowType(type: CityFlowType): FlowEdge['type'] {
+  switch (type) {
+    case 'capital': return 'capital_flow'
+    case 'logistics': return 'logistics'
+    case 'trade': return 'trade'
+    case 'supply': return 'credit'
+  }
+}
+
 function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n))
+}
+
+function normalizeBoundary(
+  boundary?: GeoBoundary | CountryBoundaryGeometry | null,
+  nationalBoundaryRings: number[][][] = [],
+): GeoBoundary | null {
+  if (boundary) {
+    return {
+      type: boundary.type,
+      coordinates: boundary.coordinates,
+    }
+  }
+
+  if (nationalBoundaryRings.length === 0) return null
+  return {
+    type: 'polygon',
+    coordinates: nationalBoundaryRings,
+  }
+}
+
+export function flattenGeoBoundaryRings(boundary: GeoBoundary | null): [number, number][][] {
+  if (!boundary) return []
+  if (boundary.type === 'polygon') {
+    return boundary.coordinates as [number, number][][]
+  }
+
+  return (boundary.coordinates as [number, number][][][]).flatMap((polygon) => polygon)
+}
+
+function toLegacyBoundary(
+  id: string,
+  type: 'national' | 'administrative',
+  boundary: GeoBoundary | null,
+): LegacyGeoBoundary | null {
+  if (!boundary) return null
+  return {
+    id,
+    type,
+    rings: flattenGeoBoundaryRings(boundary),
+  }
+}
+
+function toDivisionBoundary(boundaryRings?: [number, number][][]): GeoBoundary | null {
+  if (!boundaryRings || boundaryRings.length === 0) return null
+  return {
+    type: 'polygon',
+    coordinates: boundaryRings,
+  }
+}
+
+function buildNodePosition(lng: number, lat: number, altitude: number) {
+  const [x, y, z] = projectLngLatToCartesian(lng, lat, altitude)
+  return { x, y, z }
 }
 
 export function resolveCountryFlowModel({
   country,
   economicLayer,
+  nationalBoundary,
   nationalBoundaryRings = [],
   adminData = null,
 }: ResolveCountryFlowParams): ResolvedCountryFlowModel | null {
@@ -128,24 +246,32 @@ export function resolveCountryFlowModel({
   const capitalCity = economicLayer.cities.find((city) => city.type === 'capital')
   if (!capitalCity) return null
 
+  const capitalNetFlow = capitalCity.netFlow24H ?? 0
   const capital: CapitalNode = {
     id: capitalCity.id,
     name: capitalCity.name,
+    lat: capitalCity.position.lat,
+    lng: capitalCity.position.lon,
+    flowState: capitalNetFlow > 0 ? 'inflow' : capitalNetFlow < 0 ? 'outflow' : 'neutral',
+    intensity: capitalCity.volume24H != null && capitalCity.volume24H > 0
+      ? clamp01(Math.abs(capitalNetFlow) / capitalCity.volume24H)
+      : 0,
     nodeType: 'capital',
     position: capitalCity.position,
   }
 
-  const locationsById = new Map<string, FlowLocation>()
+  const locationsById = new Map<string, Omit<FlowLocation, 'flowState' | 'intensity'>>()
 
   for (const node of economicLayer.nodes) {
     if (node.cityId === capital.id) continue
     locationsById.set(node.cityId, {
       id: node.cityId,
       name: economicLayer.cities.find((city) => city.id === node.cityId)?.name ?? node.cityId,
+      type: mapNodeType(node.type),
+      lat: node.position.lat,
+      lng: node.position.lon,
       nodeType: mapNodeType(node.type),
       position: node.position,
-      flowState: 'neutral',
-      intensity: 0,
     })
   }
 
@@ -156,35 +282,42 @@ export function resolveCountryFlowModel({
     locationsById.set(city.id, {
       id: city.id,
       name: city.name,
+      type: mappedType,
+      lat: city.position.lat,
+      lng: city.position.lon,
       nodeType: mappedType,
       position: city.position,
-      flowState: 'neutral',
-      intensity: 0,
     })
   }
 
   const netByLocationId = new Map<string, number>()
+  const flowTypeByLocationId = new Map<string, FlowEdge['type']>()
+
   for (const flow of economicLayer.flows) {
     const amount = Math.max(0, flow.value)
     if (amount <= 0) continue
 
     if (flow.toCityId === capital.id && locationsById.has(flow.fromCityId)) {
       netByLocationId.set(flow.fromCityId, (netByLocationId.get(flow.fromCityId) ?? 0) + amount)
+      flowTypeByLocationId.set(flow.fromCityId, mapFlowType(flow.type))
       continue
     }
 
     if (flow.fromCityId === capital.id && locationsById.has(flow.toCityId)) {
       netByLocationId.set(flow.toCityId, (netByLocationId.get(flow.toCityId) ?? 0) - amount)
+      flowTypeByLocationId.set(flow.toCityId, mapFlowType(flow.type))
       continue
     }
 
     if (flow.visualStyle === 'inflow' && locationsById.has(flow.fromCityId)) {
       netByLocationId.set(flow.fromCityId, (netByLocationId.get(flow.fromCityId) ?? 0) + amount)
+      flowTypeByLocationId.set(flow.fromCityId, mapFlowType(flow.type))
       continue
     }
 
     if (flow.visualStyle === 'outflow' && locationsById.has(flow.toCityId)) {
       netByLocationId.set(flow.toCityId, (netByLocationId.get(flow.toCityId) ?? 0) - amount)
+      flowTypeByLocationId.set(flow.toCityId, mapFlowType(flow.type))
       continue
     }
   }
@@ -208,40 +341,62 @@ export function resolveCountryFlowModel({
 
     if (magnitude <= 0) continue
 
+    const fromId = state === 'inflow' ? location.id : capital.id
+    const toId = state === 'inflow' ? capital.id : location.id
+    const fromNodeType = state === 'inflow' ? location.nodeType : 'capital'
+    const toNodeType = state === 'inflow' ? 'capital' : location.nodeType
+
     flowEdges.push({
       id: `${country.isoCode.toLowerCase()}-${location.id}-capital`,
-      fromId: state === 'inflow' ? location.id : capital.id,
-      toId: state === 'inflow' ? capital.id : location.id,
-      fromNodeType: state === 'inflow' ? location.nodeType : 'capital',
-      toNodeType: state === 'inflow' ? 'capital' : location.nodeType,
-      state,
+      sourceId: fromId,
+      targetId: toId,
+      flowState: state,
       intensity,
+      type: flowTypeByLocationId.get(location.id) ?? 'capital_flow',
+      fromId,
+      toId,
+      fromNodeType,
+      toNodeType,
+      state,
       value: magnitude,
     })
   }
 
-  const geo: CountryGeoData = {
-    countryIsoCode: country.isoCode,
-    nationalBoundary: nationalBoundaryRings.length > 0
-      ? {
-          id: `${country.isoCode.toLowerCase()}-national-boundary`,
-          type: 'national',
-          rings: nationalBoundaryRings as [number, number][][],
-        }
-      : null,
-    administrativeDivisions: (adminData?.divisions ?? []).map((division) => ({
-      id: division.id,
-      name: division.name,
-      type: division.type,
-      center: division.center,
-      boundary: division.boundaryRings && division.boundaryRings.length > 0
-        ? {
-            id: `${division.id}-boundary`,
-            type: 'administrative',
-            rings: division.boundaryRings as [number, number][][],
-          }
-        : null,
-    })),
+  const resolvedBoundary = normalizeBoundary(nationalBoundary, nationalBoundaryRings)
+  const divisions = (adminData?.divisions ?? [])
+    .map((division) => {
+      const boundary = toDivisionBoundary(division.boundaryRings)
+      if (!boundary) return null
+      if (
+        division.type !== 'state'
+        && division.type !== 'province'
+        && division.type !== 'region'
+        && division.type !== 'district'
+        && division.type !== 'prefecture'
+      ) {
+        return null
+      }
+
+      return {
+        id: division.id,
+        name: division.name,
+        type: division.type,
+        boundary,
+        centroid: {
+          lng: division.center[0],
+          lat: division.center[1],
+        },
+      } satisfies AdministrativeDivision
+    })
+    .filter((division): division is AdministrativeDivision => division !== null)
+
+  const countryData: CountryGeoData = {
+    countryId: country.isoCode,
+    name: country.name,
+    boundary: resolvedBoundary,
+    capital,
+    divisions: divisions.length > 0 ? divisions : undefined,
+    flowLocations,
   }
 
   const priorityLabelIds = [
@@ -253,12 +408,37 @@ export function resolveCountryFlowModel({
       .map((loc) => loc.id),
   ]
 
+  const nodePositions: Record<string, { x: number; y: number; z: number }> = {
+    [capital.id]: buildNodePosition(capital.lng, capital.lat, EARTH_RADIUS + 0.028),
+  }
+  for (const location of flowLocations) {
+    nodePositions[location.id] = buildNodePosition(location.lng, location.lat, EARTH_RADIUS + 0.028)
+  }
+
   return {
     countryIsoCode: country.isoCode,
-    geo,
+    country: countryData,
+    geo: {
+      countryIsoCode: country.isoCode,
+      nationalBoundary: toLegacyBoundary(
+        `${country.isoCode.toLowerCase()}-national-boundary`,
+        'national',
+        resolvedBoundary,
+      ),
+      administrativeDivisions: divisions.map((division) => ({
+        id: division.id,
+        name: division.name,
+        type: division.type,
+        center: [division.centroid.lng, division.centroid.lat],
+        boundary: toLegacyBoundary(`${division.id}-boundary`, 'administrative', division.boundary),
+      })),
+    },
     capital,
     flowLocations,
     flowEdges,
     priorityLabelIds,
+    capitalPosition: nodePositions[capital.id],
+    divisionGeometry: divisions.map((division) => division.boundary),
+    nodePositions,
   }
 }

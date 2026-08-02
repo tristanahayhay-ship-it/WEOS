@@ -12,6 +12,7 @@ import { generateEconomicLayer } from '../src/world/country/CountryEconomicGener
 import type { Country } from '../src/types/country'
 import type { CountryEconomicData } from '../src/types/country'
 import { buildCountryDashboardMock } from '../src/data/countryDashboardMock'
+import { getCapitalCoordinate } from '../src/data/capitalCoordinates'
 import { resolveCountryFlowModel } from '../src/world/country/countryFlowModel'
 
 // ── Test fixtures ─────────────────────────────────────────────────────────────
@@ -140,18 +141,25 @@ test.describe('Universal Country Renderer', () => {
     expect(inflows.length).toBeGreaterThan(0)
   })
 
-  test('returns empty economic layer for countries without flow-location data', () => {
+  test('builds a capital-rooted fallback layer for countries without flow-location data', () => {
     const layer = generateEconomicLayer(NIGERIA, NIGERIA_ECONOMIC)
     expect(layer.isoCode).toBe('NG')
-    expect(layer.cities).toEqual([])
-    expect(layer.nodes).toEqual([])
+    expect(layer.cities).toHaveLength(1)
+    expect(layer.nodes.length).toBeGreaterThanOrEqual(2)
     expect(layer.flows).toEqual([])
+    expect(layer.cities[0]?.type).toBe('capital')
+    expect(layer.cities[0]?.name).toBe('Abuja')
+    expect(layer.nodes.some((node) => node.type === 'central_bank')).toBe(true)
+    expect(layer.nodes.some((node) => node.type === 'airport')).toBe(false)
   })
 
-  test('gracefully skips unresolved country flow model when country data is missing', () => {
+  test('resolves a capital-only country flow model when only capital geo data exists', () => {
     const layer = generateEconomicLayer(LUXEMBOURG)
     const model = resolveCountryFlowModel({ country: LUXEMBOURG, economicLayer: layer })
-    expect(model).toBeNull()
+    expect(model).not.toBeNull()
+    expect(model?.capital.name).toBe('Luxembourg')
+    expect(model?.flowEdges).toEqual([])
+    expect(model?.flowLocations).toEqual([])
   })
 
   test('generates a valid layer for Russia (very large country)', () => {
@@ -163,7 +171,7 @@ test.describe('Universal Country Renderer', () => {
   })
 
   test('city positions stay within valid coordinate bounds for available datasets', () => {
-    for (const country of [JAPAN, RUSSIA]) {
+    for (const country of [JAPAN, RUSSIA, NIGERIA, VIETNAM, LUXEMBOURG]) {
       const layer = generateEconomicLayer(country)
       for (const city of layer.cities) {
         expect(city.position.lon).toBeGreaterThanOrEqual(-180)
@@ -180,6 +188,19 @@ test.describe('Universal Country Renderer', () => {
     expect(capitalId).toBeDefined()
     const cbNode = layer.nodes.find((n) => n.type === 'central_bank' && n.cityId === capitalId)
     expect(cbNode).toBeDefined()
+  })
+
+  test('fallback countries use factual capital coordinates', () => {
+    for (const country of [NIGERIA, VIETNAM, LUXEMBOURG]) {
+      const layer = generateEconomicLayer(country)
+      const capital = layer.cities.find((city) => city.type === 'capital')
+      const expected = getCapitalCoordinate(country.isoCode)
+
+      expect(capital).toBeDefined()
+      expect(expected).not.toBeNull()
+      expect(capital!.position.lat).toBeCloseTo(expected!.lat, 3)
+      expect(capital!.position.lon).toBeCloseTo(expected!.lng, 3)
+    }
   })
 
   test('country datasets include an airport node via normalization', () => {
@@ -235,11 +256,8 @@ test.describe('Universal Country Renderer', () => {
     for (const country of countries) {
       const layer = generateEconomicLayer(country)
       const model = resolveCountryFlowModel({ country, economicLayer: layer })
-      if (layer.cities.length === 0) {
-        expect(model).toBeNull()
-      } else {
-        expect(model).not.toBeNull()
-      }
+      expect(layer.cities.length).toBeGreaterThan(0)
+      expect(model).not.toBeNull()
     }
   })
 })

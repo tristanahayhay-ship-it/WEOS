@@ -42,7 +42,7 @@ import {
 } from '../../utils/globe'
 import { DEBUG_COUNTRIES } from '../../utils/debugCountries'
 import type { Country } from '../../types/country'
-import { findCountryAtPoint, getCountryBoundaryRings } from '../../utils/countryGeometry'
+import { findCountryAtPoint, getCountryBoundaryGeometry, getCountryBoundaryRings } from '../../utils/countryGeometry'
 import { LOD_FLOWS } from '../../flows/lodFlows'
 import { addCountryInfrastructure } from '../../world/country/CountryInfrastructureScene'
 import { generateEconomicLayer } from '../../world/country/CountryEconomicGenerator'
@@ -322,12 +322,14 @@ function populateCountryDetailLayer(group: Group, country: Country | null) {
   if (!country) return
 
   const rings = getCountryBoundaryRings(country.numericCode)
+  const boundary = getCountryBoundaryGeometry(country.numericCode)
   const adminData = getAdminData(country.isoCode)
 
   const economicLayer = generateEconomicLayer(country)
   const flowModel = resolveCountryFlowModel({
     country,
     economicLayer,
+    nationalBoundary: boundary,
     nationalBoundaryRings: rings,
     adminData,
   })
