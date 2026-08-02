@@ -16,7 +16,7 @@ import { getCapitalCoordinate } from '../src/data/capitalCoordinates'
 import { resolveCountryFlowModel } from '../src/world/country/countryFlowModel'
 import type { CountryEconomicLayer } from '../src/world/country/types'
 import { getAdminData, ADMIN_DATA_COUNTRIES } from '../src/view/adminDivisionMockData'
-import { buildApproximateBoundaryRings, estimateDivisionRadius } from '../src/utils/adminBoundaryApproximator'
+import { estimateDivisionRadius } from '../src/utils/adminBoundaryApproximator'
 
 // ── Test fixtures ─────────────────────────────────────────────────────────────
 
@@ -437,26 +437,19 @@ test.describe('Admin Division Boundaries', () => {
     }
   })
 
-  test('approximate boundary ring approximator produces valid rings', () => {
-    const testCases: Array<[lon: number, lat: number, radius: number]> = [
-      [139.69,  35.69, 1.0],   // Tokyo
-      [-77.04,  38.91, 5.0],   // Washington D.C.
-      [ 55.75,  37.62, 9.4],   // Moscow region (high northern latitude)
-      [-34.60, -58.38, 5.0],   // Buenos Aires (southern hemisphere)
-      [  1.35,   3.14, 0.5],   // Near-equatorial (Singapore)
-    ]
-    for (const [lon, lat, radius] of testCases) {
-      const rings = buildApproximateBoundaryRings([lon, lat], radius)
-      expect(rings).toHaveLength(1)
-      const ring = rings[0]!
-      // Default 16 segments + closing vertex = 17 points
-      expect(ring).toHaveLength(17)
-      expect(ring[0]).toEqual(ring[ring.length - 1])
-      for (const [rLon, rLat] of ring) {
-        expect(rLon).toBeGreaterThanOrEqual(-180)
-        expect(rLon).toBeLessThanOrEqual(180)
-        expect(rLat).toBeGreaterThanOrEqual(-90)
-        expect(rLat).toBeLessThanOrEqual(90)
+  test('admin-data divisions expose closed real boundary rings', () => {
+    for (const iso of ADMIN_DATA_COUNTRIES) {
+      const data = getAdminData(iso)
+      expect(data, `${iso} should have admin data`).not.toBeNull()
+      for (const division of data!.divisions) {
+        expect(
+          division.boundaryRings?.length ?? 0,
+          `${iso}:${division.name} should have at least one real boundary ring`,
+        ).toBeGreaterThan(0)
+        for (const ring of division.boundaryRings ?? []) {
+          expect(ring.length, `${iso}:${division.name} ring should have multiple vertices`).toBeGreaterThan(4)
+          expect(ring[0], `${iso}:${division.name} ring should be closed`).toEqual(ring[ring.length - 1])
+        }
       }
     }
   })
