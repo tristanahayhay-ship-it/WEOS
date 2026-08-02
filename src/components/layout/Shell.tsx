@@ -2,7 +2,6 @@ import { Component, type ErrorInfo, type ReactNode, useEffect } from 'react'
 import Topbar from './Topbar'
 import Footer from './Footer'
 import GlobeEngine from '../globe/GlobeEngine'
-import CountryPanel from '../panels/CountryPanel'
 import { OverlayCanvas, OverlayPanel, OverlayLegend } from '../overlay'
 import { FlowCanvas, FlowPanel, CountryFlowCanvas } from '../flow'
 import { DebugCanvas } from '../debug'
@@ -88,7 +87,6 @@ export default function Shell({ children }: ShellProps) {
           <FlowCanvas />
           <CountryFlowCanvas />
           <FlowPanel />
-          <CountryPanel />
           <DebugCanvas />
           <ZoomLevelHUD />
         </AppErrorBoundary>

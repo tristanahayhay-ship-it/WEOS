@@ -45,6 +45,8 @@ import type { Country } from '../../types/country'
 import { findCountryAtPoint, getCountryBoundaryRings } from '../../utils/countryGeometry'
 import { LOD_FLOWS } from '../../flows/lodFlows'
 import { addCountryInfrastructure } from '../../world/country/CountryInfrastructureScene'
+import { generateEconomicLayer } from '../../world/country/CountryEconomicGenerator'
+import { addEconomicCities, addEconomicNodes } from '../../world/country/CountryEconomicScene'
 
 /** Lerp speed for programmatic camera-distance animation (units/second). */
 const CAMERA_DAMPING = 9
@@ -304,6 +306,12 @@ function populateCountryDetailLayer(group: Group, country: Country | null) {
   // V2: infrastructure layer (highways, roads, railways, airports, seaports,
   //     landuse zones, rivers, parks) — rendered beneath V1 city markers.
   addCountryInfrastructure(group, country)
+
+  // V3: country-scale economic hubs (major cities, ports/logistics/airport/
+  //     industrial/financial nodes), data-driven only.
+  const economicLayer = generateEconomicLayer(country)
+  addEconomicCities(group, economicLayer.cities)
+  addEconomicNodes(group, economicLayer.nodes)
 
   const cityPoints = COUNTRY_CITY_MARKERS.get(country.isoCode) ?? []
   for (const [lon, lat] of cityPoints) {
@@ -692,7 +700,7 @@ export default function GlobeEngine() {
           }}
         >
           <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: 'rgba(121, 196, 255, 0.72)' }}>
-            Country View V2
+            Country View V3
           </div>
           <div className="text-sm font-semibold">{selectedCountry.name}</div>
         </div>
