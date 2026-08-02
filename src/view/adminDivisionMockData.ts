@@ -212,17 +212,17 @@ const BR_ADMIN: CountryAdminData = {
 const RU_ADMIN: CountryAdminData = {
   countryIsoCode: 'RU',
   divisions: [
-    buildDivision('RU', 'region', 'Central',  [ 37.62,  55.75], 0),
-    buildDivision('RU', 'region', 'Northwestern',  [ 30.32,  59.94], 1),
-    buildDivision('RU', 'region', 'Urals',  [ 60.60,  56.84], 2),
-    buildDivision('RU', 'region', 'Siberia',  [ 82.92,  54.99], 3),
-    buildDivision('RU', 'region', 'Far East',  [131.87,  43.12], 4),
+    buildDivision('RU', 'region', 'Moscow Oblast',  [37.62, 55.75], 0),
+    buildDivision('RU', 'region', 'Saint Petersburg',  [30.32, 59.94], 1),
+    buildDivision('RU', 'region', 'Sverdlovsk Oblast',  [60.60, 56.84], 2),
+    buildDivision('RU', 'region', 'Novosibirsk Oblast',  [82.92, 54.99], 3),
+    buildDivision('RU', 'region', 'Tatarstan',  [50.70, 55.40], 4),
   ],
   intraFlows: [
-    { id: 'ru-if-01', fromId: 'ru-central',        toId: 'ru-northwestern', type: 'capital', value: 280 },
-    { id: 'ru-if-02', fromId: 'ru-central',        toId: 'ru-urals',        type: 'trade',   value: 200 },
-    { id: 'ru-if-03', fromId: 'ru-urals',          toId: 'ru-siberia',      type: 'supply',  value: 150 },
-    { id: 'ru-if-04', fromId: 'ru-siberia',        toId: 'ru-far-east',     type: 'trade',   value: 110 },
+    { id: 'ru-if-01', fromId: 'ru-moscow-oblast',       toId: 'ru-saint-petersburg',    type: 'capital', value: 280 },
+    { id: 'ru-if-02', fromId: 'ru-moscow-oblast',       toId: 'ru-sverdlovsk-oblast',   type: 'trade',   value: 200 },
+    { id: 'ru-if-03', fromId: 'ru-sverdlovsk-oblast',   toId: 'ru-novosibirsk-oblast',  type: 'supply',  value: 150 },
+    { id: 'ru-if-04', fromId: 'ru-tatarstan',           toId: 'ru-moscow-oblast',       type: 'trade',   value: 110 },
   ],
 }
 
