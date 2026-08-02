@@ -17,8 +17,7 @@ import {
   WebGLRenderer,
 } from 'three'
 import type { GlobeFrameSnapshot } from '../stores/globeViewStore'
-import type { FlowModel, FlowObject } from './types'
-import { FLOW_TYPE_CONFIG } from '../stores/flowStore'
+import type { FlowModel, FlowObject, FlowDirection } from './types'
 import { COUNTRIES } from '../data/countries'
 import { projectLngLatToCartesian, EARTH_RADIUS } from '../utils/globe'
 
@@ -41,6 +40,18 @@ const ARC_LIFT_FACTOR = 0.4
 /** Value range for opacity normalisation (USD billions) */
 const VALUE_MIN = 1
 const VALUE_MAX = 600
+
+/**
+ * Arc colour keyed by FlowDirection:
+ *   inbound  → blue  (money / goods arriving at source country)
+ *   outbound → orange/red (money / goods leaving source country)
+ *   bilateral → teal (symmetric exchange)
+ */
+const DIRECTION_COLOR_HEX: Record<FlowDirection, number> = {
+  inbound:   0x3b82f6,  // blue
+  outbound:  0xf97316,  // orange
+  bilateral: 0x14b8a6,  // teal
+}
 
 // ── Shader code ───────────────────────────────────────────────────────────────
 
@@ -260,8 +271,8 @@ export class FlowRenderer {
       if (!src || !dst) continue
 
       const geo      = buildArcGeometry(src[0], src[1], dst[0], dst[1])
-      const cfg      = FLOW_TYPE_CONFIG[flow.flowType]
-      const col      = new Color(cfg.colorHex)
+      const colorHex = DIRECTION_COLOR_HEX[flow.direction]
+      const col      = new Color(colorHex)
       const alpha    = normaliseValue(flow.value)
 
       const mat = new ShaderMaterial({
