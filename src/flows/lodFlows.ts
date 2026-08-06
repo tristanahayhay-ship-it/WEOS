@@ -4,7 +4,7 @@ import type { ZoomLevelId } from '../zoom/types'
 /**
  * LOD-indexed collection of FlowObjects.
  *
- * Each key is a ZoomLevelId (0–6).  The FlowEngine activates the array for the
+ * Each key is a ZoomLevelId (0–10).  The FlowEngine activates the array for the
  * current level and fades it out when transitioning to an adjacent level.
  *
  * Level hierarchy:
@@ -14,7 +14,11 @@ import type { ZoomLevelId } from '../zoom/types'
  *  3 – City        : secondary-city flows, regional scale (thin, faster)
  *  4 – District    : same-country city pairs (thin, fast)
  *  5 – Institution : financial-hub connections (thin, medium-fast)
- *  6 – Corporation : company supply chain / partnership flows (thinnest, fastest)
+ *  6 – Institution : institution-level flows
+ *  7 – Corporation : company-level flows
+ *  8 – Facility    : placeholder (stub)
+ *  9 – Logistics   : placeholder (stub)
+ * 10 – Real-time   : placeholder (stub)
  */
 export const LOD_FLOWS: Record<ZoomLevelId, FlowObject[]> = {
   // ── Level 0: Global ──────────────────────────────────────────────────────
@@ -840,7 +844,7 @@ export const LOD_FLOWS: Record<ZoomLevelId, FlowObject[]> = {
     },
   ],
 
-  // ── Level 6: Corporation ─────────────────────────────────────────────────
+  // ── Level 6: Institution / Organization ─────────────────────────────────
   // Company-level: supply chain, capital, ownership, data, partnerships.
   6: [
     {
@@ -956,4 +960,16 @@ export const LOD_FLOWS: Record<ZoomLevelId, FlowObject[]> = {
       visibilityState: 0,
     },
   ],
+
+  // ── Level 7: Corporation ─────────────────────────────────────────────────
+  7: [],
+
+  // ── Level 8: Facility ────────────────────────────────────────────────────
+  8: [],
+
+  // ── Level 9: Logistics Network ───────────────────────────────────────────
+  9: [],
+
+  // ── Level 10: Real-Time Data ─────────────────────────────────────────────
+  10: [],
 }

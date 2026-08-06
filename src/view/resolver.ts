@@ -18,9 +18,7 @@ import { buildDashboard } from './dashboardComposers'
 // ── Level resolution ──────────────────────────────────────────────────────────
 
 /**
- * Derive the active zoom level (0–3) from a raw camera distance.
- * Wraps the existing `levelFromCameraDistance` and clamps to the four
- * economic-intelligence levels used in WEOS.
+ * Derive the active zoom level from a raw camera distance.
  */
 export function resolveViewLevel(cameraDistance: number): ZoomLevelId {
   return levelFromCameraDistance(cameraDistance)
@@ -78,6 +76,10 @@ const VISIBILITY_THRESHOLDS: Record<ZoomLevelId, number> = {
   4: 0.00,
   5: 0.00,
   6: 0.00,
+  7: 0.00,
+  8: 0.00,
+  9: 0.00,
+  10: 0.00,
 }
 
 /**

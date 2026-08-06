@@ -1,24 +1,26 @@
 import { create } from 'zustand'
-import type { ZoomLevelId, ZoomTransitionState } from '../zoom/types'
+import type { ZoomDataLayerId, ZoomLevelId, ZoomTransitionState } from '../zoom/types'
 import { ZOOM_LEVELS, levelFromCameraDistance } from '../zoom/levels'
 import { useOverlayStore } from './overlayStore'
 import { useFlowStore } from './flowStore'
 import { useCountryStore } from './countryStore'
 import { useCountryEconomicStore } from './countryEconomicStore'
 
-/** Maximum zoom level exposed in the 4-level economic-intelligence framework (0–3). */
-const COUNTRY_VIEW_MAX_LEVEL: ZoomLevelId = 3
+const OUTERMOST_LEVEL: ZoomLevelId = 0
+const INNERMOST_LEVEL: ZoomLevelId = 10
 /** Minimum zoom level at which a country must be selected (Country / Division). */
 const COUNTRY_SCOPE_MIN_LEVEL: ZoomLevelId = 2
 const LEVEL_SYNC_HYSTERESIS = 0.06
 
-function clampLevelToCountryScope(id: ZoomLevelId): ZoomLevelId {
-  return (Math.min(id, COUNTRY_VIEW_MAX_LEVEL) as ZoomLevelId)
+function clampLevel(id: ZoomLevelId): ZoomLevelId {
+  return Math.max(OUTERMOST_LEVEL, Math.min(id, INNERMOST_LEVEL)) as ZoomLevelId
 }
 
 interface ZoomState {
   /** Currently active zoom level */
   activeLevel: ZoomLevelId
+  /** Active semantic data layer id resolved from activeLevel */
+  activeDataLayerId: ZoomDataLayerId
 
   /** Transition state — null when idle */
   transition: ZoomTransitionState | null
@@ -65,7 +67,7 @@ interface ZoomState {
 
 /** Apply level-specific settings to dependent stores (overlay / flow). */
 function applyLevelSideEffects(id: ZoomLevelId) {
-  const clampedLevel = clampLevelToCountryScope(id)
+  const clampedLevel = clampLevel(id)
   const level = ZOOM_LEVELS[clampedLevel]
 
   // Overlay
@@ -90,16 +92,18 @@ function applyLevelSideEffects(id: ZoomLevelId) {
 
 export const useZoomStore = create<ZoomState>()((set, get) => ({
     activeLevel: 0,
+    activeDataLayerId: ZOOM_LEVELS[0].dataLayer.id,
     transition: null,
     pendingCameraDistance: null,
 
     setLevel: (id) => {
-      const nextLevel = clampLevelToCountryScope(id)
+      const nextLevel = clampLevel(id)
       const current = get().activeLevel
       if (current === nextLevel) return
 
       set({
         activeLevel: nextLevel,
+        activeDataLayerId: ZOOM_LEVELS[nextLevel].dataLayer.id,
         transition: null,
       })
 
@@ -108,7 +112,7 @@ export const useZoomStore = create<ZoomState>()((set, get) => ({
 
     goToLevel: (id) => {
       const current = get().activeLevel
-      const target = clampLevelToCountryScope(id)
+      const target = clampLevel(id)
       const level = ZOOM_LEVELS[target]
       if (current === target && get().pendingCameraDistance === null) return
 
@@ -125,18 +129,18 @@ export const useZoomStore = create<ZoomState>()((set, get) => ({
 
     zoomIn: () => {
       const { activeLevel } = get()
-      const nextId = Math.min(activeLevel + 1, COUNTRY_VIEW_MAX_LEVEL) as ZoomLevelId
+      const nextId = Math.min(activeLevel + 1, INNERMOST_LEVEL) as ZoomLevelId
       get().goToLevel(nextId)
     },
 
     zoomOut: () => {
       const { activeLevel } = get()
-      const prevId = Math.max(activeLevel - 1, 0) as ZoomLevelId
+      const prevId = Math.max(activeLevel - 1, OUTERMOST_LEVEL) as ZoomLevelId
       get().goToLevel(prevId)
     },
 
     syncFromCameraDistance: (distance) => {
-      const detectedLevel = clampLevelToCountryScope(levelFromCameraDistance(distance))
+      const detectedLevel = clampLevel(levelFromCameraDistance(distance))
       const { activeLevel } = get()
       const [min, max] = ZOOM_LEVELS[activeLevel].cameraDistanceRange
 
@@ -144,7 +148,10 @@ export const useZoomStore = create<ZoomState>()((set, get) => ({
         detectedLevel !== activeLevel &&
         (distance < min - LEVEL_SYNC_HYSTERESIS || distance > max + LEVEL_SYNC_HYSTERESIS)
       ) {
-        set({ activeLevel: detectedLevel })
+        set({
+          activeLevel: detectedLevel,
+          activeDataLayerId: ZOOM_LEVELS[detectedLevel].dataLayer.id,
+        })
         applyLevelSideEffects(detectedLevel)
       }
     },
