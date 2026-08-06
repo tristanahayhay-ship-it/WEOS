@@ -309,7 +309,7 @@ export const ZOOM_LEVELS: Record<ZoomLevelId, ZoomLevelMetadata> = {
     cameraDistanceRange: [1.75, 1.79],
     showBoundaries: false,
     showCountryLayer: false,
-    overlay: { visible: true, metric: 'gdp' },
+    overlay: { visible: false },
     flow: { visible: true, visibleTypes: ['trade', 'investment', 'debt', 'aid'] },
     panel: { showCountryPanel: false },
     dataLayer: {
@@ -367,6 +367,21 @@ export function levelFromCameraDistance(distance: number): ZoomLevelId {
     const [min, max] = level.cameraDistanceRange
     if (distance >= min && distance <= max) return level.id
   }
+  // Closer than the innermost band.
   if (distance < ZOOM_LEVELS[10].cameraDistanceRange[0]) return 10
+  // Farther than the outermost band.
+  if (distance > ZOOM_LEVELS[0].cameraDistanceRange[1]) return 0
+  // In case of any accidental future gap between ranges, choose nearest band.
+  for (let index = 0; index < ZOOM_LEVEL_LIST.length - 1; index += 1) {
+    const outer = ZOOM_LEVEL_LIST[index]!
+    const inner = ZOOM_LEVEL_LIST[index + 1]!
+    const gapDistanceFar = outer.cameraDistanceRange[0]
+    const gapDistanceClose = inner.cameraDistanceRange[1]
+    if (gapDistanceClose < gapDistanceFar && distance < gapDistanceFar && distance > gapDistanceClose) {
+      return distance > (outer.cameraDistanceRange[0] + inner.cameraDistanceRange[1]) / 2
+        ? outer.id
+        : inner.id
+    }
+  }
   return 0
 }

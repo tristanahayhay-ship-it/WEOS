@@ -2,7 +2,7 @@ import { useZoomStore } from '../../stores/zoomStore'
 import { ZOOM_LEVEL_LIST } from '../../zoom/levels'
 import type { ZoomLevelId } from '../../zoom/types'
 
-const STANDARD_ZOOM_LEVELS = ZOOM_LEVEL_LIST
+const INNERMOST_LEVEL_ID = ZOOM_LEVEL_LIST[ZOOM_LEVEL_LIST.length - 1]?.id ?? 10
 
 /**
  * ZoomLevelHUD — compact overlay widget that shows the current zoom level and
@@ -18,8 +18,8 @@ export default function ZoomLevelHUD() {
   const zoomOut     = useZoomStore((s) => s.zoomOut)
   const transition  = useZoomStore((s) => s.transition)
 
-  const currentMeta = STANDARD_ZOOM_LEVELS.find((level) => level.id === activeLevel)
-    ?? STANDARD_ZOOM_LEVELS[STANDARD_ZOOM_LEVELS.length - 1]
+  const currentMeta = ZOOM_LEVEL_LIST.find((level) => level.id === activeLevel)
+    ?? ZOOM_LEVEL_LIST[ZOOM_LEVEL_LIST.length - 1]
 
   return (
     <div
@@ -54,7 +54,7 @@ export default function ZoomLevelHUD() {
           backdropFilter: 'blur(8px)',
         }}
       >
-        {STANDARD_ZOOM_LEVELS.map((level) => {
+        {ZOOM_LEVEL_LIST.map((level) => {
           const isActive = level.id === activeLevel
           return (
             <button
@@ -107,9 +107,9 @@ export default function ZoomLevelHUD() {
       <button
         type="button"
         onClick={zoomIn}
-        disabled={activeLevel === STANDARD_ZOOM_LEVELS.length - 1}
+        disabled={activeLevel === INNERMOST_LEVEL_ID}
         title="Phóng to một cấp"
-        style={buttonStyle(activeLevel === STANDARD_ZOOM_LEVELS.length - 1)}
+        style={buttonStyle(activeLevel === INNERMOST_LEVEL_ID)}
       >
         ▼
       </button>
