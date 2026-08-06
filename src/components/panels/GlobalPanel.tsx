@@ -139,10 +139,10 @@ export default function GlobalPanel() {
 
   if (!isVisible) return null
 
-  const levelLabel = activeLevel === 0 ? 'Global View' : 'Continent View'
+  const levelLabel = activeLevel === 0 ? 'Trái Đất Toàn Cầu' : 'Lục địa'
   const levelSubtitle = activeLevel === 0
-    ? 'World-scale economic intelligence'
-    : 'Continental capital flow network'
+    ? 'Toàn cảnh kinh tế thế giới'
+    : 'Mạng lưới dòng vốn theo lục địa'
 
   return (
     <aside

@@ -2,7 +2,7 @@ import { useZoomStore } from '../../stores/zoomStore'
 import { ZOOM_LEVEL_LIST } from '../../zoom/levels'
 import type { ZoomLevelId } from '../../zoom/types'
 
-const COUNTRY_VIEW_LEVELS = ZOOM_LEVEL_LIST.slice(0, 4)
+const STANDARD_ZOOM_LEVELS = ZOOM_LEVEL_LIST
 
 /**
  * ZoomLevelHUD — compact overlay widget that shows the current zoom level and
@@ -18,7 +18,8 @@ export default function ZoomLevelHUD() {
   const zoomOut     = useZoomStore((s) => s.zoomOut)
   const transition  = useZoomStore((s) => s.transition)
 
-  const currentMeta = COUNTRY_VIEW_LEVELS[activeLevel] ?? COUNTRY_VIEW_LEVELS[COUNTRY_VIEW_LEVELS.length - 1]
+  const currentMeta = STANDARD_ZOOM_LEVELS.find((level) => level.id === activeLevel)
+    ?? STANDARD_ZOOM_LEVELS[STANDARD_ZOOM_LEVELS.length - 1]
 
   return (
     <div
@@ -29,14 +30,14 @@ export default function ZoomLevelHUD() {
         transform: 'translateY(-50%)',
         zIndex: 20,
       }}
-      aria-label="Zoom level navigator"
+      aria-label="Bộ điều hướng cấp zoom"
     >
-      {/* Zoom-out button — moves toward Global (level 0) */}
+      {/* Zoom-out button — moves toward level 0 */}
       <button
         type="button"
         onClick={zoomOut}
         disabled={activeLevel === 0}
-        title="Zoom out one level"
+        title="Thu nhỏ một cấp"
         style={buttonStyle(activeLevel === 0)}
       >
         ▲
@@ -53,7 +54,7 @@ export default function ZoomLevelHUD() {
           backdropFilter: 'blur(8px)',
         }}
       >
-        {COUNTRY_VIEW_LEVELS.map((level) => {
+        {STANDARD_ZOOM_LEVELS.map((level) => {
           const isActive = level.id === activeLevel
           return (
             <button
@@ -102,13 +103,13 @@ export default function ZoomLevelHUD() {
         })}
       </div>
 
-      {/* Zoom-in button — moves toward Corporation (level 6) */}
+      {/* Zoom-in button — moves toward level 10 */}
       <button
         type="button"
         onClick={zoomIn}
-        disabled={activeLevel === COUNTRY_VIEW_LEVELS.length - 1}
-        title="Zoom in one level"
-        style={buttonStyle(activeLevel === COUNTRY_VIEW_LEVELS.length - 1)}
+        disabled={activeLevel === STANDARD_ZOOM_LEVELS.length - 1}
+        title="Phóng to một cấp"
+        style={buttonStyle(activeLevel === STANDARD_ZOOM_LEVELS.length - 1)}
       >
         ▼
       </button>
@@ -133,7 +134,7 @@ export default function ZoomLevelHUD() {
             color: transition?.isTransitioning ? '#f59e0b' : '#79c4ff',
           }}
         >
-          {transition?.isTransitioning ? 'MOVING…' : currentMeta.name}
+          {transition?.isTransitioning ? 'ĐANG CHUYỂN…' : currentMeta.name}
         </span>
       </div>
     </div>

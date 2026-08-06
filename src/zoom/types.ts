@@ -2,17 +2,40 @@ import type { OverlayMetric } from '../overlays/types'
 import type { FlowType } from '../flows/types'
 
 /**
- * Hierarchy of zoom levels in WEOS.
+ * Hierarchy of zoom levels in WEOS Zoom Level Standard V1.0.
  *
- * 0 = Global   — full Earth visible from space
- * 1 = Continent — continental view
- * 2 = Country  — individual country boundaries prominent
- * 3 = City     — city / regional scale
- * 4 = District — financial-district / borough scale
- * 5 = Institution — institution / campus scale
- * 6 = Corporation — individual building / company scale
+ * 0  = Trái Đất Toàn Cầu
+ * 1  = Lục địa
+ * 2  = Quốc gia
+ * 3  = Tỉnh/Bang
+ * 4  = Thành phố
+ * 5  = Khu tài chính
+ * 6  = Tổ chức
+ * 7  = Doanh nghiệp
+ * 8  = Nhà máy / Cơ sở
+ * 9  = Mạng lưới logistics
+ * 10 = Dữ liệu thời gian thực
  */
-export type ZoomLevelId = 0 | 1 | 2 | 3 | 4 | 5 | 6
+export type ZoomLevelId = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
+
+export type ZoomDataLayerId =
+  | 'global_earth'
+  | 'continent'
+  | 'country'
+  | 'province_state'
+  | 'city'
+  | 'financial_district'
+  | 'institution'
+  | 'corporation'
+  | 'facility'
+  | 'logistics_network'
+  | 'realtime_data'
+
+export interface ZoomDataLayerSpec {
+  id: ZoomDataLayerId
+  label: string
+  semanticItems: readonly string[]
+}
 
 /** Context driven by the zoom level for the overlay layer */
 export interface OverlayContext {
@@ -59,6 +82,7 @@ export interface ZoomLevelMetadata {
   overlay: OverlayContext
   flow: FlowContext
   panel: PanelContext
+  dataLayer: ZoomDataLayerSpec
 
   // ── Transition ────────────────────────────────────────────────────────────
   /** Camera-animation duration when jumping directly to this level (ms). */

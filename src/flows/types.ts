@@ -23,7 +23,7 @@ export type FlowDirection = 'outbound' | 'inbound' | 'bilateral'
 export type FlowMetadata = Record<string, string | number | boolean | null>
 
 /** Zoom levels at which a FlowObject can be visible (mirrors ZoomLevelId) */
-export type FlowLodLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6
+export type FlowLodLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
 
 /**
  * LOD rules embedded in each FlowObject.

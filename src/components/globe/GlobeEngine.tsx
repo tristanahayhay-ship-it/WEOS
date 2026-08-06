@@ -34,6 +34,7 @@ import { useGlobeViewStore } from '../../stores/globeViewStore'
 import { useDebugStore } from '../../stores/debugStore'
 import { useZoomStore } from '../../stores/zoomStore'
 import type { ZoomLevelId } from '../../zoom/types'
+import { ZOOM_LEVEL_LIST } from '../../zoom/levels'
 import {
   COASTLINE_PATHS,
   COUNTRY_BOUNDARY_PATHS,
@@ -147,6 +148,7 @@ const DEPTH_WRITE_ALPHA_THRESHOLD = 0.35
 const ALPHA_UPDATE_THRESHOLD = 0.002
 const COUNTRY_BORDER_ALTITUDE = 0.018
 const COUNTRY_DETAIL_LEVELS = [2, 3] as const
+const STANDARD_ZOOM_LEVEL_IDS: ZoomLevelId[] = ZOOM_LEVEL_LIST.map((level) => level.id)
 const COUNTRY_DETAIL_CLEAR_ALPHA_THRESHOLD = 0.06
 const BASE_OPACITY_BY_MATERIAL = new WeakMap<Material, number>()
 const MATERIAL_TEXTURE_KEYS = [
@@ -402,9 +404,29 @@ function createWorld(): WorldBundle {
   const layer4 = new Group()
   const layer5 = new Group()
   const layer6 = new Group()
+  const layer7 = new Group()
+  const layer8 = new Group()
+  const layer9 = new Group()
+  const layer10 = new Group()
 
   world.rotation.z = MathUtils.degToRad(23.4)
-  world.add(earth, atmosphere, coastlines, countryBoundaries, layer0, layer1, layer2, layer3, layer4, layer5, layer6)
+  world.add(
+    earth,
+    atmosphere,
+    coastlines,
+    countryBoundaries,
+    layer0,
+    layer1,
+    layer2,
+    layer3,
+    layer4,
+    layer5,
+    layer6,
+    layer7,
+    layer8,
+    layer9,
+    layer10,
+  )
 
   const layers: Record<ZoomLevelId, WorldLayerState> = {
     0: { group: layer0, alpha: 1 },
@@ -414,9 +436,13 @@ function createWorld(): WorldBundle {
     4: { group: layer4, alpha: 0 },
     5: { group: layer5, alpha: 0 },
     6: { group: layer6, alpha: 0 },
+    7: { group: layer7, alpha: 0 },
+    8: { group: layer8, alpha: 0 },
+    9: { group: layer9, alpha: 0 },
+    10: { group: layer10, alpha: 0 },
   }
 
-  for (const level of [0, 1, 2, 3, 4, 5, 6] as const) {
+  for (const level of STANDARD_ZOOM_LEVEL_IDS) {
     setGroupOpacity(layers[level].group, layers[level].alpha)
   }
 
@@ -561,7 +587,7 @@ export default function GlobeEngine() {
 
       // Clamp to 1 to keep interpolation stable on dropped/long frames.
       const fadeLerp = Math.min(1, LAYER_FADE_SPEED * deltaSeconds)
-      for (const level of [0, 1, 2, 3, 4, 5, 6] as const) {
+      for (const level of STANDARD_ZOOM_LEVEL_IDS) {
         const state = worldBundle.layers[level]
         const targetAlpha = level === activeLevel ? 1 : 0
         state.alpha = updateGroupAlpha(state.group, state.alpha, targetAlpha, fadeLerp)
